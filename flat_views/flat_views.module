@@ -1,0 +1,163 @@
+<?php
+/**
+ * @file
+ * Primarily Drupal hooks and global API functions setup the example.
+ *
+ * This is the main module file for the view_actions example.
+ * It implements :
+ *  hook_views_api() : register this module with views api and set path
+ *
+ *
+ */
+
+/**
+ * Implements hook_views_api().
+ * register with views api
+ * declare the path where to find the view include files
+ *
+ */
+
+
+/**
+ * Implements hook_menu().
+ */
+function flat_views_menu()
+{
+    $items = array();
+    $items['dashboard/%user/notifications/delete_all_confirm'] = array(
+        'title' => 'Delete all notifications',
+        'type' => MENU_CALLBACK,
+        'page callback' => 'flat_views_notifications_delete_all',
+        'page arguments' => array(1),
+        'access arguments' => array('use deposit module', 1),
+    );
+
+    return $items;
+}
+
+function flat_views_notifications_delete_all($form, &$form_state, $user){
+
+    $a = 2;
+    return  confirm_form(
+        array(),
+        t('Are you sure you want to delete all reports?'),
+        'dashboard/'. $user->uid .'notifications',
+        t('This action cannot be undone.'),
+        t('Delete'),
+        t('Cancel')
+    );
+
+}
+
+function flat_views_notifications_delete_all_submit($user){
+
+    drupal_set_message('Done');
+}
+
+function flat_views_views_api() {
+
+  $views_registration = array (
+    'api' => '3.0',
+    'path' => drupal_get_path('module', 'flat_views') . '/views',
+  );
+
+
+  return $views_registration;
+}
+
+
+/**
+ * Implements hook_block_info().
+ */
+function flat_views_block_info()
+{
+    $blocks = array();
+
+
+    $blocks['reports_actions'] = array(
+        'info' => t('FLAT deposit reports actions '),
+        'status' => TRUE,
+        'weight' => 999,
+        'region' => 'content',
+        'visibility' => BLOCK_VISIBILITY_LISTED,
+        'pages' => 'dashboard/*/notifications'
+    );
+
+    return $blocks;
+}
+
+
+/**
+ * Implements hook_block_view().
+ */
+function flat_views_block_view($delta = '')
+{
+
+    switch ($delta){
+        case 'reports_actions':
+
+        if (user_access('use deposit module')) {
+
+            module_load_include('inc','flat_views','includes/flat_reports.actions_form');
+
+            $form = drupal_get_form('flat_reports_action_form');
+            $rendered_form = drupal_render($form);
+
+            $block = array(
+                'subject' => '',
+                'content' => $rendered_form,
+            );
+            break;
+
+        }
+
+    }
+
+    return $block;
+
+}
+
+
+
+
+/**
+ * Implements hook_block_info_alter().
+ *
+ * Alter visibility of in views defined blocks for report, bundles and collections
+ */
+function flat_views_block_info_alter(&$blocks, $theme, $code_blocks)
+{
+
+    foreach ($blocks['views'] as &$view_block){
+
+        $block_description = $view_block['info'];
+        switch ($block_description){
+            case "Flat user notifications":
+                $view_block['region'] = 'content';
+                $view_block['visibility'] = BLOCK_VISIBILITY_LISTED;
+                $view_block['pages'] = 'dashboard/*/notifications';
+                $view_block['status'] = TRUE;
+                break;
+
+            case "FLAT my bundles":
+                $view_block['region'] = 'content';
+                $view_block['visibility'] = BLOCK_VISIBILITY_LISTED;
+                $view_block['pages'] = "dashboard/*/bundles";
+                $view_block['status'] = TRUE;
+                break;
+
+            case "FLAT my collections":
+                $view_block['region'] = 'content';
+                $view_block['visibility'] = BLOCK_VISIBILITY_LISTED;
+                $view_block['pages'] = 'dashboard/*/collections';
+                $view_block['status'] = TRUE;
+                break;
+        }
+
+        }
+
+    #var_dump($blocks['views']);
+}
+
+
+

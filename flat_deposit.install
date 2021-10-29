@@ -1,0 +1,968 @@
+<?php
+/**
+ * @file
+ * Deposit UI installation
+ */
+
+/**
+ * Implements hook_install().
+ */
+function flat_deposit_install()
+{
+    $t = get_t();
+
+    // CREATE FLAT BUNDLE and FLAT COLLECTION CONTENT TYPE
+    // This content types are the core entities that will contain upload data and metadata and upload information
+    $content_types = array(
+        'flat_bundle' => array(
+            'type' => 'flat_bundle',
+            'name' => $t('Bundle'),
+            'description' => $t('A bundle of one or more data files upload entity'),
+            'title_label' => $t('Name of the upload bundle'),
+            'base' => 'flat_bundle', #declare to be able to use content type hooks
+            'custom' => TRUE
+        ),
+        'flat_collection' => array(
+            'type' => 'flat_collection',
+            'name' => $t('Collection'),
+            'description' => $t('A collection of data bundles'),
+            'title_label' => $t('Name of the collection'),
+            'base' => 'flat_collection', #declare to be able to use content type hooks
+            'custom' => TRUE
+        ),
+    );
+
+    foreach ($content_types as $key => $content_type){
+        // Set remaining definitions with defaults
+        $node_type = node_type_set_defaults($content_type);
+        node_type_save($node_type);
+
+
+        // switch off comments for content type _flat_bundle
+        variable_set('comment_' . $key, '0');
+        $node_options = variable_get('node_options_' . $key, array());
+
+        // switch off promotion of new entries to front
+        $promote_key = array_search('promote', $node_options);
+        if ($promote_key !== false) {
+            unset($node_options[$promote_key]);
+            variable_set('node_options_'. $key, $node_options);
+        }
+    }
+
+
+
+
+    // Attach fields to the flat bundle content type by creating fields and instances of these fields
+    $fields = array();
+
+    $fields['flat_parent_nid'] = array(
+        'field_name' => 'flat_parent_nid',
+        'type' => 'list_integer',
+        'cardinality' => 1,
+        'settings' => array(),
+    );
+
+    $fields['flat_parent_title'] = array(
+        'field_name' => 'flat_parent_title',
+        'type' => 'list_text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 255)
+    );
+
+    $fields['flat_source'] = array(
+        'field_name' => 'flat_source',
+        'type' => 'list_text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 255,
+            'allowed_values' => array(
+                'external' => 'Upload the files using the web browser',
+            ),
+        ),
+        'locked' => TRUE,
+    );
+
+    $fields['flat_policies'] = array(
+        'field_name' => 'flat_policies',
+        'type' => 'list_text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 255,
+            'allowed_values' => array(
+                '_none' => '-- Select a policy --',
+                'public' => 'public',
+                'authenticated' => 'authenticated users',
+                'academic' => 'academic users',
+                'private' => 'private',
+                //'inherit' => 'inherit',
+            ),
+        ),
+        'locked' => TRUE,
+    );
+
+    $fields['flat_original_path'] = array(
+        'field_name' => 'flat_original_path',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 5000)
+    );
+
+    $fields['flat_new_path'] = array(
+        'field_name' => 'flat_new_path',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 5000)
+    );
+
+    $fields['flat_bundle_status'] = array(
+        'field_name' => 'flat_bundle_status',
+        'type' => 'list_text',
+        'cardinality' => 1,
+        'settings' => array(
+            'allowed_values' => array(
+                'open' => 'open',
+                'failed' => 'failed',
+                'validating' => 'validating',
+                'valid' => 'valid',
+                'processing' => 'processing',
+                'archived' => 'archived',
+            )
+        ),
+        'locked' => TRUE
+    );
+
+    $fields['flat_exception'] = array(
+        'field_name' => 'flat_exception',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 5000)
+    );
+
+
+    $fields['flat_cmdi_file'] = array(
+        'field_name' => 'flat_cmdi_file',
+        'settings' => array(
+            'display_field' => 1,
+            'display_default' => 1,
+            'uri_scheme' => 'metadata',
+        ),
+        'type' => 'file',
+        'entity_types' => array('node'),
+        'cardinality' => 1,
+    );
+
+
+    $fields['flat_cmdi_option'] = array(
+        'field_name' => 'flat_cmdi_option',
+        'type' => 'list_text',
+        'cardinality' => 1,
+        'settings' => array(
+            'allowed_values'=> array(
+                'new' => 'Enter it using a form',
+                'import' => 'Upload a CMDI file',
+                'template' => 'Upload a CMDI file to be used as a template (any links to files will be stripped)',
+                ),
+        ),
+    );
+
+    $fields['flat_external'] = array(
+        'field_name' => 'flat_external',
+        'type' => 'list_boolean',
+        'cardinality' => 1,
+        'settings' => array(
+            'allowed_values'=> array(
+                0 => "no",
+                1 => "yes"),
+        ),
+    );
+
+    $fields['flat_metadata_visibility'] = array(
+        'field_name' => 'flat_metadata_visibility',
+        'type' => 'list_text',
+        'cardinality' => 1,
+        'settings' => array(
+            'allowed_values'=> array(
+                'show' => 'visible',
+                'hide' => 'hidden',
+                ),
+        ),
+    );
+
+    $fields['flat_location'] = array(
+        'field_name' => 'flat_location',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 255)
+    );
+
+
+    $fields['flat_fid'] = array(
+        'field_name' => 'flat_fid',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => array(),
+        'max_length' => 255,
+    );
+
+
+    $fields['flat_type'] = array(
+        'field_name' => 'flat_type',
+        'type' => 'list_text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 255,
+            'allowed_values' => array(
+                'new' => 'Newly created content',
+                'update' => 'Update of existing content',
+            ),
+        ),
+        'locked' => TRUE,
+    );
+
+    $fields['flat_deleted_resources'] = array(
+        'field_name' => 'flat_deleted_resources',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => array(
+            'max_length' => 5000)
+    );
+
+    $fields['flat_collection_status'] = array(
+        'field_name' => 'flat_collection_status',
+        'type' => 'list_text',
+        'cardinality' => 1,
+        'settings' => array(
+            'allowed_values' => array(
+                'active' => 'active',
+                'inactive' => 'inactive',
+                'locked' => 'locked',
+                'error' => 'error',
+            )
+        ),
+        'locked' => TRUE
+    );
+
+    $fields['flat_fid_super'] = array(
+        'field_name' => 'flat_fid_super',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => array(),
+        'max_length' => 255,
+    );
+
+
+    foreach ($fields as $field) {
+        field_create_field($field);}
+
+    $instances = array();
+
+    $instances['flat_parent_nid_bundle'] = array(
+        'field_name' => 'flat_parent_nid',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Parent collection'),
+        'widget' => array(
+            'type' => 'option_buttons'
+        ),
+        'required' => FALSE,
+        'settings' => array(
+            'text_processing' => 0),
+            'display' => array(
+                'default' => array(
+                    'label' => 'inline',
+                    #'label' => 'hidden',
+                )
+            ),
+
+    );
+
+    $instances['flat_policies'] = array(
+        'field_name' => 'flat_policies',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Which access policy do you want to apply?'
+        ),
+        'widget' => array(
+            'type' => 'option_buttons',
+        ),
+        'required' => TRUE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
+    $instances['flat_bundle_metadata_visibility'] = array(
+        'field_name' => 'flat_metadata_visibility',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Visibility'),
+        'widget' => array(
+            'type' => 'option_buttons',
+        ),
+        'default_value' => array(
+            0 => array('value'=> 'show')),
+        'required' => TRUE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
+
+    $instances['flat_cmdi_option'] = array(
+        'field_name' => 'flat_cmdi_option',
+        'bundle' => 'flat_bundle',
+        'label' => $t('How will you provide the metadata for this bundle?'),
+        'widget' => array(
+            'type' => 'option_buttons',
+        ),
+        'default_value' => array(0 => array('value'=> '0')),
+        'required' => TRUE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
+    $instances['flat_cmdi_file'] = array(
+
+        'field_name' => 'flat_cmdi_file',
+        'bundle' => 'flat_bundle',
+        'label' => 'Attached metadata file',
+        'description' => $t('The metadata file describing the upload bundle'),
+        'widget' => array(
+            'type' => 'file_generic',
+            'settings' => array (
+                'progress_indicator' => 'throbber',
+                'imce_filefield_on' => 0,
+            )
+        ),
+        'settings' => array(
+            'file_directory' => '',
+            'file_extensions' => 'cmdi',
+            'max_filesize' => '1 MB',
+            'description_field' => 0,
+            'filefield_paths_enabled' => 1,
+            'filefield_paths' =>
+                array (
+                    'file_path' => array (
+                        'value' =>  '[current-user:name]/[node:flat_parent_title]/[node:title]/',
+                        'options' => array(
+                            'slashes' => 0,
+                            'pathauto' => FALSE,
+                            'transliterate' => 0,
+                        ),
+                        'redirect' => false,
+                        'retroactive_update' => 0,
+                        'active_updating' => 0,
+                    ),
+                    'file_name' =>array (
+                        'value' =>  'record.cmdi',
+                        'options' => array(
+                            'slashes' => 0,
+                            'pathauto' => FALSE,
+                            'transliterate' => 0,
+                        ),
+                    ),
+                ),
+        ),
+        'required' => FALSE,
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+        ),
+    );
+
+    $instances['flat_bundle_status'] = array(
+        'field_name' => 'flat_bundle_status',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Status of the upload'),
+        'description' => $t('Is the bundle accessible (open or failed), being processed (validating or processing) or closed (valid or archived)'),
+        'widget' => array(
+            'type' => 'option_buttons',
+        ),
+        'required' => TRUE,
+        'default_value' => array(
+            0 => array('value'=> 'open')),
+        'settings' => array('text_processing' => 0),
+        'no_ui' => TRUE,
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            )
+        )
+    );
+
+
+    $instances['flat_bundle_exception'] = array(
+        'field_name' => 'flat_exception',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Exception'
+        ),
+        'description' => $t('Did any errors occur during upload'),
+        'widget' => array(
+            'type' => 'text_textfield'
+        ),
+        'required' => FALSE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'type' => 'hidden',
+                'label' => 'inline',
+            ),
+            'error' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
+    $instances['flat_deleted_resources'] = array(
+        'field_name' => 'flat_deleted_resources',
+        'bundle' => 'flat_bundle',
+        'label' => 'Deleted Resources',
+        'description' => 'Resources of existing bundle that will be deleted',
+        'widget' => array(
+            'type' => 'text_textfield'
+        ),
+        'required' => FALSE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'type' => 'hidden',
+                'label' => 'inline',
+            ),
+            'error' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
+
+
+    $instances['flat_parent_title'] = array(
+        'field_name' => 'flat_parent_title',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Is part of collection'),
+        'widget' => array(
+            'type' => 'text_textfield',
+        ),
+        'required' => FALSE,
+        'disabled' => TRUE,
+        'default_value' => array(
+            0 => array('value'=> 'unassigned')),
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            )
+        )
+    );
+
+
+    $instances['flat_source'] = array(
+        'field_name' => 'flat_source',
+        'bundle' => 'flat_bundle',
+        'label' => $t('How will you provide the files to be included in this bundle?'),
+        'widget' => array(
+            'type' => 'option_select',
+        ),
+        'default_value' => array(
+            0 => array('value'=> 'local')),
+        'required' => TRUE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
+
+    $instances['flat_original_path'] = array(
+        'field_name' => 'flat_original_path',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Original Path of locally stored data'),
+        'widget' => array(
+            'type' => 'text_textfield',
+        ),
+        'required' => FALSE,
+        'disabled' => TRUE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            )
+        )
+    );
+
+    $instances['flat_new_path'] = array(
+        'field_name' => 'flat_new_path',
+        'bundle' => 'flat_bundle',
+        'label' => $t('New Path of locally stored data'),
+        'widget' => array(
+            'type' => 'text_textfield',
+        ),
+        'required' => FALSE,
+        'disabled' => TRUE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            )
+        )
+    );
+
+
+
+    $instances['flat_location'] = array(
+        'field_name' => 'flat_location',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Location where data is stored'
+        ),
+        'description' => $t('Folder where data to be archived is stored'),
+        'widget' => array(
+            'type' => 'text'
+        ),
+        'required' => FALSE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'hidden',
+            ),
+
+        )
+    );
+    $instances['flat_external'] = array(
+        'field_name' => 'flat_external',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Data has alternate storage location'
+        ),
+        'description' => $t('Check this option if data is available at a different location'),
+        'widget' => array(
+            'type' => 'option_buttons',
+        ),
+        'default_value' => array(
+            0 => array('value'=> '0')),
+        'required' => TRUE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
+// flat collection field instances
+    $instances['flat_fid_bundle'] = array(
+        'field_name' => 'flat_fid',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Fedora commons ID'
+        ),
+        'description' => $t('ID assigned by fedora during ingest process'),
+        'widget' => array(
+            'type' => 'text_textfield'
+        ),
+        'required' => FALSE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+            'error' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
+    // flat collection field instances
+    $instances['flat_fid'] = array(
+        'field_name' => 'flat_fid',
+        'bundle' => 'flat_collection',
+        'label' => $t('Fedora commons ID'
+        ),
+        'description' => $t('ID assigned by fedora during ingest process'),
+        'widget' => array(
+            'type' => 'text_textfield'
+        ),
+        'required' => FALSE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+            'error' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
+
+
+    $instances['flat_collection_status'] = array(
+        'field_name' => 'flat_collection_status',
+        'bundle' => 'flat_collection',
+        'label' => $t('Status of the collection'),
+        'description' => $t('Is the collection active, inactive, erroneous or locked?'),
+        'widget' => array(
+            'type' => 'option_buttons',
+        ),
+
+        'required' => TRUE,
+        'default_value' => array(
+            0 => array('value'=> 'open')),
+        'settings' => array('text_processing' => 0),
+        'no_ui' => TRUE,
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            )
+        )
+    );
+
+    $instances['flat_collection_metadata_visibility'] = array(
+        'field_name' => 'flat_metadata_visibility',
+        'bundle' => 'flat_collection',
+        'label' => $t('Control visibility of a archive object'
+        ),
+        'widget' => array(
+            'type' => 'option_buttons',
+        ),
+        'default_value' => array(
+            0 => array('value'=> 'show')),
+        'required' => TRUE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
+    $instances['flat_collection_exception'] = array(
+        'field_name' => 'flat_exception',
+        'bundle' => 'flat_collection',
+        'label' => $t('Exception'
+        ),
+        'description' => $t('Did any errors occur'),
+        'widget' => array(
+            'type' => 'text_textfield'
+        ),
+        'required' => FALSE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'type' => 'hidden',
+                'label' => 'inline',
+            ),
+            'error' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
+    $instances['flat_parent_nid_collection'] = array(
+        'field_name' => 'flat_parent_nid',
+        'bundle' => 'flat_collection',
+        'label' => $t('NID of the parent of this node'),
+        'description' => $t('In case this node is a subcollection, it is attach to which node?'),
+        'widget' => array(
+            'type' => 'number',
+        ),
+        'required' => FALSE,
+        'settings' => array(
+            'display' => array(
+                'default' => array(
+                    'label' => 'inline',
+                )
+            ),
+        ),
+    );
+
+    $instances['flat_fid_super'] = array(
+        'field_name' => 'flat_fid_super',
+        'bundle' => 'flat_collection',
+        'label' => $t('Fedora commons ID of super collection node'),
+        'widget' => array(
+            'type' => 'text_textfield'
+        ),
+        'required' => FALSE,
+        'settings' => array('text_processing' => 0),
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            ),
+            'error' => array(
+                'label' => 'inline',
+            ),
+        )
+    );
+
+    $instances['flat_bundle_type'] = array(
+        'field_name' => 'flat_type',
+        'bundle' => 'flat_bundle',
+        'label' => $t('Type of bundle'),
+        'description' => $t('Is the bundle newly created or is an existing bundle updated?'),
+        'widget' => array(
+            'type' => 'option_buttons',
+        ),
+        'required' => TRUE,
+        'default_value' => array(
+            0 => array('value'=> 'new')),
+        'settings' => array('text_processing' => 0),
+        'no_ui' => TRUE,
+        'display' => array(
+            'default' => array(
+                'label' => 'inline',
+            )
+        )
+    );
+
+
+    foreach ($instances as $instance){
+        $instance['entity_type'] = 'node';
+        field_create_instance($instance);
+    }
+
+    //SET DEFAULTS
+    module_load_include('inc', 'flat_deposit', 'inc/config');
+    flat_deposit_set_general();
+    flat_deposit_set_cmdi_profiles();
+    flat_deposit_set_fits();
+    flat_deposit_set_ingest_service();
+    flat_deposit_set_sword();
+    flat_deposit_set_doorkeeper();
+    flat_deposit_set_fedora();
+    flat_deposit_set_solr();
+
+
+    variable_set('file_private_path','sites/default/files/private');
+
+
+    variable_set('file_default_scheme','private');
+    variable_set('imce_settings_disable_private',0);
+
+
+    flat_deposit_set_custom_roles();
+
+    // Install our custom block visibility settings per node type
+    $query = db_insert('block_node_type')
+        ->fields(array('type', 'module', 'delta'))
+        ->values(array(
+            'module' => 'flat_deposit',
+            'delta' => 'node_actions', // block name
+            'type' => 'flat_bundle', // content type
+        ))
+        ->execute();
+}
+
+
+
+
+/**
+ * Implements hook_uninstall().
+ */
+function flat_deposit_uninstall(){
+    $t = get_t();
+
+    // DISABLE AND UNINSTALL DEPENDENT PACKAGES
+    module_disable(array('blog','flat_views', 'flat_owncloud'));
+    drupal_uninstall_modules(array('blog', 'flat_owncloud'));
+
+    // clean up variables
+    variable_del('flat_deposit_general');
+    variable_del('flat_deposit_ingest_service');
+    variable_del('flat_deposit_sword');
+    variable_del('flat_deposit_doorkeeper');
+    variable_del('flat_deposit_fedora');
+    variable_del('flat_deposit_solr');
+
+
+    // Delete all flat_bundle and flat_collection content
+    $nids = db_select('node','n')
+        ->fields('n', array('nid'))
+        ->condition('type', array('flat_collection', 'flat_bundle', 'blog'), 'IN')
+        ->execute()
+        ->fetchCol();
+
+    if (!empty ($nids)){
+        node_delete_multiple($nids);
+        drupal_set_message($t('Nodes containing custom content types have been removed'));
+    }
+
+
+    //Remove all custom content type fields and field instances and clean up entries in field_config / field_config_instance tables
+ /*   foreach (field_read_fields(array('module' => 'flat_deposit')) as $field) {
+        foreach(field_read_instances(array('field_name' => $field['field_name'])) as $instance) {
+            field_delete_instance($instance);
+        }
+    }
+ */
+    field_attach_delete_bundle('node','flat_bundle');
+    field_attach_delete_bundle('node','flat_collection');
+
+    db_delete('field_config_instance')
+        ->condition('deleted', 1)
+        ->execute();
+
+    field_purge_batch(1000);
+
+    drupal_set_message($t('Custom field and field instances have been removed'));
+
+    // Delete custom content type
+    node_type_delete('flat_bundle');
+    node_type_delete('flat_collection');
+    drupal_set_message($t('Custom content type has been removed'));
+
+
+    //Round up uninstall
+    drupal_set_message($t('Flat deposit has been uninstalled'));
+
+
+}
+
+function flat_deposit_schema() {
+
+    $schema = [];
+    $schema['flat_cmdi_templates'] = [
+
+        'description' => 'Table that stores blocks inside cmdi as templates for Flat CMDI Templates module',
+        'fields'      => [
+
+            'id' => [
+
+                'type'        => 'serial',
+                'not null'    => true,
+                'unsigned'    => true,
+                'description' => 'The primary id',
+            ],
+
+            'uid' => [
+
+                'type' => 'int',
+                'unsigned' => true,
+                'not null' => true,
+                'description' => 'Adding user_id field to templates table',
+                'default' => 0,
+            ],
+
+            'profile' => [
+
+                'type'        => 'varchar',
+                'length'      => 500,
+                'not null'    => true,
+                'description' => 'Profile CMDI template',
+            ],
+
+            'label' => [
+
+                'type'        => 'varchar',
+                'length'      => 500,
+                'not null'    => true,
+                'description' => 'Label for cmdi template block',
+            ],
+
+            'component_id' => [
+
+                'type'        => 'varchar',
+                'length'      => 500,
+                'not null'    => true,
+                'description' => 'Component id in form of cmdi metadata',
+            ],
+
+            'block' => [
+
+                'type'        => 'blob',
+                'size'        => 'normal',
+                'not null'    => true,
+                'description' => 'Actual CMDI template block',
+            ],
+        ],
+        'primary key' => ['id'],
+    ];
+
+    return $schema;
+}
+
+/**
+ * Implements hook_schema_alter
+ */
+// function flat_deposit_schema_alter(&$schema) {
+
+//     $schema['flat_cmdi_templates']['fields'];
+// }
+
+/**
+ * Adding CMDI Templates table
+ */
+function flat_deposit_update_7003() {
+
+    $schema = flat_deposit_schema();
+
+    if (!db_table_exists('flat_cmdi_templates')) {
+        db_create_table('flat_cmdi_templates', $schema['flat_cmdi_templates']);
+    }
+}
+
+/**
+ * Adding encryption tagging
+ */
+function flat_deposit_update_7005() {
+
+    $fields = [];
+
+    $fields['flat_encrypted_resources'] = [
+        'field_name' => 'flat_encrypted_resources',
+        'type' => 'text',
+        'cardinality' => 1,
+        'settings' => [
+            'max_length' => 5000
+        ],
+    ];
+
+    foreach ($fields as $field) {
+        field_create_field($field);
+    }
+
+    $instances = [];
+
+    $instances['flat_encrypted_resources'] = [
+
+        'field_name' => 'flat_encrypted_resources',
+        'bundle' => 'flat_bundle',
+        'label' => 'Encrypted Resources',
+        'description' => 'Resources of bundle that need to be encrypted',
+        'widget' => [
+            'type' => 'text_textfield',
+        ],
+        'required' => false,
+        'settings' => [
+            'text_processing' => 0,
+        ],
+        'display' => [
+            'default' => [
+                'type' => 'hidden',
+                'label' => 'inline',
+            ],
+            'error' => [
+                'label' => 'inline',
+            ],
+        ],
+    ];
+
+    foreach ($instances as $instance) {
+
+        $instance['entity_type'] = 'node';
+        field_create_instance($instance);
+    }
+}

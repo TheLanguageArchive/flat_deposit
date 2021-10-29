@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Specifies which form items will be generate in drupal
+see https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7.x for info about drupal form render api.
+In the items section you can specify items. items need to have attributes:
+- id: unique id which will become the form item id in drupal
+- name: name of the item in the original  cmdi-profile
+and children:
+- type: type of form field for the item; implemented values are
+* textitem
+* textarea
+* date
+* dropdown
+* hidden
+* (empty) missing values will be rendered as textitem
+- title: The title which will appear as the label above the element
+- description (optional): an info box with this value will appear when hovering above the element
+- component (optional): specifies whether a item is located within a component.
+- default (optional): specifies a default value for the field. Will be overridden by existing values when editing existing metadata.
+- skipParentInCMDI (optional): Can be used to have a fieldset wrapper that will only be used for the web form and will be skipped in the CMDI generation. Useful for fields that have attributes. Set this attribute to "true" on the first child item of the fieldset.
+Additional field is data. Data items are hidden in drupal. Required info is the clarin profile ID, to which this transform refers
+ -->
+<profileToDrupal>
+    <header>
+        <content_type>flat_bundle</content_type>
+        <template_name>MPI_Bundle</template_name>
+        <template_description>MPI Bundle (non-corpus collections)</template_description>
+    </header>
+    <items>
+       <item id="title_field" name="Title" type="Leaf" inherited="true" minOccurrence="1">
+            <type>textfield</type>
+            <title>Bundle title</title>
+        </item>
+        <item id="field_02" name="DataType" type="Leaf" multival="true" inherited="true" minOccurrence="1">
+            <type>dropdown</type>
+            <title>Data Type</title>
+            <description>Kind of data that is acquired</description>
+            <options>
+                <option>Audio recordings</option>
+                <option>Behavioural data</option>
+                <option>Breathing measurements</option>
+                <option>Cell biology data</option>
+                <option>Computational modeling data</option>
+                <option>Demographic data</option>
+                <option>Dictionary</option>
+                <option>DNA sequences</option>
+                <option>DTI data</option>
+                <option>EEG data</option>
+                <option>Eye tracking data</option>
+                <option>FCPP (forced choice pointing) data</option>
+                <option>Field notes</option>
+                <option>fMRI data</option>
+                <option>Genome data</option>
+                <option>Geolocation data</option>
+                <option>Grammatical description</option>
+                <option>Grammaticality judgement data</option>
+                <option>GSR data</option>
+                <option>Histology data</option>
+                <option>Images</option>
+                <option>IQ test data</option>
+                <option>Kinematic data</option>
+                <option>Kinship data</option>
+                <option>LENA recording data</option>
+                <option>Lexicographic data</option>
+                <option>Linguistic annotations</option>
+                <option>MEG data</option>
+                <option>Microscopic images</option>
+                <option>Molecular data</option>
+                <option>Neuropsychological test data</option>
+                <option>Phenotype data</option>
+                <option>Phonetic analysis</option>
+                <option>Photographs</option>
+                <option>Phylogenetic data</option>
+                <option>Proteomic data</option>
+                <option>Questionnaire data</option>
+                <option>Reaction time data</option>
+                <option>Resting state fMRI data</option>
+                <option>sMRI data</option>
+                <option>SNP genotype data</option>
+                <option>Statistical data</option>
+                <option>Stimuli</option>
+                <option>tACS data</option>
+                <option>tDCS data</option>
+                <option>TMS data</option>
+                <option>Transcriptions</option>
+                <option>Transcriptome data</option>
+                <option>Video recordings</option>
+                <option>Word list</option>
+                <option>Other</option>
+            </options>
+        </item>
+
+        <item id="field_03" name="ResearchField" type="Leaf" multival="true" inherited="true" minOccurrence="1">
+            <type>dropdown</type>
+            <title>Research Discipline</title>
+            <options>
+                <option>Anthropological Linguistics</option>
+                <option>Anthropology</option>
+                <option>Cell Biology</option>
+                <option>Clinical Psychology</option>
+                <option>Cognitive Science</option>
+                <option>Computational Linguistics</option>
+                <option>Developmental Psychology</option>
+                <option>Discourse Analysis</option>
+                <option>General Linguistics</option>
+                <option>Genetics</option>
+                <option>Historical Linguistics</option>
+                <option>Language Acquisition</option>
+                <option>Language Development</option>
+                <option>Language Documentation</option>
+                <option>Linguistic Typology</option>
+                <option>Neurobiology</option>
+                <option>Psycholinguistics</option>
+                <option>Psychology</option>
+                <option>Social Psychology</option>
+                <option>Sociolinguistics</option>
+                <option>Other</option>
+            </options>
+        </item>
+        <item id="field_04" name="Date" type="Leaf" minOccurrence="1">
+            <type>date</type>
+            <title>Collection creation date</title>
+            <description>Date at which the collection was created</description>
+        </item>
+        <item id="fieldset_01" name="Description" type="Composite" minOccurrence="1">
+            <type>fieldset</type>
+            <title>Description</title>
+            <container>Descriptions</container>
+            <item id="field_05" name="Description" type="Leaf" multival="true" minOccurrence="1">
+                <title>Description</title>
+                <type>textarea</type>
+            </item>
+        </item>
+        <item id="fieldset_02" type="Composite" name="Contributor" multival="true" inherited="true" minOccurrence="1">
+        <type>fieldset</type>
+        <title>Contributor</title>
+        <container>Contributors</container>
+        <item id="field_06" name="Name" type="Leaf" inherited="true" minOccurrence="1">
+        <title>Name</title>
+        <type>textfield</type>
+    </item>
+            <item id="field_07" name="Role" type="Leaf" multival="true" inherited="true" minOccurrence="1">
+                <title>Role</title>
+                <type>dropdown</type>
+                <options>
+                    <option>annotator</option>
+                    <option>author</option>
+                    <option>compiler</option>
+                    <option>consultant</option>
+                    <option>data_inputter</option>
+                    <option>depositor</option>
+                    <option>developer</option>
+                    <option>editor</option>
+                    <option>illustrator</option>
+                    <option>interpreter</option>
+                    <option>interviewer</option>
+                    <option>participant</option>
+                    <option>performer</option>
+                    <option>photographer</option>
+                    <option>recorder</option>
+                    <option>researcher</option>
+                    <option>research_participant</option>
+                    <option>responder</option>
+                    <option>signer</option>
+                    <option>singer</option>
+                    <option>speaker</option>
+                    <option>sponsor</option>
+                    <option>transcriber</option>
+                    <option>translator</option>
+                </options>
+                <multival>true</multival>
+            </item>
+            <item id="field_08" name="EmailAddress" type="Leaf" inherited="true" minOccurrence="0">
+            <title>Email Address</title>
+            <type>textfield</type>
+        </item>
+        <item id="field_09" name="ORCID" type="Leaf" inherited="true" minOccurrence="0">
+            <title>ORCID</title>
+            <description>Enter your ORCID iD as a URL (starting with https://orcid.org/)</description>
+            <type>textitem</type>
+            <component>Contributor</component>
+        </item>
+    </item>
+        <item id="fieldset_03" type="Composite" name="Institution" multival="true" inherited="true" minOccurrence="1">
+            <title>Institution</title>
+            <type>fieldset</type>
+            <container>Institutions</container>
+            <item id="field_10" name="Department" type="Leaf" multival="true" inherited="true" minOccurrence="0">
+                <title>Department</title>
+                <type>textfield</type>
+            </item>
+            <item id="field_11" name="Organisation" type="Leaf" multival="true" inherited="true" minOccurrence="1">
+                <title>Organisation</title>
+                <type>textfield</type>
+            </item>
+            <item id="field_12" name="Url" type="Leaf" multival="true" inherited="true" minOccurrence="0">
+                <title>URL</title>
+                <type>textfield</type>
+            </item>
+        </item>
+        <item id="fieldset_04" type="Composite" name="Project" multival="true" inherited="true" minOccurrence="1">
+            <title>Project</title>
+            <type>fieldset</type>
+            <container>Projects</container>
+            <item id="field_13" name="ProjectName" type="Leaf" inherited="true" minOccurrence="1">
+                <title>Project Name</title>
+                <type>textfield</type>
+            </item>
+            <item id="field_14" name="ProjectDescription" type="Leaf" inherited="true" minOccurrence="1">
+                <title>Project Description</title>
+                <type>textarea</type>
+            </item>
+            <item id="field_15" name="ProjectID" type="Leaf" inherited="true" minOccurrence="0">
+                <title>Project identifier</title>
+                <type>textfield</type>
+            </item>
+            <item id="field_16" name="Url" type="Leaf" inherited="true" minOccurrence="0">
+                <title>URL</title>
+                <type>textfield</type>
+            </item>
+            <item id="fieldset_05" type="Composite" name="Funder" multival="true" inherited="false" minOccurrence="0">
+                <title>Funder</title>
+                <type>fieldset</type>
+		<container>Funders</container>
+                <item id="field_17" name="fundingAgency" type="Leaf" inherited="false" minOccurrence="1">
+                    <title>Funding Agency</title>
+                    <type>textfield</type>
+                </item>
+                <item id="field_18" name="fundingReferenceNumber" type="Leaf" inherited="false" minOccurrence="0">
+                    <title>Funding Reference Number</title>
+                    <type>textfield</type>
+                </item>
+            </item>
+        </item>
+        <item id="fieldset_06" type="Composite" name="Content_Language" multival="true" inherited="true" minOccurrence="0">
+            <title>Content_Language</title>
+            <type>fieldset</type>
+            <container>Content Languages</container>
+            <item id="field_19" name="Name" type="Leaf" inherited="true" minOccurrence="1">
+                <title>Name</title>
+                <type>textfield</type>
+        	<data>
+            		<role>flat-lang-autocomplete</role>
+        	</data>
+            </item>
+            <item id="field_20" name="Id" type="Leaf" inherited="true" minOccurrence="1">
+                <title>Id</title>
+                <type>textfield</type>
+                <description>Valid entries are: ISO639-3 language code (e.g. ISO639-3:nld) | Unknown | Unspecified</description>
+       	 	<data>
+            		<role>flat-lang-autocomplete-destination</role>
+        	</data>
+            </item>
+        </item>
+        <item id="fieldset_07" type="Composite" name="Location" multival="true" inherited="true" minOccurrence="0">
+            <type>fieldset</type>
+            <title>Location</title>
+            <container>Locations</container>
+            <item id="field_21" name="Continent" type="Leaf" inherited="true" minOccurrence="1">
+                <title>Continent</title>
+                <type>dropdown</type>
+                <options>
+                    <option>Unknown</option>
+                    <option>Unspecified</option>
+                    <option>Africa</option>
+                    <option>Asia</option>
+                    <option>Europe</option>
+                    <option>Australia</option>
+                    <option>Oceania</option>
+                    <option>North-America</option>
+                    <option>Middle-America</option>
+                    <option>South-America</option>
+                </options>
+            </item>
+            <item id="field_22" type="Leaf" name="Country" inherited="true" minOccurrence="1">
+                <title>Country</title>
+                <type>textfield</type>
+            </item>
+            <item id="field_23" type="Leaf" name="PlaceName" multival="true" inherited="true" minOccurrence="0">
+                <title>Place Name</title>
+                <type>textfield</type>
+            </item>
+            <item id="fieldset_08" name="geoCoordinates" type="Composite"  multival="true" inherited="true" minOccurrence="0">
+                <title>geoCoordinates</title>
+                <type>fieldset</type>
+                <item id="field_24" name="Latitude" type="Leaf" inherited="true" minOccurrence="1">
+                    <title>Latitude</title>
+                    <type>textfield</type>
+                    <description>Latitude in decimal degrees</description>
+                </item>
+                <item id="field_25" name="Longitude" type="Leaf" inherited="true" minOccurrence="1">
+                    <title>Longitude</title>
+                    <type>textfield</type>
+                    <description>Longitude in decimal degrees</description>
+                </item>
+                <item id="field_26" name="Elevation" type="Leaf" inherited="true" minOccurrence="0">
+                    <title>Elevation</title>
+                    <type>textfield</type>
+                    <description>Elevation in metres above sea level</description>
+                </item>
+            </item>
+        </item>
+        <item id="fieldset_09" name="Publication" type="Composite" multival="true" inherited="true" minOccurrence="0">
+            <type>fieldset</type>
+            <title>Publication</title>
+            <container>Publications</container>
+            <item id="field_27" name="Reference" type="Leaf" inherited="true" minOccurrence="1">
+                <title>Reference</title>
+                <type>textarea</type>
+            </item>
+            <item id="field_28" name="Url" type="Leaf" inherited="true" minOccurrence="0">
+                <title>URL</title>
+                <type>textfield</type>
+            </item>
+        </item>
+        <item id="fieldset_10" name="License" type="Composite" multival="true" inherited="true" minOccurrence="0">
+            <title>License</title>
+            <type>fieldset</type>
+            <container>Licenses</container>
+            <item id="field_29" name="License" type="Leaf" inherited="true" minOccurrence="1">
+                <title>License</title>
+                <type>textfield</type>
+            </item>
+            <item id="field_30" name="LicenseURL" type="Leaf" inherited="true" minOccurrence="1">
+                <title>License URL</title>
+                <type>textfield</type>
+            </item>
+        </item>
+    </items>
+    <resources>
+        <root_path>MPI_Bundle</root_path>
+        <subnodes></subnodes>
+        <allowed_tags>
+            <tag id="Resource">
+                <updated_values id="Size"></updated_values>
+                <mime_regex>/^./</mime_regex>
+            </tag>
+        </allowed_tags>
+    </resources>
+    <data>
+        <clarinProfileId>clarin.eu:cr1:p_1475136016242</clarinProfileId>
+    </data>
+</profileToDrupal>
