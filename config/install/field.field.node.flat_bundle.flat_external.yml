@@ -1,0 +1,26 @@
+# field.field.node.flat_bundle.flat_external.yml
+langcode: en
+status: true
+dependencies:
+    config:
+      - field.storage.node.flat_external
+      - node.type.flat_bundle
+id: node.flat_bundle.flat_external
+field_name: flat_external
+field_type: boolean
+entity_type: node
+bundle: flat_bundle
+label: Data has alternate storage location
+description: 'Check this option if data is available at a different location'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_values:
+    -
+      value: 0
+      label: 'no'
+    -
+      value: 1
+      label: 'yes'

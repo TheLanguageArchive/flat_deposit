@@ -202,7 +202,7 @@ function flat_nextcloud_admin_form_validate ($form, &$form_state)
             $status = check_nextcloud_status();
 
             if (!$status) {
-                form_set_error('activated', 'Nextcloud status check failed');
+                $form_state->setErrorByName('activated', 'Nextcloud status check failed');
 
             } else {
                 $form_state['values']['status'] = $status;
@@ -226,7 +226,7 @@ function flat_nextcloud_admin_form_submit ($form, &$form_state)
 
             flat_nextcloud_set_nextcloud($form_state['values']['nextcloud']);
 
-            drupal_set_message(t('Changed values have been saved'));
+            \Drupal::messenger()->addMessage(t('Changed values have been saved'));
 
             break;
         }
@@ -237,14 +237,14 @@ function flat_nextcloud_admin_form_submit ($form, &$form_state)
 
             flat_nextcloud_set_nextcloud();
 
-            drupal_set_message(t('Nextcloud settings have been reset to default'));
+            \Drupal::messenger()->addMessage(t('Nextcloud settings have been reset to default'));
 
             break;
         }
 
         case 'Check nextcloud connection': {
 
-            drupal_set_message('Passed Nextcloud connection check');
+            \Drupal::messenger()->addMessage('Passed Nextcloud connection check');
 
 
             break;

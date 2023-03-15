@@ -1,0 +1,71 @@
+flat_deposit_general:
+  namespace: lat
+  external: '/var/www/drupal/web/sites/default/files/private/flat_deposit/external'
+  metadata: '/var/www/drupal/web/sites/default/files/private/flat_deposit/metadata'
+  freeze: '/var/www/drupal/web/sites/default/files/private/flat_deposit/freeze'
+
+flat_deposit_cmdi_profiles:
+  collection_profile_ids: 'clarin.eu:cr1:p_1475136016239,clarin.eu:cr1:p_1407745712064'
+  bundle_profile_ids: 'clarin.eu:cr1:p_1475136016242,clarin.eu:cr1:p_1407745712035'
+
+flat_deposit_fits:
+  url: 'http://127.0.0.1/fits'
+  port: 8080
+
+flat_deposit_ingest_service:
+  host_name: 'localhost'
+  host_scheme: 'http'
+  java_home: '/usr/lib/jvm/java-8-openjdk-amd64'
+  bag_exe: '/usr/local/bin/bagit-4.9.0/bin/bag'
+  bag_dir: '/var/www/drupal/web/sites/default/files/private/flat_deposit/bags'
+  sword_tmp_dir: '/var/www/drupal/web/sites/default/files/private/flat_deposit/sword/tmp'
+  log_errors: true
+  error_log_file: '/var/www/drupal/web/sites/default/files/private/flat_deposit/ingest_logs'
+  log_all: true
+  max_ingest_files: 3
+  max_file_size: 300
+  allowed_extensions: 'wav, mpg, mpeg, mp4, jpg, png, tiff, svg, eaf, pfsx, cha, tbt, TextGrid, txt, html, pdf, tbx, cut, typ, lng, set, xml, xsd, kml, img, hdr, eeg, seg, sav, spv, ehst, ehtp, mat, fig, IMA, ima, dcm, vhdr, vmkr, hfinf, pcl, sce, exp, Praat, praat, zip, gz, odt, ods, odp, csv'
+
+flat_workspaces:
+  activated:
+    - tg
+    - lac
+    - ladd
+    - lag
+  mount_folder: '/var/www/drupal/web/sites/default/files/private/flat_workspaces/'
+  workspace_folder: 'workspaces'
+  archive_folder: 'archive_deposit'
+  department_mapping:
+    lac: 'Language and Cognition'
+    ladd: 'Language Development'
+    lag: 'Language and Genetics'
+    nbl: 'Neurobiology of Language'
+    nvc: 'Neurogenetics of Vocal Communication'
+    pol: 'Psychology of Language'
+    tg: 'Technical group'
+
+flat_deposit_sword:
+  url: 'http://localhost:90/flat/easy-deposit/'
+  port: 90
+  user: 'flat'
+  password: 'sword'
+
+flat_deposit_doorkeeper:
+  url: 'http://localhost/flat/doorkeeper/'
+  port: 8080
+
+flat_deposit_fedora:
+  host_name: 'localhost'
+  host_ip: '127.0.0.1'
+  port: 8443
+  scheme: 'https'
+  user: 'fedoraAdmin'
+  password: 'fedora'
+  context: 'fedora'
+
+flat_deposit_solr:
+  schema: 'http'
+  host_name: 'localhost'
+  port: 8983
+  path: 'solr'
+  core: 'collection1'

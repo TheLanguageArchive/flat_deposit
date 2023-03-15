@@ -13,8 +13,8 @@ function flat_fedora_collections_form($form, &$form_state)
     );
 
     // query existing fedora collection objects
-    global $user;
-    $user_name= $user->name;
+    $user = \Drupal::currentUser();
+    $user_name= $user->getAccountName();
 
     $connection = islandora_get_tuque_connection();
     $ri = $connection->repository->ri;
@@ -29,10 +29,9 @@ function flat_fedora_collections_form($form, &$form_state)
 
 
     // query already existing links to collections
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'flat_collection')
-        ->propertyCondition('uid', $user->uid);
+    $query = new EntityQuery('node');
+    $query->condition('type', 'flat_collection')
+          ->condition('uid', $user->id());
 
     $user_collection_nodes = $query->execute();
     $existing = [];
@@ -41,9 +40,11 @@ function flat_fedora_collections_form($form, &$form_state)
     if (!empty($user_collection_nodes['node'])) {
         foreach ($user_collection_nodes['node'] as $entity) {
             $nid = $entity->nid;
-            $collection_node = node_load($nid);
-            $wrapper = entity_metadata_wrapper('node', $collection_node);
-            $fid = $wrapper->flat_fid->value();
+            $collection_node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+
+            // @FIXME entity_metadata_wrapper fix for drupal 9
+            // $wrapper = entity_metadata_wrapper('node', $collection_node);
+            $fid = $collection_node->flat_fid->value;
             $existing[] = $fid;
         }
     }
@@ -72,9 +73,12 @@ function flat_fedora_collections_form($form, &$form_state)
         $form['table_container'][$count]['pid'] = array(
             '#markup' => t('!pid', array('!pid' => $pid)),
         );
-        $form['table_container'][$count]['link'] = array(
-            '#markup' => l(t('link',  array('!pid' => $pid)), $url_link),
-        );
+        // @FIXME
+// l() expects a Url object, created from a route name or external URI.
+// $form['table_container'][$count]['link'] = array(
+//             '#markup' => l(t('link',  array('!pid' => $pid)), $url_link),
+//         );
+
 
 
         $form['table_container'][$count]['activate'] = array(
@@ -105,7 +109,7 @@ function flat_fedora_collections_form_submit($form, &$form_state){
 
         $data = $form_state['values']['table_container']['data'][$index];
 
-        global $user;
+        $user = \Drupal::currentUser();
         $uid = $user->uid;
 
         module_load_include('inc', 'flat_deposit','/inc/flat_collection.add_collection');

@@ -85,6 +85,6 @@ function flat_workspace_admin_form_save_submit ($form, &$form_state)
 
     flat_workspaces_set_variables($form_state['values']['workspace_settings']);
 
-    drupal_set_message(t('Changed values have been saved'));
+    \Drupal::messenger()->addMessage(t('Changed values have been saved'));
 
 }

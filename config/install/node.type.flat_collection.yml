@@ -1,0 +1,14 @@
+# node.type.flat_collection.yml
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - flat_deposit
+name: 'Collection'
+type: flat_collection
+description: 'A collection of data bundles'
+help: ''
+new_revision: false
+preview_mode: 1
+display_submitted: true

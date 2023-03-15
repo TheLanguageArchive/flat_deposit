@@ -1,6 +1,6 @@
 <?php
 
-include_once('SIP.php');
+include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/IngestService/SIP.php';
 
 /**
  * Collection is responsible to ingest new/updated MPI_collections and updated MPI_BUndles into the fedora commons repository.
@@ -32,7 +32,7 @@ class Collection extends SIP
      *
      * @throws IngestServiceException
      */
-    public function init($info){
+    public function init($info) {
 
         $this->logging('Starting init');
 
@@ -43,26 +43,21 @@ class Collection extends SIP
             'visibility',
         );
 
-        if (!isset($info['fid'])){$info['fid'] ='';}
+        if (!isset($info['fid'])) {
+            $info['fid'] ='';
+        }
 
+        $diff = array_diff($required, array_keys($info));
 
-        $diff = array_diff($required,array_keys($info));
-        if($diff){
-
-            throw new IngestServiceException('Not all required variables are defined. Following variables are missing: ' . implode(', ', $diff));
-
+        if ($diff) {
+            throw new \IngestServiceException('Not all required variables are defined. Following variables are missing: ' . implode(', ', $diff));
         };
 
         $this->info = $info;
 
         $this->logging('Finishing init');
         return TRUE;
-
-
-
     }
-
-
 
     /**
      * Collection permissions are handled by Fedora. In case of missing permissions the whole ingest form including
@@ -70,10 +65,8 @@ class Collection extends SIP
      *
      * @return bool
      */
-    public function authenticateUser()
-    {
+    public function authenticateUser() {
         return TRUE;
-
     }
 
     /**
@@ -81,8 +74,7 @@ class Collection extends SIP
      *
      * @return mixed
      */
-    function prepareSipData()
-    {
+    function prepareSipData() {
         return TRUE;
     }
 
@@ -91,8 +83,7 @@ class Collection extends SIP
      *
      * @return true
      */
-    function validateResources(){
-
+    function validateResources() {
         return TRUE;
     }
 
@@ -100,8 +91,7 @@ class Collection extends SIP
      *
      * @return mixed
      */
-    function addResourcesToCmdi()
-    {
+    function addResourcesToCmdi() {
 
         $this->logging('Starting addResourcesToCmdi');
 
@@ -109,16 +99,17 @@ class Collection extends SIP
 
         $file_name = $this->cmdiTarget;
 
-        $cmdi = CmdiHandler::simplexml_load_cmdi_file($file_name);
+        $cmdi = \CmdiHandler::simplexml_load_cmdi_file($file_name);
 
 
-        if (!$cmdi OR !$cmdi->canBeValidated()){
-            throw new IngestServiceException('Unable to load record.cmdi file');
+        if (!$cmdi || !$cmdi->canBeValidated()){
+            throw new \IngestServiceException('Unable to load record.cmdi file');
         }
 
         try{
 
-            $md_type = isset($this->wrapper->flat_cmdi_option) ? $this->wrapper->flat_cmdi_option->value() : NULL;
+            $md_type = isset($this->node->flat_cmdi_option) ? $this->node->flat_cmdi_option->value : NULL;
+
             switch ($md_type) {
                 case 'new':
                     $cmdi->cleanMdSelfLink();
@@ -129,10 +120,8 @@ class Collection extends SIP
                     break;
             }
 
-        } catch (CmdiHandlerException $exception){
-
-            throw new IngestServiceException($exception->getMessage());
-
+        } catch (\CmdiHandlerException $exception){
+            throw new \IngestServiceException($exception->getMessage());
         }
 
         /*
@@ -166,13 +155,8 @@ class Collection extends SIP
         return TRUE;
     }
 
+    function finish() {
 
-
-
-
-
-    function finish()
-    {
         $this->logging('Starting finish');
         $this->removeFrozenZipDir();
         $this->removeSipZip();
@@ -183,12 +167,7 @@ class Collection extends SIP
                 */
         $this->logging('Stop finish');
         return TRUE;
-
     }
 
-
-
-    function customRollback($message){}
-
-    function generateFlatEncryptionMetadata() {}
+    function customRollback($message) {}
 }

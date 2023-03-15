@@ -1,0 +1,19 @@
+# field.field.node.flat_bundle.flat_location.yml
+langcode: en
+status: true
+dependencies:
+    config:
+      - field.storage.node.flat_location
+      - node.type.flat_bundle
+id: node.flat_bundle.flat_location
+field_name: flat_location
+field_type: text
+entity_type: node
+bundle: flat_bundle
+label: Location where data is stored
+description: 'Folder where data to be archived is stored'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: { }

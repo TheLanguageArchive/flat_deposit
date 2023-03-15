@@ -1,0 +1,31 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - flat_deposit
+    - node
+id: node.flat_collection_status
+field_name: flat_collection_status
+entity_type: node
+type: text
+module: core
+locked: false
+cardinality: 1
+settings:
+  allowed_values:
+    -
+      value: active
+      label: active
+    -
+      value: inactive
+      label: inactive
+    -
+      value: locked
+      label: locked
+    -
+      value: error
+      label: error
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

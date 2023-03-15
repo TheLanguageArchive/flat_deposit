@@ -1,11 +1,14 @@
 <?php
 
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Component\Utility\NestedArray;
+
 class CmdiTemplateLoader
 {
     public static function getLoadedBlock($id)
     {
-        global $user;
-        $row = CmdiTemplateDb::fetch($id, $user->uid);
+        $user = \Drupal::currentUser();
+        $row = \CmdiTemplateDb::fetch($id, $user->id());
 
         if (false === $row) {
 
@@ -24,33 +27,39 @@ class CmdiTemplateLoader
         return $block;
     }
 
-    public static function load(&$form_state)
+    public static function load(FormStateInterface $form_state)
     {
-        $isSubmitted = isset($form_state['triggering_element']['#ajax']['callback']) && $form_state['triggering_element']['#ajax']['callback'] === 'flat_cmdi_templates_ajax_load_callback';
+        $triggeringElement = $form_state->getTriggeringElement();
+
+        $isSubmitted = null !== $triggeringElement && $triggeringElement['#ajax']['callback'] && $triggeringElement['#ajax']['callback'] === 'flat_cmdi_templates_ajax_load_callback';
 
         if (false === $isSubmitted) {
             return false;
         }
 
-        $id = (int)$form_state['triggering_element']['#value'];
-        $target_tree = $form_state['triggering_element']['#cmdi_tree'];
+        $id = (int)$triggeringElement['#value'];
+        $target_tree = $triggeringElement['#cmdi_tree'];
         $block = static::getLoadedBlock($id);
-
         if (false !== $block) {
 
             // loading block into form_state input array will trigger the formbuilder
             // to create the necessary elements
-            drupal_array_set_nested_value($form_state['input']['template_container']['elements'], $target_tree, $block['state']);
+            $input = $form_state->getUserInput() ?? [];
+            NestedArray::setValue($input['template_container']['elements'], $target_tree, $block['state']);
+            $form_state->setUserInput($input);
 
             if (null !== $block['pressed']) {
 
                 // create pressedButtons form state if it doesn't exist
-                if (!isset($form_state['pressedButtons']['template_container']['elements'])) {
-                    $form_state['pressedButtons']['template_container']['elements'] = [];
+                if (!$form_state->has(['pressedButtons', 'template_container', 'elements'])) {
+                    $form_state->set(['pressedButtons', 'template_container', 'elements'], []);
                 }
 
+                $pressedButtons = $form_state->get(['pressedButtons', 'template_container', 'elements']);
+
                 // create pressedButtons tree in form state pressedButtons for saved block
-                drupal_array_set_nested_value($form_state['pressedButtons']['template_container']['elements'], $target_tree, $block['pressed']);
+                NestedArray::setValue($pressedButtons, $target_tree, $block['pressed']);
+                $form_state->set(['pressedButtons', 'template_container', 'elements'], $pressedButtons);
             }
         }
     }

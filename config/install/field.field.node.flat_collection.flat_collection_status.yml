@@ -1,0 +1,32 @@
+# field.field.node.flat_collection.flat_collection_status.yml
+langcode: en
+status: true
+dependencies:
+    config:
+      - field.storage.node.flat_collection_status
+      - node.type.flat_collection
+id: node.flat_collection.flat_collection_status
+field_name: flat_collection_status
+field_type: list_string
+entity_type: node
+bundle: flat_collection
+label: Status of the collection
+description: 'Is the collection active, inactive, erroneous or locked?'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_values:
+    -
+      value: active
+      label: active
+    -
+      value: inactive
+      label: inactive
+    -
+      value: locked
+      label: locked
+    -
+      value: error
+      label: error

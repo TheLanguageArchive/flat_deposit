@@ -1,0 +1,106 @@
+# core.entity_form_display.node.flat_bundle.default.yml
+#uuid: 288db1b1-7a02-403b-b76f-cdefa2dba29d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.flat_bundle.flat_bundle_exception
+    - field.field.node.flat_bundle.flat_bundle_status
+    - field.field.node.flat_bundle.flat_cmdi_file
+    - field.field.node.flat_bundle.flat_cmdi_option
+    - field.field.node.flat_bundle.flat_deleted_resources
+    - field.field.node.flat_bundle.flat_external
+    - field.field.node.flat_bundle.flat_fid_super
+    - field.field.node.flat_bundle.flat_location
+    - field.field.node.flat_bundle.flat_metadata_visibility
+    - field.field.node.flat_bundle.flat_new_path
+    - field.field.node.flat_bundle.flat_original_path
+    - field.field.node.flat_bundle.flat_parent_nid_bundle
+    - field.field.node.flat_bundle.flat_parent_title
+    - field.field.node.flat_bundle.flat_policies
+    - field.field.node.flat_bundle.flat_source
+    - field.field.node.flat_bundle.flat_type
+    - node.type.flat_bundle
+  module:
+    - file
+id: node.flat_bundle.default
+targetEntityType: node
+bundle: flat_bundle
+mode: default
+content:
+  title:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  flat_parent_nid_bundle:
+    type: options_select
+    weight: 1
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  flat_policies:
+    type: options_select
+    weight: 2
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  flat_metadata_visibility:
+    type: options_select
+    weight: 3
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  flat_cmdi_option:
+    type: options_select
+    weight: 4
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  flat_cmdi_file:
+    type: file_generic
+    weight: 5
+    region: content
+    settings:
+      progress_indicator: throbber
+    third_party_settings: {  }
+  flat_source:
+    type: options_select
+    weight: 6
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  flat_new_path:
+    type: string_textfield
+    weight: 7
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  flat_type:
+    type: options_select
+    weight: 8
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  created: true
+  flat_bundle_exception: true
+  flat_bundle_status: true
+  flat_deleted_resources: true
+  flat_external: true
+  flat_fid_super: true
+  flat_location: true
+  flat_original_path: true
+  flat_parent_title: true
+  langcode: true
+  path: true
+  promote: true
+  status: true
+  menu: true
+  sticky: true
+  uid: true

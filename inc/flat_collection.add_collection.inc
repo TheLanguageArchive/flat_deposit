@@ -2,7 +2,14 @@
 
 function flat_collection_add_form($form, &$form_state, $fedoraObject)
 {
-    drupal_set_title(t('Add Collection'));
+    // @FIXME
+// drupal_set_title() has been removed. There are now a few ways to set the title
+// dynamically, depending on the situation.
+//
+//
+// @see https://www.drupal.org/node/2067859
+// drupal_set_title(t('Add Collection'));
+
 
     ctools_add_js('ajax-responder');
 
@@ -27,7 +34,7 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject)
     $form['#prefix'] = "<div id='flat_collection_add_form_wrapper'>";
     $form['#suffix'] = "</div>";
 
-    global $user;
+    $user = \Drupal::currentUser();
     $form['owner'] = array(
         '#title' => t('Owner of the collection'),
         '#type' => 'textfield',
@@ -63,7 +70,7 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject)
   	),
     );
 
-    if (!user_access('admin collection')) {
+    if (!\Drupal::currentUser()->hasPermission('admin collection')) {
         $form['owner']['#disabled'] = TRUE;
     }
 
@@ -223,13 +230,13 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject)
 
         // check if everything worked as expected
         if (!is_array($form['template_container']['elements'])) {
-            drupal_set_message(t('Unable to generate CMDI form based on selected profile'), 'warning');
+            \Drupal::messenger()->addWarning(t('Unable to generate CMDI form based on selected profile'));
         }
     }
     return $form;
 }
 
-function flat_deposit_form_flat_collection_add_form_alter(&$form, &$form_state) {
+function flat_deposit_form_flat_collection_add_form_alter(&$form, \Drupal\Core\Form\FormStateInterface &$form_state) {
     // CmdiTemplateManager::alter($form, $form_state);
 }
 
@@ -240,7 +247,11 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
     $owner = $form_state['values']['owner'];
     $namespace = $form_state['values']['namespace'];
     $profile = $form_state['values']['select_profile_name'];
-    $allowed_collection_profiles = variable_get('flat_deposit_cmdi_profiles')['collection_profile_ids'];
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$allowed_collection_profiles = \Drupal::config('flat_deposit.settings')->get('flat_deposit_cmdi_profiles')['collection_profile_ids'];
     $allowed_collection_profile_ids = explode(',', $allowed_collection_profiles);
     $export_dir = 'metadata://' . str_replace('@', '_at_', $owner) . "/.collection/";
     $cmdiFile = $export_dir . '/' . $profile . '_' . uniqid() . '.cmdi';
@@ -258,24 +269,24 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
 
     // Validate that selected profile is not empty
     if ($form_state['values']['select_profile_name'] === '-- Select --') {
-        form_set_error('select_profile_name', t('Please choose an option from the list'));
+        $form_state->setErrorByName('select_profile_name', t('Please choose an option from the list'));
         return $form;
     }
 
     // Validate if owner exists.
     if (!user_load_by_name($owner)) {
 
-        form_set_error('owner', t('Specified owner is unknown'));
+        $form_state->setErrorByName('owner', t('Specified owner is unknown'));
         return $form;
     };
 
     // Validate that output directory for new cmdi exists or can be created
     if (!file_exists($export_dir)) {
-        drupal_mkdir($export_dir, NULL, TRUE);
+        \Drupal::service("file_system")->mkdir($export_dir, NULL, TRUE);
     }
 
     if (!file_exists($export_dir)) {
-        form_set_error('error', t('Cannot create a directory to temporarily store CMDI files'));
+        $form_state->setErrorByName('error', t('Cannot create a directory to temporarily store CMDI files'));
         return $form;
     }
 
@@ -296,22 +307,22 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
             $values = FlatTuque::getChildrenLabels($fid);
 
             if ($values === false) {
-                form_set_error('title', t('Unable to validate that collection name is unique at this location'));
+                $form_state->setErrorByName('title', t('Unable to validate that collection name is unique at this location'));
                 return $form;
             }
 
             if (in_array(strtoupper($title), array_unique(array_map('strtoupper', $values)))) {
-                form_set_error('title', t('Another collection or bundle with same name exists at this location. Please use a different name'));
+                $form_state->setErrorByName('title', t('Another collection or bundle with same name exists at this location. Please use a different name'));
                 return $form;
             }
 
             // 2. Validate that output directory for new cmdi exists or can be created
             if (!file_exists($export_dir)) {
-                drupal_mkdir($export_dir, NULL, TRUE);
+                \Drupal::service("file_system")->mkdir($export_dir, NULL, TRUE);
             }
 
             if (!file_exists($export_dir)) {
-                form_set_error('error', t('Cannot create directory to temporarily store cmdi files'));
+                $form_state->setErrorByName('error', t('Cannot create directory to temporarily store cmdi files'));
                 return $form;
             }
 
@@ -332,14 +343,14 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
                 $creator->setCmdi($templateName, $form_data, $owner);
                 $cmdi = $creator->getCmdi();
             } catch (CmdiCreatorException $e) {
-                form_set_error('error', $e->getMessage());
+                $form_state->setErrorByName('error', $e->getMessage());
                 return $form;
             }
 
             $exported = $cmdi->asXML($cmdiFile);
 
             if (!$exported) {
-                form_set_error('error', t('Unable to save CMDI file on the server'));
+                $form_state->setErrorByName('error', t('Unable to save CMDI file on the server'));
                 return $form;
             }
 
@@ -355,19 +366,19 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
             ));
             if (!$file) {
                 // No file specified or has incorrect extension
-                form_set_error('cmdi_file', t('No file was specified or it has an incorrect file extension (should be .cmdi)'));
+                $form_state->setErrorByName('cmdi_file', t('No file was specified or it has an incorrect file extension (should be .cmdi)'));
                 return $form;
             }
-            $cmdi = CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($file->uri));
+            $cmdi = CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($file->uri));
             // Valid xml?
             if (!$cmdi) {
-                form_set_error('cmdi_file', t('Your uploaded CMDI file is not a valid XML file'));
+                $form_state->setErrorByName('cmdi_file', t('Your uploaded CMDI file is not a valid XML file'));
                 return $form;
             }
             // Check whether CMDI file has allowed CMDI collection profile
             $type = $cmdi->getCmdiProfileType();
             if ($type !== 'collection') {
-                form_set_error('cmdi_file', t('Your uploaded CMDI file has a profile that is not accepted as a Collection profile. See the deposit manual for more information about accepted CMDI profiles.'));
+                $form_state->setErrorByName('cmdi_file', t('Your uploaded CMDI file has a profile that is not accepted as a Collection profile. See the deposit manual for more information about accepted CMDI profiles.'));
                 return $form;
             }
 
@@ -385,17 +396,17 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
             }
 
             if (!$title) {
-                form_set_error('cmdi_file', t('Unable to read the collection name from your uploaded CMDI file'));
+                $form_state->setErrorByName('cmdi_file', t('Unable to read the collection name from your uploaded CMDI file'));
                 return $form;
             }
 
             if ($values === false) {
-                form_set_error('cmdi_file', t('Unable to validate that collection name is unique at this location'));
+                $form_state->setErrorByName('cmdi_file', t('Unable to validate that collection name is unique at this location'));
                 return $form;
             }
 
             if (in_array(strtoupper($title), array_unique(array_map('strtoupper', $values)))) {
-                form_set_error('cmdi_file', t('Another collection or bundle with same name exists at this location. Please use a different name'));
+                $form_state->setErrorByName('cmdi_file', t('Another collection or bundle with same name exists at this location. Please use a different name'));
                 return $form;
             }
 
@@ -408,7 +419,7 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
             $exported = $cmdi->asXML($cmdiFile);
 
             if (!$exported) {
-                form_set_error('error', t('Unable to save CMDI file on the server'));
+                $form_state->setErrorByName('error', t('Unable to save CMDI file on the server'));
                 return $form;
             }
 
@@ -430,7 +441,7 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
 
     } catch (Exception $e){
 
-        form_set_error($validator->displayErrors());
+        $form_state->setErrorByName($validator->displayErrors());
         return $form;
 
     }
@@ -448,7 +459,7 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
     try {
         $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fid, $test, $namespace);
     } catch (IngestServiceException $exception) {
-        form_set_error('debug', $exception->getMessage());
+        $form_state->setErrorByName('debug', $exception->getMessage());
         return $form;
     }
 
@@ -461,7 +472,7 @@ function flat_collection_add_form_final_validate($form, &$form_state) {
     $fObject = islandora_object_load($fid);
 
     if (!$fObject) {
-        form_set_error('error', t('Check of FID for new collection item did not reveal valid data. Error message:' . $fid));
+        $form_state->setErrorByName('error', t('Check of FID for new collection item did not reveal valid data. Error message:' . $fid));
         return $form;
     }
 
@@ -487,9 +498,14 @@ function flat_collection_add_form_submit($form, &$form_state)
     $target = 'islandora/object/' . $form_state['values']['data']['fid'];
     create_collection_node($label, $uid, $fid);
 
-    drupal_set_message(t('New collection item has been created'));
+    \Drupal::messenger()->addMessage(t('New collection item has been created'));
 
-    ctools_include('ajax');
+    // @FIXME
+// Most CTools APIs have been moved into core.
+//
+// @see https://www.drupal.org/node/2164623
+// ctools_include('ajax');
+
     ctools_add_js('ajax-responder');
     $commands[] = ctools_ajax_command_redirect($target);
     print ajax_render($commands);
@@ -501,7 +517,6 @@ function create_collection_node($label, $uid, $fid)
 {
     $new_node = new stdClass();
     $new_node->type = 'flat_collection';
-    $new_node->language = 'und';
     $new_node->title = $label;
     $new_node->uid = $uid;
     $new_node->status = 1;
@@ -509,8 +524,8 @@ function create_collection_node($label, $uid, $fid)
     $new_node->promote = 0;
     $new_node->format = 3;
     $new_node->revision = 0;
-    $new_node->flat_fid['und'][0]['value'] = $fid;
-    node_save($new_node);
+    $new_node->flat_fid[0]['value'] = $fid;
+    $new_node->save();
 }
 
 function flat_collection_add_form_ajax_handler(&$form, &$form_state)

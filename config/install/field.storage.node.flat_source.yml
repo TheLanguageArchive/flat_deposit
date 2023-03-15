@@ -1,0 +1,25 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - flat_deposit
+    - node
+id: node.flat_source
+field_name: flat_source
+entity_type: node
+type: list_string
+module: core
+locked: true
+cardinality: 1
+settings:
+  allowed_values:
+    -
+      value: "external"
+      label: "Upload the files using the web browser"
+    -
+      value: "local"
+      label: "Select a folder in a workspace on the server"
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

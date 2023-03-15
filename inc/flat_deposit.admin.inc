@@ -21,7 +21,11 @@ function flat_deposit_admin_form($form, &$form_state)
         '#tree' => TRUE,
     );
 
-    $general = variable_get('flat_deposit_general');
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$general = \Drupal::config('flat_deposit.settings')->get('flat_deposit_general');
 
     $form['general']['namespace'] = array(
         '#type' => 'textfield',
@@ -64,13 +68,17 @@ function flat_deposit_admin_form($form, &$form_state)
         '#tree' => TRUE,
     );
 
-    $profiles = variable_get('flat_deposit_cmdi_profiles');
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$profiles = \Drupal::config('flat_deposit.settings')->get('flat_deposit_cmdi_profiles');
 
     $form['cmdi_profiles']['collection_profile_ids'] = array (
         '#type' => 'textfield',
         '#title' => t('Collection CMDI profile IDs'),
         '#description' => t('CMDI profiles that should be treated as collections'),
-        '#default_value' => $profiles['collection_profiles'],
+        '#default_value' => $profiles['collection_profile_ids'],
         '#required' => TRUE,
     );
 
@@ -78,7 +86,7 @@ function flat_deposit_admin_form($form, &$form_state)
         '#type' => 'textfield',
         '#title' => t('Bundle CMDI profile IDs'),
         '#description' => t('CMDI profiles that should be treated as bundles'),
-        '#default_value' => $profiles['bundle_profiles'],
+        '#default_value' => $profiles['bundle_profile_ids'],
         '#required' => TRUE,
     );
 
@@ -91,7 +99,11 @@ function flat_deposit_admin_form($form, &$form_state)
         '#tree' => TRUE
     );
 
-    $service = variable_get('flat_deposit_ingest_service');
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$service = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service');
 
     $form['ingest_service']['host_name'] = array (
         '#type' => 'textfield',
@@ -196,7 +208,11 @@ function flat_deposit_admin_form($form, &$form_state)
         '#tree' => TRUE,
     );
 
-    $fits = variable_get('flat_deposit_fits');
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$fits = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
 
     $form['fits']['url'] = array (
         '#type' => 'textfield',
@@ -221,7 +237,11 @@ function flat_deposit_admin_form($form, &$form_state)
         '#tree' => TRUE
     );
 
-    $sword = variable_get('flat_deposit_sword');
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$sword = \Drupal::config('flat_deposit.settings')->get('flat_deposit_sword');
 
     $form['sword']['url'] = array (
         '#type' => 'textfield',
@@ -258,7 +278,11 @@ function flat_deposit_admin_form($form, &$form_state)
         '#tree' => TRUE
     );
 
-    $doorkeeper = variable_get('flat_deposit_doorkeeper');
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$doorkeeper = \Drupal::config('flat_deposit.settings')->get('flat_deposit_doorkeeper');
 
     $form['doorkeeper']['url'] = array (
         '#type' => 'textfield',
@@ -283,7 +307,11 @@ function flat_deposit_admin_form($form, &$form_state)
         '#tree' => TRUE
     );
 
-    $fedora = variable_get('flat_deposit_fedora');
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$fedora = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fedora');
 
     $form['fedora']['host_name'] = array (
         '#type' => 'textfield',
@@ -343,7 +371,11 @@ function flat_deposit_admin_form($form, &$form_state)
         '#tree' => TRUE
     );
 
-    $solr = variable_get('flat_deposit_solr');
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$solr = \Drupal::config('flat_deposit.settings')->get('flat_deposit_solr');
 
     $form['solr']['host_name'] = array (
         '#type' => 'textfield',
@@ -431,11 +463,19 @@ function flat_deposit_admin_form($form, &$form_state)
 function keep_default_password($form, &$form_state)
 {
     if (empty($form_state['values']['sword']['password'])) {
-        $form_state['values']['sword']['password'] = variable_get('flat_deposit_sword')['password'];
+        // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$form_state['values']['sword']['password'] = \Drupal::config('flat_deposit.settings')->get('flat_deposit_sword')['password'];
     }
 
     if (empty($form_state['values']['fedora']['password'])) {
-        $form_state['values']['fedora']['password'] = variable_get('flat_deposit_fedora')['password'];
+        // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$form_state['values']['fedora']['password'] = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fedora')['password'];
     }
 }
 
@@ -445,11 +485,11 @@ function flat_deposit_admin_form_save_validate($form, &$form_state)
     foreach ($form_state['values']['general'] as $key => $path) {
         if (!is_numeric(array_search($key, $excluded))) {
             if (!file_exists($path)) {
-                drupal_mkdir($path, NULL, TRUE);
+                \Drupal::service("file_system")->mkdir($path, NULL, TRUE);
             }
 
             if (!file_exists($path)) {
-                form_set_error($key, 'Directory ('. $path .') does not exist and cannot be created');
+                $form_state->setErrorByName($key, 'Directory ('. $path .') does not exist and cannot be created');
             }
         }
     }
@@ -468,7 +508,7 @@ function flat_deposit_admin_form_save_submit($form, &$form_state)
     flat_deposit_set_doorkeeper($form_state['values']['doorkeeper']);
     flat_deposit_set_fedora($form_state['values']['fedora']);
     flat_deposit_set_solr($form_state['values']['solr']);
-    drupal_set_message(t('Changed values have been saved'));
+    \Drupal::messenger()->addMessage(t('Changed values have been saved'));
 }
 
 
@@ -486,22 +526,55 @@ function flat_deposit_admin_form_reset_submit($form, &$form_state)
     flat_deposit_set_fedora();
     flat_deposit_set_solr();
 
-    drupal_set_message(t('All settings have been reset to default'));
+    \Drupal::messenger()->addMessage(t('All settings have been reset to default'));
 }
 
 
 function flat_deposit_admin_form_export_submit()
 {
 
-    $config = array(
-        'general' =>  variable_get('flat_deposit_general'),
-        'cmdi_profiles' => variable_get('flat_deposit_cmdi_profiles'),
-        'fits' => variable_get('flat_deposit_fits'),
-        'ingest_service' => variable_get('flat_deposit_ingest_service'),
-        'sword' => variable_get('flat_deposit_sword'),
-        'doorkeeper' => variable_get('flat_deposit_doorkeeper'),
-        'fedora' => variable_get('flat_deposit_fedora'),
-        'solr' => variable_get('flat_deposit_solr'),
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+// @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+// @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+// @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+// @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+// @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+// @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+// @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$flat_deposit_config = \Drupal::config('flat_deposit.settings');
+$config = array(
+        'general' =>  $flat_deposit_config->get('flat_deposit_general'),
+        'cmdi_profiles' => $flat_deposit_config->get('flat_deposit_cmdi_profiles'),
+        'fits' => $flat_deposit_config->get('flat_deposit_fits'),
+        'ingest_service' => $flat_deposit_config->get('flat_deposit_ingest_service'),
+        'sword' => $flat_deposit_config->get('flat_deposit_sword'),
+        'doorkeeper' => $flat_deposit_config->get('flat_deposit_doorkeeper'),
+        'fedora' => $flat_deposit_config->get('flat_deposit_fedora'),
+        'solr' => $flat_deposit_config->get('flat_deposit_solr'),
     );
 
     $URI = "temporary://flat_deposit_settings.json";
@@ -520,7 +593,7 @@ function flat_deposit_admin_form_import_validate($form, &$form_state)
 
     // Check if file is specified
     if (empty($_FILES['File_selector']['name'])) {
-        form_set_error('import', t('File needs to be specified for import'));
+        $form_state->setErrorByName('import', t('File needs to be specified for import'));
 
         return $form;
     }
@@ -535,7 +608,7 @@ function flat_deposit_admin_form_import_validate($form, &$form_state)
 
     if ($type != 'application/json') {
 
-        form_set_error('import', t('Settings file needs to be a json file '));
+        $form_state->setErrorByName('import', t('Settings file needs to be a json file '));
     }
     */
 
@@ -543,7 +616,7 @@ function flat_deposit_admin_form_import_validate($form, &$form_state)
     $content = file_get_contents($tmp);
 
     if ($content === FALSE) {
-        form_set_error('import', t('Settings file cannot be processed'));
+        $form_state->setErrorByName('import', t('Settings file cannot be processed'));
         return $form;
     }
 
@@ -551,7 +624,7 @@ function flat_deposit_admin_form_import_validate($form, &$form_state)
     // Check allowed characters
     if (preg_match('/[^a-zA-Z0-9_.,;:"\s\-\{\}\/\\\\]/', $content) !== 0) {
 
-        form_set_error('import', t('Settings file contains forbidden characters. Only allowed characters are numbers, letters, underscores, hyphens, (semi-)colons, curly brackets, dot, comma, slash, backslash.'));
+        $form_state->setErrorByName('import', t('Settings file contains forbidden characters. Only allowed characters are numbers, letters, underscores, hyphens, (semi-)colons, curly brackets, dot, comma, slash, backslash.'));
         return $form;
     }
 
@@ -559,7 +632,7 @@ function flat_deposit_admin_form_import_validate($form, &$form_state)
     $imported_values = json_decode($content, true);
 
     if ($imported_values === false) {
-        form_set_error('import', t('Unable to decode the settings file'));
+        $form_state->setErrorByName('import', t('Unable to decode the settings file'));
         return $form;
     }
 
@@ -569,7 +642,7 @@ function flat_deposit_admin_form_import_validate($form, &$form_state)
     foreach ($checks as $check) {
         if (!empty(array_diff_key($imported_values[$check], $form_state['values'][$check]))) {
 
-            form_set_error('imported variable keys do not match with flat_deposit variable keys');
+            $form_state->setErrorByName('imported variable keys do not match with flat_deposit variable keys');
         };
     }
 
@@ -582,14 +655,16 @@ function flat_deposit_admin_form_import_validate($form, &$form_state)
 
 function flat_deposit_admin_form_import_submit($form, &$form_state)
 {
-    variable_set('flat_deposit_general', $form_state['values']['imported_values']['general']);
-    variable_set('flat_deposit_cmdi_profiles', $form_state['values']['imported_values']['cmdi_profiles']);
-    variable_set('flat_deposit_fits', $form_state['values']['imported_values']['fits']);
-    variable_set('flat_deposit_ingest_service', $form_state['values']['imported_values']['ingest_service']);
-    variable_set('flat_deposit_sword', $form_state['values']['imported_values']['sword']);
-    variable_set('flat_deposit_doorkeeper', $form_state['values']['imported_values']['doorkeeper']);
-    variable_set('flat_deposit_fedora', $form_state['values']['imported_values']['fedora']);
-    variable_set('flat_deposit_solr', $form_state['values']['imported_values']['solr']);
+    $flat_deposit_config = \Drupal::configFactory()->getEditable('flat_deposit.settings')
+    $flat_deposit_config->set('flat_deposit_general', $form_state['values']['imported_values']['general']);
+    $flat_deposit_config->set('flat_deposit_cmdi_profiles', $form_state['values']['imported_values']['cmdi_profiles']);
+    $flat_deposit_config->set('flat_deposit_fits', $form_state['values']['imported_values']['fits']);
+    $flat_deposit_config->set('flat_deposit_ingest_service', $form_state['values']['imported_values']['ingest_service']);
+    $flat_deposit_config->set('flat_deposit_sword', $form_state['values']['imported_values']['sword']);
+    $flat_deposit_config->set('flat_deposit_doorkeeper', $form_state['values']['imported_values']['doorkeeper']);
+    $flat_deposit_config->set('flat_deposit_fedora', $form_state['values']['imported_values']['fedora']);
+    $flat_deposit_config->set('flat_deposit_solr', $form_state['values']['imported_values']['solr']);
+    $flat_deposit_config->save();
 
-    drupal_set_message(t('Setting import completed'));
+    \Drupal::messenger()->addMessage(t('Setting import completed'));
 }

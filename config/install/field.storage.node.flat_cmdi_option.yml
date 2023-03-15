@@ -1,0 +1,29 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - flat_deposit
+    - node
+id: node.flat_cmdi_option
+field_name: flat_cmdi_option
+entity_type: node
+type: list_string
+module: core
+locked: false
+cardinality: 1
+settings:
+  allowed_values:
+    -
+      value: new
+      label: 'Enter it using a form'
+    -
+      value: import
+      label: 'Upload a CMDI file'
+    -
+      value: template
+      label: 'Upload a CMDI file to be used as a template (any links to files will be stripped)'
+
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

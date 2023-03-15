@@ -1,0 +1,39 @@
+# field.field.node.flat_bundle.flat_bundle_status.yml
+langcode: en
+status: true
+dependencies:
+    config:
+      - field.storage.node.flat_bundle_status
+      - node.type.flat_bundle
+id: node.flat_bundle.flat_bundle_status
+field_name: flat_bundle_status
+field_type: list_string
+entity_type: node
+bundle: flat_bundle
+label: Status of the upload
+description: 'Is the bundle accessible (open or failed), being processed (validating or processing) or closed (valid or archived)'
+required: false
+translatable: true
+default_value: { }
+default_value_callback: ''
+settings:
+  allowed_values:
+    -
+      value: open
+      label: open
+    -
+      value: failed
+      label: failed
+    -
+      value: validating
+      label: validating
+    -
+      value: valid
+      label: valid
+    -
+      value: processing
+      label: processing
+    -
+      value: archived
+      label: archived
+

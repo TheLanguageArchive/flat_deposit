@@ -1,0 +1,19 @@
+# field.field.node.flat_collection.flat_parent_nid_collection.yml
+langcode: en
+status: true
+dependencies:
+    config:
+      - field.storage.node.flat_parent_nid_collection
+      - node.type.flat_collection
+id: node.flat_collection.flat_parent_nid_collection
+field_name: flat_parent_nid_collection
+field_type: list_integer
+entity_type: node
+bundle: flat_collection
+label: Parent collection
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: { }

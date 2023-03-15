@@ -1,0 +1,41 @@
+# field.field.node.flat_bundle.flat_cmdi_file.yml
+langcode: en
+status: true
+dependencies:
+    config:
+      - field.storage.node.flat_cmdi_file
+      - node.type.flat_bundle
+id: node.flat_bundle.flat_cmdi_file
+field_name: flat_cmdi_file
+field_type: file
+entity_type: node
+bundle: flat_bundle
+label: Attached metadata file
+description: 'The metadata file describing the upload bundle'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  file_directory: ''
+  file_extensions: 'cmdi'
+  max_filesize: '1 MB'
+  description_field: 0
+  filefield_paths_enabled: 1
+  filefield_paths:
+    -
+      file_path:
+        value: '[current-user:name]/[node:flat_parent_title]/[node:title]/'
+        options:
+          slashes: 0
+          pathauto: FALSE
+          transliterate: 0
+        redirect: false
+        retroactive_update: 0
+        active_updating: 0
+      file_name:
+        value: 'record.cmdi'
+        options:
+          slashes: 0
+          pathauto: FALSE
+          transliterate: 0

@@ -1,0 +1,26 @@
+# field.field.node.flat_bundle.flat_parent_title.yml
+langcode: en
+status: true
+dependencies:
+    config:
+      - field.storage.node.flat_parent_title
+      - node.type.flat_bundle
+id: node.flat_bundle.flat_parent_title
+field_name: flat_parent_title
+field_type: boolean
+entity_type: node
+bundle: flat_bundle
+label: Is part of collection
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_values:
+    -
+      value: 0
+      label: 'no'
+    -
+      value: 1
+      label: 'yes'

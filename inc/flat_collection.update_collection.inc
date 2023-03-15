@@ -3,7 +3,14 @@
 function flat_collection_update_form($form, &$form_state, $fedora_object)
 {
 
-    drupal_set_title(t('Update Collection Metadata'));
+    // @FIXME
+// drupal_set_title() has been removed. There are now a few ways to set the title
+// dynamically, depending on the situation.
+//
+//
+// @see https://www.drupal.org/node/2067859
+// drupal_set_title(t('Update Collection Metadata'));
+
 
     ctools_add_js('ajax-responder');
 
@@ -21,7 +28,7 @@ function flat_collection_update_form($form, &$form_state, $fedora_object)
     $form['#prefix'] = "<div id='flat_collection_update_form_wrapper'>";
     $form['#suffix'] = "</div>";
 
-    global $user;
+    $user = \Drupal::currentUser();
 
     $form['owner'] = array(
         '#title' => t('Owner of the collection'),
@@ -31,7 +38,7 @@ function flat_collection_update_form($form, &$form_state, $fedora_object)
         '#disabled' => true,
     );
 
-    if (!user_access('admin collection')) {
+    if (!\Drupal::currentUser()->hasPermission('admin collection')) {
         $form['owner']['#disabled'] = true;
     }
 
@@ -136,10 +143,10 @@ function flat_collection_update_form($form, &$form_state, $fedora_object)
 
         // check if everything worked as expected
         if (!is_array($form['template_container']['elements'])) {
-            drupal_set_message('Unable to generate cmdi form based on profile', 'warning');
+            \Drupal::messenger()->addWarning('Unable to generate cmdi form based on profile');
         }
     } else {
-        drupal_set_message('Online editing of the metadata of this collection is not supported');
+        \Drupal::messenger()->addMessage('Online editing of the metadata of this collection is not supported');
         $form['Submit']['#disabled'] = true;
     }
 
@@ -163,14 +170,14 @@ function flat_collection_update_form_final_validate($form, &$form_state)
 
     // Validate that selected profile is not empty
     if ($form_state['values']['select_profile_name'] === '-- Select --') {
-        form_set_error('select_profile_name', 'Please choose correct option');
+        $form_state->setErrorByName('select_profile_name', 'Please choose correct option');
         return $form;
     }
 
     // Validate if owner exists.
     $owner = $form_state['values']['owner'];
     if (!user_load_by_name($owner)) {
-        form_set_error('owner', t('Specified owner is unknown'));
+        $form_state->setErrorByName('owner', t('Specified owner is unknown'));
         return $form;
     }
     ;
@@ -199,12 +206,12 @@ function flat_collection_update_form_final_validate($form, &$form_state)
         $values = FlatTuque::getChildrenLabels($fidParent);
 
         if ($values === false) {
-            form_set_error('title', t('Unable to validate that collection name is unique at this location'));
+            $form_state->setErrorByName('title', t('Unable to validate that collection name is unique at this location'));
             return $form;
         }
 
         if (in_array(strtoupper($new_title), array_unique(array_map('strtoupper', $values)))) {
-            form_set_error('title', t('Another collection or bundle with same name exists at this location. Please use a different name'));
+            $form_state->setErrorByName('title', t('Another collection or bundle with same name exists at this location. Please use a different name'));
             return $form;
         }
     }
@@ -212,11 +219,11 @@ function flat_collection_update_form_final_validate($form, &$form_state)
     // 2. Validate that output directory for new cmdi exists or can be created
     $export_dir = 'metadata://' . str_replace('@', '_at_', $owner) . "/.collection/";
     if (!file_exists($export_dir)) {
-        drupal_mkdir($export_dir, null, true);
+        \Drupal::service("file_system")->mkdir($export_dir, null, true);
     }
 
     if (!file_exists($export_dir)) {
-        form_set_error('error', t('Cannot create directory to temporarily store cmdi files'));
+        $form_state->setErrorByName('error', t('Cannot create directory to temporarily store cmdi files'));
         return $form;
     }
 
@@ -241,7 +248,7 @@ function flat_collection_update_form_final_validate($form, &$form_state)
         $creator->setCmdi($templateName, $form_data, $owner);
         $generatedCmdi = $creator->getCmdi();
     } catch (CmdiCreatorException $e) {
-        form_set_error('error', $e->getMessage());
+        $form_state->setErrorByName('error', $e->getMessage());
         return $form;
     }
 
@@ -273,7 +280,7 @@ function flat_collection_update_form_final_validate($form, &$form_state)
     $exported = $originalCmdi->asXML($cmdiFile);
 
     if (!$exported) {
-        form_set_error('error', 'Unable to save cmdi file');
+        $form_state->setErrorByName('error', 'Unable to save cmdi file');
         return $form;
     }
 
@@ -288,7 +295,7 @@ function flat_collection_update_form_final_validate($form, &$form_state)
     try {
         $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fidParent, $test, $namespace);
     } catch (IngestServiceException $exception) {
-        form_set_error('debug', $exception->getMessage());
+        $form_state->setErrorByName('debug', $exception->getMessage());
         return $form;
     }
 
@@ -302,7 +309,7 @@ function flat_collection_update_form_final_validate($form, &$form_state)
     $fObject = islandora_object_load($fid);
 
     if (!$fObject) {
-        form_set_error('error', t('Check of FID for new collection item did not reveal valid data. Error message:' . $fid));
+        $form_state->setErrorByName('error', t('Check of FID for new collection item did not reveal valid data. Error message:' . $fid));
         return $form;
     }
 
@@ -313,18 +320,17 @@ function flat_collection_update_form_final_validate($form, &$form_state)
     // Ingest succeeded, in case the title has changed we need to modify the title of any existing Drupal node for this collection ("My Collections" entries for all users)
 
     if ($old_title !== $new_title) {
-        $query = new EntityFieldQuery();
-        $query->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', 'flat_collection')
-            ->fieldCondition('flat_fid', 'value', "$fid", '=');
+        $query = new EntityQuery('node');
+        $query->condition('type', 'flat_collection')
+              ->condition('flat_fid.value', $fid, '=');
 
         $collection_nodes = $query->execute();
 
         foreach ($collection_nodes['node'] as $collection_node) {
             $nid = $collection_node->nid;
-            $node = node_load($nid);
+            $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
             $node->title = $new_title;
-            node_save($node);
+            $node->save();
         }
     }
 
@@ -339,9 +345,14 @@ function flat_collection_update_form_submit($form, &$form_state)
 {
     $target = 'islandora/object/' . $form_state['values']['data']['fid'];
 
-    drupal_set_message('Collection has been updated');
+    \Drupal::messenger()->addMessage('Collection has been updated');
 
-    ctools_include('ajax');
+    // @FIXME
+// Most CTools APIs have been moved into core.
+//
+// @see https://www.drupal.org/node/2164623
+// ctools_include('ajax');
+
     ctools_add_js('ajax-responder');
     $commands[] = ctools_ajax_command_redirect($target);
     print ajax_render($commands);

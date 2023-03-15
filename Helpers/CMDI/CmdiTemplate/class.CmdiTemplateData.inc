@@ -16,8 +16,8 @@ class CmdiTemplateData
     {
         if (null === static::$data) {
 
-            global $user;
-            static::$data = CmdiTemplateDb::all($profile, $user->uid);
+            $user = \Drupal::currentUser();
+            static::$data = \CmdiTemplateDb::all($profile, $user->id());
         }
 
         $options = [];

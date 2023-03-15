@@ -18,24 +18,32 @@ function flat_deposit_set_general($updated_values = null)
     );
 
     //remove already installed variables
-    $values_stored_in_database = variable_get('flat_deposit_general', array());
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$values_stored_in_database = \Drupal::config('flat_deposit.settings')->get('flat_deposit_general');
 
     if (!empty($values_stored_in_database[0])) {
-        variable_del('flat_deposit_general');
+        \Drupal::config('flat_deposit.settings')->clear('flat_deposit_general')->save();
     }
 
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_general', $values);
+    \Drupal::configFactory()->getEditable('flat_deposit.settings')->set('flat_deposit_general', $values)->save();
 
 
     // warn if directory does not exist
     $checks = ['external', 'metadata', 'freeze'];
-    $paths = variable_get('flat_deposit_general');
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$paths = \Drupal::config('flat_deposit.settings')->get('flat_deposit_general');
     foreach ($checks as $check) {
         if (!file_exists($paths[$check])) {
-            drupal_set_message(t('%check directory (%dir) as specified in flat_deposit module settings does not exist', array('%check'=> $check, '%dir'=> $paths[$check])), 'error');
+            \Drupal::messenger()->addError(t('%check directory (%dir) as specified in flat_deposit module settings does not exist', array('%check'=> $check, '%dir'=> $paths[$check])));
         }
     }
 
@@ -45,21 +53,25 @@ function flat_deposit_set_general($updated_values = null)
 function flat_deposit_set_cmdi_profiles($updated_values = null)
 {
     $defaults = array(
-        'collection_profiles' => 'clarin.eu:cr1:p_1475136016239,clarin.eu:cr1:p_1407745712064',
-        'bundle_profiles' => 'clarin.eu:cr1:p_1475136016242,clarin.eu:cr1:p_1407745712035',
+        'collection_profile_ids' => 'clarin.eu:cr1:p_1475136016239,clarin.eu:cr1:p_1407745712064',
+        'bundle_profile_ids' => 'clarin.eu:cr1:p_1475136016242,clarin.eu:cr1:p_1407745712035',
     );
 
     //clean up stored values
-    $values_stored_in_database = variable_get('flat_deposit_cmdi_profiles', array());
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$values_stored_in_database = \Drupal::config('flat_deposit.settings')->get('flat_deposit_cmdi_profiles');
 
     //already installed
     if (!empty($values_stored_in_database[0])) {
-        variable_del('flat_deposit_cmdi_profiles');
+        \Drupal::configFactory()->getEditable('flat_deposit.settings')->clear('flat_deposit_cmdi_profiles');
     }
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_cmdi_profiles', $values);
+    \Drupal::configFactory()->getEditable('flat_deposit.settings')->set('flat_deposit_cmdi_profiles', $values)->save();
 
     return TRUE;
 }
@@ -72,16 +84,20 @@ function flat_deposit_set_fits($updated_values = null)
     );
 
     //clean up stored values
-    $values_stored_in_database = variable_get('flat_deposit_fits', array());
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$values_stored_in_database = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
 
     //already installed
     if (!empty($values_stored_in_database[0])) {
-        variable_del('flat_deposit_fits');
+        \Drupal::configFactory()->getEditable('flat_deposit.settings')->clear('flat_deposit_fits');
     }
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_fits', $values);
+    \Drupal::configFactory()->getEditable('flat_deposit.settings')->set('flat_deposit_fits', $values)->save();
 
     return TRUE;
 }
@@ -115,23 +131,31 @@ function flat_deposit_set_ingest_service($updated_values = null)
     );
 
     //clean up stored values
-    $values_stored_in_database = variable_get('flat_deposit_ingest_service', array());
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$values_stored_in_database = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service');
 
     //already installed
     if (!empty($values_stored_in_database[0])) {
-        variable_del('flat_deposit_ingest_service');
+        \Drupal::configFactory()->getEditable('flat_deposit.settings')->clear('flat_deposit_ingest_service');
     }
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_ingest_service', $values);
+    \Drupal::configFactory()->getEditable('flat_deposit.settings')->set('flat_deposit_ingest_service', $values)->save();
 
     // warn if directory does not exist
     $checks = ['bag_exe','bag_dir','error_log_file','sword_tmp_dir'];
-    $paths = variable_get('flat_deposit_ingest_service');
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$paths = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service');
     foreach ($checks as $check) {
         if (!file_exists($paths[$check])) {
-            drupal_set_message(t('%check directory (%dir) as specified in flat_deposit module settings does not exist', array('%check'=> $check, '%dir'=> $paths[$check])), 'error');
+            \Drupal::messenger()->addError(t('%check directory (%dir) as specified in flat_deposit module settings does not exist', array('%check'=> $check, '%dir'=> $paths[$check])));
         }
     }
 
@@ -150,16 +174,20 @@ function flat_deposit_set_sword($updated_values = null)
     );
 
     //clean up stored values
-    $values_stored_in_database = variable_get('flat_deposit_sword', array());
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$values_stored_in_database = \Drupal::config('flat_deposit.settings')->get('flat_deposit_sword');
 
     //already installed
     if (!empty($values_stored_in_database[0])) {
-        variable_del('flat_deposit_sword');
+        \Drupal::configFactory()->getEditable('flat_deposit.settings')->clear('flat_deposit_sword');
     }
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_sword', $values);
+    \Drupal::configFactory()->getEditable('flat_deposit.settings')->set('flat_deposit_sword', $values)->save();
 
     return TRUE;
 }
@@ -173,16 +201,20 @@ function flat_deposit_set_doorkeeper($updated_values = null)
     );
 
     //clean up stored values
-    $values_stored_in_database = variable_get('flat_deposit_doorkeeper', array());
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$values_stored_in_database = \Drupal::config('flat_deposit.settings')->get('flat_deposit_doorkeeper');
 
     //already installed
     if (!empty($values_stored_in_database[0])) {
-        variable_del('flat_deposit_doorkeeper');
+        \Drupal::configFactory()->getEditable('flat_deposit.settings')->clear('flat_deposit_doorkeeper');
     }
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_doorkeeper', $values);
+    \Drupal::configFactory()->getEditable('flat_deposit.settings')->set('flat_deposit_doorkeeper', $values)->save();
 
     return TRUE;
 }
@@ -201,16 +233,20 @@ function flat_deposit_set_fedora($updated_values = null)
     );
 
     //clean up stored values
-    $values_stored_in_database = variable_get('flat_deposit_fedora', array());
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$values_stored_in_database = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fedora');
 
     //already installed
     if (!empty($values_stored_in_database[0])) {
-        variable_del('flat_deposit_fedora');
+        \Drupal::configFactory()->getEditable('flat_deposit.settings')->clear('flat_deposit_fedora');
     }
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_fedora', $values);
+    \Drupal::configFactory()->getEditable('flat_deposit.settings')->set('flat_deposit_fedora', $values)->save();
 
     return TRUE;
 }
@@ -227,16 +263,20 @@ function flat_deposit_set_solr($updated_values = null)
     );
 
     //clean up stored values
-    $values_stored_in_database = variable_get('flat_deposit_solr', array());
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$values_stored_in_database = \Drupal::config('flat_deposit.settings')->get('flat_deposit_solr');
 
     //already installed
     if (!empty($values_stored_in_database[0])) {
-        variable_del('flat_deposit_solr');
+        \Drupal::configFactory()->getEditable('flat_deposit.settings')->clear('flat_deposit_solr');
     }
 
     // set or update values
     $values = $updated_values ? array_merge($values_stored_in_database, $updated_values) : $defaults;
-    variable_set('flat_deposit_solr', $values);
+    \Drupal::configFactory()->getEditable('flat_deposit.settings')->set('flat_deposit_solr', $values)->save();
 
     return TRUE;
 }
@@ -252,7 +292,7 @@ function flat_deposit_set_anonymous_user_permissions()
     );
 
     // Grant permissions to anonymous users
-    user_role_change_permissions(DRUPAL_ANONYMOUS_RID, $anonymous_user_permissions);
+    user_role_change_permissions(\Drupal\Core\Session\AccountInterface::ANONYMOUS_ROLE, $anonymous_user_permissions);
 }
 
 function flat_deposit_set_authenticated_user_permissions()
@@ -265,7 +305,7 @@ function flat_deposit_set_authenticated_user_permissions()
     );
 
     // Grant permissions to authenticated user
-    user_role_change_permissions(DRUPAL_AUTHENTICATED_RID, $authenticated_user_permissions);
+    user_role_change_permissions(\Drupal\Core\Session\AccountInterface::AUTHENTICATED_RID, $authenticated_user_permissions);
 }
 
 function flat_deposit_set_custom_roles()
@@ -334,7 +374,7 @@ function flat_deposit_set_content_access()
 
     $permissions =  array(
         'view_own' => array(
-                0 => DRUPAL_AUTHENTICATED_RID,
+                0 => \Drupal\Core\Session\AccountInterface::AUTHENTICATED_RID,
                 1 => (int)$admin->rid,
             ),
         'view' =>
@@ -344,5 +384,10 @@ function flat_deposit_set_content_access()
             ),
         );
 
-    variable_set('content_access_flat_bundle', $permissions);
+    // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// variable_set('content_access_flat_bundle', $permissions);
+    \Drupal::configFactory()->getEditable('flat_deposit.settings')->set('content_access_flat_bundle', $permissions)->save();
 }

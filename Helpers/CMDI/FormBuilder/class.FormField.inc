@@ -56,7 +56,7 @@ class FormField
     /**
      * @return array
      */
-    public function getFormField(): array
+    public function getFormField()
     {
 
         return $this->formField;
@@ -158,7 +158,7 @@ class FormField
                     $options[] = (string)$option;
                 }
 
-                $formField['#options'] = drupal_map_assoc($options);
+                $formField['#options'] = array_combine($options, $options);
                 break;
 
             case 'date':

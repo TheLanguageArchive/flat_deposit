@@ -2,7 +2,14 @@
 
 function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object)
 {
-    drupal_set_title(t('Update Bundle Metadata'));
+    // @FIXME
+// drupal_set_title() has been removed. There are now a few ways to set the title
+// dynamically, depending on the situation.
+//
+//
+// @see https://www.drupal.org/node/2067859
+// drupal_set_title(t('Update Bundle Metadata'));
+
 
     ctools_add_js('ajax-responder');
 
@@ -18,7 +25,7 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object)
     $form['#prefix'] = "<div id='flat_bundle_update_form_wrapper'>";
     $form['#suffix'] = "</div>";
 
-    global $user;
+    $user = \Drupal::currentUser();
 
     $form['file'] = array(
         '#type' => 'file',
@@ -35,7 +42,7 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object)
         '#disabled' => TRUE,
     );
 
-    if (!user_access('admin bundle')) {
+    if (!\Drupal::currentUser()->hasPermission('admin bundle')) {
         $form['owner']['#disabled'] = TRUE;
     }
 
@@ -118,16 +125,16 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object)
 
         // check if everything worked as expected
         if (!is_array($form['template_container']['elements'])) {
-            drupal_set_message('Unable to generate cmdi form based on profile', 'warning');
+            \Drupal::messenger()->addWarning('Unable to generate cmdi form based on profile');
         }
     } else {
-        drupal_set_message('Online editing of the metadata of this bundle is not supported');
+        \Drupal::messenger()->addMessage('Online editing of the metadata of this bundle is not supported');
         $form['Submit']['#disabled'] = TRUE;
     }
     return $form;
 }
 
-function flat_deposit_form_flat_bundle_update_cmdi_form_alter(&$form, &$form_state) {
+function flat_deposit_form_flat_bundle_update_cmdi_form_alter(&$form, \Drupal\Core\Form\FormStateInterface &$form_state) {
     // CmdiTemplateManager::alter($form, $form_state);
 }
 
@@ -150,18 +157,18 @@ function flat_bundle_update_form_final_validate($form, &$form_state)
 
     // Validate if owner exists.
     if (!user_load_by_name($owner)) {
-        form_set_error('owner', 'Specified owner is unknown to drupal');
+        $form_state->setErrorByName('owner', 'Specified owner is unknown to drupal');
         return $form;
     };
 
     // Validate that output directory for new cmdi exists or can be created
 
     if (!file_exists($export_dir)) {
-        drupal_mkdir($export_dir, NULL, TRUE);
+        \Drupal::service("file_system")->mkdir($export_dir, NULL, TRUE);
     }
 
     if (!file_exists($export_dir)) {
-        form_set_error('error', 'Cannot create directory to temporarily store cmdi files');
+        $form_state->setErrorByName('error', 'Cannot create directory to temporarily store cmdi files');
         return $form;
     }
 
@@ -183,7 +190,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state)
         $uploadedProfile = $updatedCmdi->getNameById();
 
         if ($uploadedProfile !== $profile) {
-            form_set_error('error', 'Your uploaded CMDI file does not have the same profile as the archived CMDI file.');
+            $form_state->setErrorByName('error', 'Your uploaded CMDI file does not have the same profile as the archived CMDI file.');
             return $form;
         }
 
@@ -203,12 +210,12 @@ function flat_bundle_update_form_final_validate($form, &$form_state)
             $values = FlatTuque::getChildrenLabels($fidParent);
 
             if ($values === false) {
-                form_set_error('title', 'Unable to validate that collection name is unique at this location');
+                $form_state->setErrorByName('title', 'Unable to validate that collection name is unique at this location');
                 return $form;
             }
 
             if (in_array(strtoupper($new_title), array_unique(array_map('strtoupper', $values)))) {
-                form_set_error('title', t('Another collection or bundle with the name @name exists at this location. Please use a different name.', array('@name' => $new_title)));
+                $form_state->setErrorByName('title', t('Another collection or bundle with the name @name exists at this location. Please use a different name.', array('@name' => $new_title)));
                 return $form;
             }
         }
@@ -232,12 +239,12 @@ function flat_bundle_update_form_final_validate($form, &$form_state)
             $values = FlatTuque::getChildrenLabels($fidParent);
 
             if ($values === false) {
-                form_set_error('title', 'Unable to validate that collection name is unique at this location');
+                $form_state->setErrorByName('title', 'Unable to validate that collection name is unique at this location');
                 return $form;
             }
 
             if (in_array(strtoupper($new_title), array_unique(array_map('strtoupper', $values)))) {
-                form_set_error('title', 'Another collection or bundle with same name exists at this location. Please use a different name');
+                $form_state->setErrorByName('title', 'Another collection or bundle with same name exists at this location. Please use a different name');
                 return $form;
             }
         }
@@ -258,7 +265,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state)
             $creator->setCmdi($templateName, $form_data, $owner);
             $generatedCmdi = $creator->getCmdi();
         } catch (CmdiCreatorException $e) {
-            form_set_error('error', $e->getMessage());
+            $form_state->setErrorByName('error', $e->getMessage());
             return $form;
         }
 
@@ -290,7 +297,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state)
     $exported = $originalCmdi->asXML($cmdiFile);
 
     if (!$exported) {
-        form_set_error('error', 'Unable to save cmdi file');
+        $form_state->setErrorByName('error', 'Unable to save cmdi file');
         return $form;
     }
 
@@ -306,7 +313,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state)
     try {
         $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fidParent, $test, $namespace);
     } catch (IngestServiceException $exception) {
-        form_set_error('debug', $exception->getMessage());
+        $form_state->setErrorByName('debug', $exception->getMessage());
         return $form;
     }
 
@@ -321,7 +328,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state)
     $fObject = islandora_object_load($fid);
 
     if (!$fObject) {
-        form_set_error('error', t('Check of FID for updated bundle did not reveal valid data. Error message:' . $fid));
+        $form_state->setErrorByName('error', t('Check of FID for updated bundle did not reveal valid data. Error message:' . $fid));
         return $form;
     }
 
@@ -343,9 +350,14 @@ function flat_bundle_update_cmdi_form_submit($form, &$form_state)
     $fid = $form_state['values']['data']['fid'];
     $target = 'islandora/object/' . $fid;
 
-    drupal_set_message('Bundle metadata has been updated');
+    \Drupal::messenger()->addMessage('Bundle metadata has been updated');
 
-    ctools_include('ajax');
+    // @FIXME
+// Most CTools APIs have been moved into core.
+//
+// @see https://www.drupal.org/node/2164623
+// ctools_include('ajax');
+
     ctools_add_js('ajax-responder');
     $commands[] = ctools_ajax_command_redirect($target);
     print ajax_render($commands);

@@ -1,4 +1,6 @@
 <?php
+use Drupal\Core\Form\FormStateInterface;
+
 /**
  * @file
  * Primarily Drupal hooks and global API functions setup the example.
@@ -35,13 +37,13 @@ function flat_views_menu()
     return $items;
 }
 
-function flat_views_notifications_delete_all($form, &$form_state, $user){
+function flat_views_notifications_delete_all($form, FormStateInterface $form_state, $user){
 
     $a = 2;
     return  confirm_form(
         array(),
         t('Are you sure you want to delete all reports?'),
-        'dashboard/'. $user->uid .'notifications',
+        'dashboard/'. $user->getAccountName() .'notifications',
         t('This action cannot be undone.'),
         t('Delete'),
         t('Cancel')
@@ -51,7 +53,7 @@ function flat_views_notifications_delete_all($form, &$form_state, $user){
 
 function flat_views_notifications_delete_all_submit($user){
 
-    drupal_set_message('Done');
+    \Drupal::messenger()->addMessage('Done');
 }
 
 function flat_views_views_api() {

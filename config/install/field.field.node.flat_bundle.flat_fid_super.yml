@@ -1,0 +1,19 @@
+# field.field.node.flat_bundle.flat_fid_super.yml
+langcode: en
+status: true
+dependencies:
+    config:
+      - field.storage.node.flat_fid_super
+      - node.type.flat_bundle
+id: node.flat_bundle.flat_fid_super
+field_name: flat_fid_super
+field_type: text
+entity_type: node
+bundle: flat_bundle
+label: Fedora commons ID of super collection node
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: { }

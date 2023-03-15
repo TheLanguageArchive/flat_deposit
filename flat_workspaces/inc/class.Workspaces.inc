@@ -1,4 +1,7 @@
 <?php
+
+use Drupal\Core\Form\FormStateInterface;
+
 module_load_include('inc', 'node', 'node.pages');
 /**
  * Created by PhpStorm.
@@ -8,11 +11,10 @@ module_load_include('inc', 'node', 'node.pages');
  */
 class Workspaces
 {
-
-
     static function get_container(){
 
-        $max_files = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
+        $max_files = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['max_ingest_files'];
+        $department_mapping = \Drupal::config('flat_deposit.settings')->get('flat_workspaces')['department_mapping'];
 
         return array(
             '#weight' => 11,
@@ -27,7 +29,7 @@ class Workspaces
                 '#states' => array(
                     // Hide this select menu if source of resources is not local.
                     'visible' => array(
-                        ':input[name="flat_source[und]"]' => array('value' => 'local'),
+                        ':input[name="flat_source"]' => array('value' => 'local'),
                     ),
                 ),
 
@@ -38,7 +40,7 @@ class Workspaces
                 'department' => array(
                     '#type' => 'radios',
                     '#title' => t('Department'),
-                    '#options' => drupal_parse_info_format(variable_get('flat_workspaces')['department_mapping']),
+                    '#options' => $department_mapping,//drupal_parse_info_format($department_mapping),
                     '#empty_option' => '-- Select Department --',
                     '#empty_value' => 'unselected',
                     '#ajax' => array(
@@ -94,9 +96,9 @@ class Workspaces
      * @param $project_root
      * @return string
      */
-    static function get_flat_ws_path($form_state, $project_root){
-        if (isset($form_state['values']['flat_source']['und'][0]['value'])) {
-            if ($form_state['values']['flat_source']['und'][0]['value'] == 'external') {
+    static function get_flat_ws_path(FormStateInterface $form_state, $project_root){
+        if ($form_state->hasValue(['flat_source', 0, 'value'])) {
+            if ($form_state->getValue(['flat_source', 0, 'value']) == 'external') {
 
                 return '';
             }
@@ -104,7 +106,7 @@ class Workspaces
         // 1) If not set yet, set to project root. Otherwise,
         // 2) if project root folder has changed set to root folder.
         // 3) Otherwise take saved value
-        $value = isset($form_state['values']['flat_ws_path']['und'][0]['value']) ? $form_state['values']['flat_ws_path']['und'][0]['value'] : $project_root;
+        $value = $form_state->hasValue(['flat_ws_path', 0, 'value']) ? $form_state->getValue(['flat_ws_path', 0, 'value']) : $project_root;
 
 
         if (strpos ($value, $project_root ) === FALSE){
@@ -198,11 +200,12 @@ class Workspaces
 
     }
 
-   static function isNotArchiveFolder($directory)
+    static function isNotArchiveFolder($directory)
     {
-	drupal_set_message('dirname: ' . basename(dirname($directory)), 'error');
-	drupal_set_message('archive_folder: ' . variable_get('flat_workspaces')['archive_folder'], 'error');
-        if (basename(dirname($directory)) == variable_get('flat_workspaces')['archive_folder']) {
+	    \Drupal::messenger()->addError('dirname: ' . basename(dirname($directory)));
+        $archive_folder = \Drupal::config('flat_deposit.settings')->get('flat_workspaces')['archive_folder'];
+        \Drupal::messenger()->addError('archive_folder: ' . $archive_folder);
+        if (basename(dirname($directory)) == $archive_folder) {
             return false;
 
         } else {
@@ -212,22 +215,22 @@ class Workspaces
     }
 
     static function userHasReadPermissions($directory){
-        module_load_include('inc', 'flat_workspaces','inc/class.AclHandler');
-        $acl = new AclHandler(drupal_realpath($directory));
+        module_load_include('inc', 'flat_deposit','inc/class.AclHandler');
+        $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
         if (empty($acl->getInfo())){
             return false;
         }
 
-        global $user;
-        $id = $user->name == 'admin' ? exec('whoami') : $user->name;
+        $username = \Drupal::currentUser()->getAccountName();
+        $id = $username == 'admin' ? exec('whoami') : $username;
         $id = str_replace('@mpi.nl', '', $id);
 
         return $acl->checkReadAccess($id) ;
     }
 
     static function webUserHasReadPermissions($directory){
-        module_load_include('inc', 'flat_workspaces','inc/class.AclHandler');
-        $acl = new AclHandler(drupal_realpath($directory));
+        module_load_include('inc', 'flat_deposit','inc/class.AclHandler');
+        $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
 
         if (empty($acl->getInfo())){
             return false;
@@ -239,23 +242,23 @@ class Workspaces
     }
 
     static function userHasWritePermissions($directory){
-        module_load_include('inc', 'flat_workspaces','inc/class.AclHandler');
-        $acl = new AclHandler(drupal_realpath($directory));
+        module_load_include('inc', 'flat_deposit','inc/class.AclHandler');
+        $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
 
         if (empty($acl->getInfo())){
             return false;
         }
 
-        global $user;
-        $id = $user->name == 'admin' ? exec('whoami') : $user->name;
+        $username = \Drupal::currentUser()->getAccountName();
+        $id = $username == 'admin' ? exec('whoami') : $username;
         $id = str_replace('@mpi.nl', '', $id);
 
         return $acl->checkWriteAccess($id) ;
     }
 
     static function webUserHasWritePermissions($directory){
-        module_load_include('inc', 'flat_workspaces','inc/class.AclHandler');
-        $acl = new AclHandler(drupal_realpath($directory));
+        module_load_include('inc', 'flat_deposit','inc/class.AclHandler');
+        $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
 
         if (empty($acl->getInfo())){
             return false;
@@ -269,7 +272,7 @@ class Workspaces
 }
 
 
-function reload_workspace_navigation_container_ajax_callback ($form, $form_state)
+function reload_workspace_navigation_container_ajax_callback ($form, FormStateInterface $form_state)
 {
 
     return $form['workspace_navigation'];

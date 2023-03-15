@@ -201,9 +201,17 @@ class CmdiHandler extends SimpleXMLElement
             $this->registerXPathNamespace('cmd', 'http://www.clarin.eu/cmd/');
             $profile_id = $this->xpath('//cmd:MdProfile')[0];
         }
-        $collection_profiles = variable_get('flat_deposit_cmdi_profiles')['collection_profile_ids'];
+        // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$collection_profiles = \Drupal::config('flat_deposit.settings')->get('flat_deposit_cmdi_profiles')['collection_profile_ids'];
         $collection_profile_values = explode(',', $collection_profiles);
-        $bundle_profiles = variable_get('flat_deposit_cmdi_profiles')['bundle_profile_ids'];
+        // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$bundle_profiles = \Drupal::config('flat_deposit.settings')->get('flat_deposit_cmdi_profiles')['bundle_profile_ids'];
         $bundle_profile_values = explode(',', $bundle_profiles);
         if (in_array($profile_id, $collection_profile_values)) {
             return "collection";
@@ -424,7 +432,11 @@ class CmdiHandler extends SimpleXMLElement
     public static function fits_mimetype_check($filename)
     {
 
-        $config = variable_get('flat_deposit_fits');
+        // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
         $url = $config['url'] . '/examine?file=';
         $query = rawurlencode($filename);
         $port = $config['port'];
@@ -622,10 +634,12 @@ class CmdiHandler extends SimpleXMLElement
         $resourceProxyList = $this->xpath('cmd:Resources/cmd:ResourceProxyList')[0];
 
         foreach ($new_resources as $rid => $file_name) {
-            $file_mime = self::linux_mimetype_check(drupal_realpath($file_name));
+
+            $file_mime = self::linux_mimetype_check(\Drupal::service("file_system")->realpath($file_name));
             if (!$file_mime) {
                 return FALSE;
             }
+
             $proxy = $resourceProxyList->addChild("cmd:ResourceProxy", '', "http://www.clarin.eu/cmd/");
             $proxy->addAttribute('id', $rid);
             $proxy->addChild("ResourceType", "Resource");
@@ -757,8 +771,8 @@ class CmdiHandler extends SimpleXMLElement
      */
     private function addResourcesFromDatastream($fid)
     {
-        $cmdi_str = CmdiHandler::getCmdiFromDatastream($fid);
-        $fObjectCmdi = CmdiHandler::loadCleanedCmdi($cmdi_str);
+        $cmdi_str = \CmdiHandler::getCmdiFromDatastream($fid);
+        $fObjectCmdi = \CmdiHandler::loadCleanedCmdi($cmdi_str);
         $resourceProxyList = $fObjectCmdi->Resources->ResourceProxyList;
 
         if (!empty($resourceProxyList->children()) OR !empty($resourceProxyList->children('cmd', TRUE))) {
@@ -922,7 +936,7 @@ class CmdiHandler extends SimpleXMLElement
                 continue;
             }
 
-            $file_name = drupal_realpath($file->getPathname());
+            $file_name = \Drupal::service("file_system")->realpath($file->getPathname());
 
             $resource_id = array_search(basename($file_name), $existing_resources);
 
@@ -971,7 +985,7 @@ class CmdiHandler extends SimpleXMLElement
         $existing_resources = array_intersect_key($directory_resources, $cmdi_resources);
 
         foreach ($existing_resources as $rid => $file_name) {
-            $file_mime = self::linux_mimetype_check(drupal_realpath($file_name));
+            $file_mime = self::linux_mimetype_check(\Drupal::service("file_system")->realpath($file_name));
             if (!$file_mime) {
                 return FALSE;
             }

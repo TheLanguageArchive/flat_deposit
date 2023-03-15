@@ -1,0 +1,19 @@
+# field.field.node.flat_bundle.flat_bundle_exception.yml
+langcode: en
+status: true
+dependencies:
+    config:
+      - field.storage.node.flat_bundle_exception
+      - node.type.flat_bundle
+id: node.flat_bundle.flat_bundle_exception
+field_name: flat_bundle_exception
+field_type: text
+entity_type: node
+bundle: flat_bundle
+label: Exception
+description: 'Did any errors occur during upload'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: { }

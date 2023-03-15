@@ -1,0 +1,27 @@
+# field.field.node.flat_bundle.flat_type.yml
+langcode: en
+status: true
+dependencies:
+    config:
+      - field.storage.node.flat_type
+      - node.type.flat_bundle
+id: node.flat_bundle.flat_type
+field_name: flat_type
+field_type: list_string
+entity_type: node
+bundle: flat_bundle
+label: Type of bundle
+description: 'Is the bundle newly created or is an existing bundle updated?'
+required: true
+translatable: true
+default_value:
+  - new
+default_value_callback: ''
+settings:
+  allowed_values:
+    -
+      value: new
+      label: 'Newly created content'
+    -
+      value: update
+      label: 'Update of existing content'

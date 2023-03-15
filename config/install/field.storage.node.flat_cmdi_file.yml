@@ -1,0 +1,40 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - flat_deposit
+    - node
+id: node.flat_cmdi_file
+field_name: flat_cmdi_file
+entity_type: node
+type: file
+module: core
+locked: false
+cardinality: 1
+settings:
+  file_directory: ''
+  file_extensions: 'cmdi'
+  max_filesize: '1 MB'
+  description_field: 0
+  filefield_paths_enabled: 1
+  filefield_paths:
+    -
+      file_path:
+        value: '[current-user:name]/[node:flat_parent_title]/[node:title]/'
+        options:
+          slashes: 0
+          pathauto: FALSE
+          transliterate: 0
+        redirect: false
+        retroactive_update: 0
+        active_updating: 0
+      file_name:
+        value: 'record.cmdi'
+        options:
+          slashes: 0
+          pathauto: FALSE
+          transliterate: 0
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

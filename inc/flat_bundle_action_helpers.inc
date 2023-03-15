@@ -16,12 +16,13 @@ function get_nids($form_state){
 
 function parent_is_known($nid){
 
-    $node = node_load ($nid);
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
 
     if($node !== false AND $node->type == 'flat_bundle'){
 
-        $wrapper = entity_metadata_wrapper('node',$node);
-        $parent_nid = (integer)$wrapper->flat_parent_nid->value() > 0 ? true : false;
+        // @FIXME entity_metadata_wrapper fix for drupal 9
+        // $wrapper = entity_metadata_wrapper('node',$node);
+        $parent_nid = (integer)$node->flat_parent_nid->value > 0 ? true : false;
 
     } else {
 
@@ -37,10 +38,11 @@ function parent_is_known($nid){
 function has_cmdi($nid){
 
 
-    $node = node_load ($nid);
-    $wrapper = entity_metadata_wrapper('node',$node);
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node',$node);
 
-    $has_cmdi = !$wrapper->flat_cmdi_file->value() ? FALSE : TRUE;
+    $has_cmdi = !$node->flat_cmdi_file->value ? FALSE : TRUE;
 
     return $has_cmdi;
 }
@@ -51,11 +53,12 @@ function is_valid_xml($nid, $has_cmdi){
 
     if ($has_cmdi){
 
-        $node = node_load ($nid);
-        $wrapper = entity_metadata_wrapper('node',$node);
-        $file_field = $wrapper->flat_cmdi_file->value();
+        $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+        // @FIXME entity_metadata_wrapper fix for drupal 9
+        // $wrapper = entity_metadata_wrapper('node',$node);
+        $file_field = $node->flat_cmdi_file->value;
         $attached_file = file_load($file_field['fid']);
-        $xml = simplexml_load_file(drupal_realpath($attached_file->uri));
+        $xml = simplexml_load_file(\Drupal::service("file_system")->realpath($attached_file->uri));
         $is_valid = !$xml ? false : true;
 
     } else {
@@ -70,9 +73,10 @@ function is_valid_xml($nid, $has_cmdi){
 
 function has_correct_filename($nid){
 
-    $node = node_load($nid);
-    $wrapper = entity_metadata_wrapper('node', $node);
-    $exploded_uri = explode('/', $wrapper->flat_cmdi_file->value()['uri']);
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
+    $exploded_uri = explode('/', $node->flat_cmdi_file->value['uri']);
     $file_name = end($exploded_uri);
 
     $correct = $file_name == 'record.cmdi' ? TRUE : false;
@@ -82,9 +86,10 @@ function has_correct_filename($nid){
 
 function bundle_file_exists($nid)
 {
-    $node = node_load($nid);
-    $wrapper = entity_metadata_wrapper('node', $node);
-    $location = $wrapper->flat_location->value();
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $node->flat_location->value;
 
     $exists = file_exists($location) ;
 
@@ -94,9 +99,10 @@ function bundle_file_exists($nid)
 
 function bundle_new_files($nid) {
 
-    $node = node_load($nid);
-    $wrapper = entity_metadata_wrapper('node', $node);
-    $location = $wrapper->flat_location->value();
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $node->flat_location->value;
 
     $nFiles = count(file_scan_directory($location, '/.*/', array('min_depth' => 0)));
 
@@ -116,10 +122,11 @@ function bundle_new_files($nid) {
 
 function bundle_deleted_files($nid) {
 
-    $node = node_load($nid);
-    $wrapper = entity_metadata_wrapper('node', $node);
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
 
-    $deletedFiles = isset($wrapper->flat_deleted_resources) ? $wrapper->flat_deleted_resources->value() : NULL;
+    $deletedFiles = isset($node->flat_deleted_resources) ? $node->flat_deleted_resources->value : NULL;
 
     if (!isset($deletedFiles) OR ($deletedFiles == '')) {
 
@@ -139,17 +146,18 @@ function bundle_max_files_exceeded($nid) {
 
     module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
 
-    $node = node_load($nid);
-    $wrapper = entity_metadata_wrapper('node', $node);
-    $location = $wrapper->flat_location->value();
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $node->flat_location->value;
 
-    $fedora_id = $wrapper->flat_fid->value();
+    $fedora_id = $node->flat_fid->value;
 
-    $cmdi_file = $wrapper->flat_cmdi_file->value();
+    $cmdi_file = $node->flat_cmdi_file->value;
     $cmdi_file_uri = $cmdi_file['uri'];
 
-    if (file_exists(drupal_realpath($cmdi_file_uri))){
-        $cmd = @CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($cmdi_file_uri));
+    if (file_exists(\Drupal::service("file_system")->realpath($cmdi_file_uri))){
+        $cmd = @CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($cmdi_file_uri));
     }
 
     $new_files = [];
@@ -195,7 +203,11 @@ function bundle_max_files_exceeded($nid) {
 
     $totalFiles = $new_files_count + $existing_files_count - $replaced_files_count;
 
-    $max = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$max = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['max_ingest_files'];
 
     if ($totalFiles > $max) {
 
@@ -213,11 +225,16 @@ function bundle_max_files_exceeded($nid) {
 
 function bundle_max_file_size_exceeded($nid) {
 
-    $node = node_load($nid);
-    $wrapper = entity_metadata_wrapper('node', $node);
-    $location = $wrapper->flat_location->value();
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $node->flat_location->value;
 
-    $max_size = variable_get('flat_deposit_ingest_service')['max_file_size'];
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$max_size = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['max_file_size'];
     $max_size_bytes = ($max_size * 1073741824);
 
     $files = file_scan_directory($location, '/.*/', array('min_depth' => 0));
@@ -247,9 +264,10 @@ function bundle_max_file_size_exceeded($nid) {
 
 function bundle_invalid_file_names($nid) {
 
-    $node = node_load($nid);
-    $wrapper = entity_metadata_wrapper('node', $node);
-    $location = $wrapper->flat_location->value();
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $node->flat_location->value;
 
     $filename_pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+$/';
 
@@ -279,11 +297,16 @@ function bundle_invalid_file_names($nid) {
 
 function bundle_invalid_file_extensions($nid) {
 
-    $node = node_load($nid);
-    $wrapper = entity_metadata_wrapper('node', $node);
-    $location = $wrapper->flat_location->value();
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $node->flat_location->value;
 
-    $allowed_extensions = explode(', ', variable_get('flat_deposit_ingest_service')['allowed_extensions']);
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$allowed_extensions = explode(', ', \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['allowed_extensions']);
 
     $files = file_scan_directory($location, '/.*/', array('min_depth' => 0));
 
@@ -318,17 +341,18 @@ function bundle_invalid_file_extensions($nid) {
 function has_flat_uri($nid) {
     module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
 
-    $node = node_load($nid);
-    $wrapper = entity_metadata_wrapper('node', $node);
-    $location = $wrapper->flat_location->value();
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $node->flat_location->value;
 
-    $fedora_id = $wrapper->flat_fid->value();
+    $fedora_id = $node->flat_fid->value;
 
-    $cmdi_file = $wrapper->flat_cmdi_file->value();
+    $cmdi_file = $node->flat_cmdi_file->value;
     $cmdi_file_uri = $cmdi_file['uri'];
 
-    if (file_exists(drupal_realpath($cmdi_file_uri))){
-        $cmd = @CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($cmdi_file_uri));
+    if (file_exists(\Drupal::service("file_system")->realpath($cmdi_file_uri))){
+        $cmd = @CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($cmdi_file_uri));
     }
 
     if ($cmd) {
@@ -355,17 +379,18 @@ function bundle_files_mismatch($nid) {
 
     module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
 
-    $node = node_load($nid);
-    $wrapper = entity_metadata_wrapper('node', $node);
-    $location = $wrapper->flat_location->value();
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
+    $location = $node->flat_location->value;
 
-    $fedora_id = $wrapper->flat_fid->value();
+    $fedora_id = $node->flat_fid->value;
 
-    $cmdi_file = $wrapper->flat_cmdi_file->value();
+    $cmdi_file = $node->flat_cmdi_file->value;
     $cmdi_file_uri = $cmdi_file['uri'];
 
-    if (file_exists(drupal_realpath($cmdi_file_uri))){
-        $cmd = @CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($cmdi_file_uri));
+    if (file_exists(\Drupal::service("file_system")->realpath($cmdi_file_uri))){
+        $cmd = @CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($cmdi_file_uri));
     }
 
     $new_files = [];
@@ -432,16 +457,16 @@ function bundle_files_mismatch($nid) {
 function user_has_permissions($nid)
 {
 
-    global $user;
+    $user = \Drupal::currentUser();
 
     $user_id = $user->uid;
 
 
-    $node = node_load($nid);
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
 
     $bundle_id = $node->uid;
 
-    if ($user_id === $bundle_id OR user_access('validate bundles')) {
+    if ($user_id === $bundle_id OR \Drupal::currentUser()->hasPermission('validate bundles')) {
         $has = true;
 
     } else {
@@ -487,15 +512,15 @@ function check_completeness($type, $nid, $index, $form_state)
 
 function check_permissions($nid){
 
-    $node = node_load($nid);
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
 
     // Check user permissions
-    global $user;
+    $user = \Drupal::currentUser();
     $user_id = $user->uid;
 
     $bundle_id = $node->uid;
 
-    if (($user_id === $bundle_id AND user_access('certified user')) OR user_access('ingest bundles')) {
+    if (($user_id === $bundle_id AND \Drupal::currentUser()->hasPermission('certified user')) OR \Drupal::currentUser()->hasPermission('ingest bundles')) {
 
         $permissions = true;
 
@@ -511,16 +536,24 @@ function check_permissions($nid){
 
 function send_request($nid, $action, $debug=FALSE){
 
-    global $user;
+    $user = \Drupal::currentUser();
 
     // background service http request settings
-    $host = variable_get('flat_deposit_ingest_service')['host_name'];
-    $scheme = variable_get('flat_deposit_ingest_service')['host_scheme'];
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$host = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['host_name'];
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$scheme = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['host_scheme'];
     $base = $GLOBALS['base_path'];
 
     // create array containing data needed by the ingest service
     $data_to_post = array();
-    $data_to_post['drupal_path'] = DRUPAL_ROOT;
+    $data_to_post['drupal_path'] = \Drupal::root();
     $data_to_post['nid'] = $nid;
     $data_to_post['loggedin_user'] = $user->uid;
     $data_to_post['test'] = $action;
@@ -553,7 +586,7 @@ function send_request($nid, $action, $debug=FALSE){
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if ($httpcode  != 200) {
-            drupal_set_message("Unable to send sequential http request using curl to Ingest service");
+            \Drupal::messenger()->addMessage("Unable to send sequential http request using curl to Ingest service");
         }
         curl_close($ch);
 
@@ -574,8 +607,9 @@ function move_node_data($nid){
     $error = [];
 
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
-    $node = node_load($nid);
-    $wrapper = entity_metadata_wrapper('node', $node);
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
 
     $move = FlatBundle::moveBundleData($node, 'data', 'unfreeze');
 
@@ -583,7 +617,7 @@ function move_node_data($nid){
         $error ['nid'][] = 'data';
     }
 
-    if (isset($wrapper->flat_cmdi_file)){
+    if (isset($node->flat_cmdi_file)){
         $move = FlatBundle::moveBundleData($node, 'metadata', 'unfreeze');
 
         if (!$move){
@@ -595,3 +629,6 @@ function move_node_data($nid){
 
     return $error;
 }
+
+
+

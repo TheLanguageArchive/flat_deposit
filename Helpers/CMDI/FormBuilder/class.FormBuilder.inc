@@ -22,6 +22,8 @@ function autoload_formbuilder()
 
 }
 
+use Drupal\Core\Form\FormStateInterface;
+
 /**
  * Translates an xml form template into a drupal form
  */
@@ -137,7 +139,6 @@ class FormBuilder
      */
     public function setForm($templateName, $cmdi = null, $pressedButtons = null, $inheritAll = false)
     {
-
         $fName = self::FORM_TEMPLATES_PATH . $templateName . '.xml';
         $template = simplexml_load_file($fName);
 
@@ -298,25 +299,25 @@ class FormBuilder
      * @param $form_state
      *
      */
-    public function aggregatePressedButtons(&$form_state)
+    public function aggregatePressedButtons(FormStateInterface $form_state)
     {
-        // return if no button has been pressed
-        if (!isset($form_state['clicked_button'])) {
+        $triggeringElement = $form_state->getTriggeringElement();
+
+        if (null === $triggeringElement || $triggeringElement['#type'] !== 'button') {
             return false;
         }
 
         // return if button has ignore flag set to true
-        if (isset($form_state['clicked_button']['#flat_ignore_button']) && $form_state['clicked_button']['#flat_ignore_button'] === true) {
+        if (isset($triggeringElement['#flat_ignore_button']) && $triggeringElement['#flat_ignore_button'] === true) {
             return false;
         }
 
-        $componentId = $form_state['clicked_button']['#componentid'];
-        $isAddButton = is_int(strpos($form_state['clicked_button']['#value'], 'Add '));
+        $componentId = $triggeringElement['#componentid'];
+        $isAddButton = is_int(strpos($triggeringElement['#value'], 'Add '));
 
-        #if (!isset($form_state['pressedButtons'])){$form_state['pressedButtons'] = array();};
-
-        $pointer = &$form_state['pressedButtons'];
-        $parents = $form_state['clicked_button']['#parents'];
+        $pressedButtons = $form_state->get(['pressedButtons']);
+        $pointer = &$pressedButtons;
+        $parents = $triggeringElement['#parents'];
 
         foreach ($parents as $key => $parent) {
             if ($parent === $componentId) {
@@ -339,6 +340,8 @@ class FormBuilder
         } else {
             $pointer = $pointer - 1;
         }
+
+        $form_state->set(['pressedButtons'], $pressedButtons);
     }
 }
 

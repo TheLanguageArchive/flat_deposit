@@ -1,7 +1,14 @@
 <?php
 spl_autoload_register(function ($class_name) {
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/Formbuilder/class.' . $class_name . '.inc';
 
+    $ns = explode('\\', $class_name);
+    $class_name = $ns[count($ns) - 1];
+
+    $path = drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.' . $class_name . '.inc';
+
+    if (file_exists($path)) {
+        include_once $path;
+    }
 });
 
 /**
@@ -97,11 +104,12 @@ abstract class FormComponent
         // in case node is not present in the existing CMDI, check whether an attribute with the name is present
         $is_attribute = false;
             if ($existingCmdiNode && ($count == 0)) {
-            $data = isset($existingCmdiNode->attributes(){$componentName}) ? $existingCmdiNode->attributes(){$componentName} : null;
-            if ($data) {
-                $count = 1; // there can be only one attribute with the same name
-                $is_attribute = true;
-            }
+                $attributes = $existingCmdiNode->attributes();
+                $data = isset($attributes[$componentName]) ? $attributes[$componentName] : null;
+                if ($data) {
+                    $count = 1; // there can be only one attribute with the same name
+                    $is_attribute = true;
+                }
         }
 
         // in case of a template node with a skipParentInCMDI attribute, the default value is the value of the existing CMDI node itself
@@ -138,7 +146,8 @@ abstract class FormComponent
             }
 
             if ($is_attribute) {
-            $defaultValue = isset($existingCmdiNode->attributes(){$componentName}) ? (string)$existingCmdiNode->attributes(){$componentName} : null;
+                $attributes = $existingCmdiNode->attributes();
+                $defaultValue = isset($attributes[$componentName]) ? (string)$attributes[$componentName] : null;
             }
 
             $tree = $this->cmdiTree;

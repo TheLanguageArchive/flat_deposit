@@ -1,0 +1,14 @@
+# node.type.flat_bundle.yml
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - flat_deposit
+name: 'Bundle'
+type: flat_bundle
+description: 'A bundle of one or more data files'
+help: ''
+new_revision: false
+preview_mode: 1
+display_submitted: true

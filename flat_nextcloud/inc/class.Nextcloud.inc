@@ -27,7 +27,7 @@ class Nextcloud
                 '#states' => array(
                     // Hide this select menu if source of resources is not cloud.
                     'visible' => array(
-                        ':input[name="flat_source[und]"]' => array('value' => 'cloud'),
+                        ':input[name="flat_source"]' => array('value' => 'cloud'),
                     ),
                 ),
 
@@ -65,8 +65,8 @@ class Nextcloud
      * @return string
      */
     static function get_flat_nc_path($form_state, $project_root){
-        if (isset($form_state['values']['flat_source']['und'][0]['value'])) {
-            if ($form_state['values']['flat_source']['und'][0]['value'] == 'external') {
+        if (isset($form_state['values']['flat_source'][0]['value'])) {
+            if ($form_state['values']['flat_source'][0]['value'] == 'external') {
 
                 return '';
             }
@@ -75,7 +75,7 @@ class Nextcloud
         // 2) if project root folder has changed set to root folder.
         // 3) Otherwise take saved value
 
-        $value = isset($form_state['values']['flat_nc_path']['und'][0]['value']) ? $form_state['values']['flat_nc_path']['und'][0]['value'] : $project_root;
+        $value = isset($form_state['values']['flat_nc_path'][0]['value']) ? $form_state['values']['flat_nc_path'][0]['value'] : $project_root;
 
 
         if (strpos ($value, $project_root ) === FALSE){
@@ -175,8 +175,8 @@ class Nextcloud
 
    static function isNotArchiveFolder($directory)
     {
-	drupal_set_message('dirname: ' . basename(dirname($directory)), 'error');
-	drupal_set_message('archive_folder: ' . variable_get('flat_workspaces')['archive_folder'], 'error');
+	\Drupal::messenger()->addMessage('dirname: ' . basename(dirname($directory)), 'error');
+	\Drupal::messenger()->addMessage('archive_folder: ' . variable_get('flat_workspaces')['archive_folder'], 'error');
         if (basename(dirname($directory)) == variable_get('flat_workspaces')['archive_folder']) {
             return false;
 
@@ -246,7 +246,7 @@ class Nextcloud
 
 function reload_nextcloud_navigation_container_ajax_callback ($form, $form_state)
 {
-    
+
     return $form['nextcloud_navigation'];
 
 }

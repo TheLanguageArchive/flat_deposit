@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - flat_deposit
+    - node
+id: node.flat_metadata_visibility
+field_name: flat_metadata_visibility
+entity_type: node
+type: list_string
+module: core
+locked: false
+cardinality: 1
+settings:
+  allowed_values:
+    -
+      value: show
+      label: 'visible'
+    -
+      value: hide
+      label: 'hidden'
+
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

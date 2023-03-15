@@ -12,7 +12,7 @@ class CmdiTemplateDb
      */
     public static function all($profile, $uid)
     {
-        return db_select('flat_cmdi_templates', 'fct')
+        return \Drupal::database()->select('flat_cmdi_templates', 'fct')
                 ->fields('fct')
                 ->condition('profile', $profile, '=')
                 ->condition('uid', $uid, '=')
@@ -30,7 +30,7 @@ class CmdiTemplateDb
      */
     public static function fetch($id, $uid)
     {
-        return db_select('flat_cmdi_templates', 'fct')
+        return \Drupal::database()->select('flat_cmdi_templates', 'fct')
                 ->fields('fct')
                 ->condition('id', $id, '=')
                 ->condition('uid', $uid, '=')
@@ -52,7 +52,7 @@ class CmdiTemplateDb
     {
         try {
 
-            $result = db_select('flat_cmdi_templates', 'fct')
+            $result = \Drupal::database()->select('flat_cmdi_templates', 'fct')
                 ->fields('fct', ['id'])
                 ->condition('profile', $profile)
                 ->condition('label', $label)
@@ -85,7 +85,7 @@ class CmdiTemplateDb
     {
         try {
 
-            return db_select('flat_cmdi_templates', 'fct')
+            return \Drupal::database()->select('flat_cmdi_templates', 'fct')
                     ->fields('fct')
                     ->condition('profile', $profile)
                     ->condition('label', $label)
@@ -146,7 +146,7 @@ class CmdiTemplateDb
      */
     public static function override($id, $uid, $block)
     {
-        return db_update('flat_cmdi_templates')
+        return \Drupal::database()->update('flat_cmdi_templates')
                 ->fields([
                     'block' => $block,
                 ])
@@ -168,7 +168,7 @@ class CmdiTemplateDb
      */
     public static function insert($profile, $label, $component_id, $block, $uid)
     {
-        return db_insert('flat_cmdi_templates')
+        return \Drupal::database()->insert('flat_cmdi_templates')
                 ->fields([
                     'profile'      => $profile,
                     'label'        => $label,
@@ -189,7 +189,7 @@ class CmdiTemplateDb
      */
     public static function delete($id, $uid)
     {
-        return db_delete('flat_cmdi_templates')
+        return \Drupal::database()->delete('flat_cmdi_templates')
                 ->condition('id', $id, '=')
                 ->condition('uid', $uid, '=')
                 ->execute();
@@ -204,9 +204,9 @@ class CmdiTemplateDb
     public static function error(Exception $e)
     {
         if ($e->errorInfo[0] == '42P01') {
-            drupal_set_message(t('Flat Cmdi Templates table not found. Try running <a href="@update_url">update.php</a>.', ['@update_url' => url('update.php')]), 'error');
+            \Drupal::messenger()->addError(t('Flat Cmdi Templates table not found. Try running <a href="@update_url">update.php</a>.', ['@update_url' => \Drupal\Core\Url::fromRoute('system.db_update')]));
         } else {
-            drupal_set_message($e->getMessage(), 'error');
+            \Drupal::messenger()->addError($e->getMessage());
         }
     }
 }

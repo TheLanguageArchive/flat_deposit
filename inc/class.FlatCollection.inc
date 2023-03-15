@@ -21,13 +21,21 @@ class FlatCollection
      */
     public static function getUserCollectionNodes($user_id, $fid = null)
     {
-        $query = new EntityFieldQuery();
-        $query->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', 'flat_collection')
-            ->propertyCondition('uid', $user_id);
+        $query = \Drupal::entityQuery('node')
+            ->condition('type', 'flat_collection')
+            ->condition('uid', $user_id);
+
         if ($fid) {
-            $query->fieldCondition('flat_fid', 'value', "$fid", '=');
+            $query = $query->condition("flat_fid.value", $fid, "=");
         }
+
+        // $query = new EntityFieldQuery();
+        // $query->entityCondition('entity_type', 'node')
+        //     ->entityCondition('bundle', 'flat_collection')
+        //     ->propertyCondition('uid', $user_id);
+        // if ($fid) {
+        //     $query->fieldCondition('flat_fid', 'value', "$fid", '=');
+        // }
 
         $collection_nodes = $query->execute();
 

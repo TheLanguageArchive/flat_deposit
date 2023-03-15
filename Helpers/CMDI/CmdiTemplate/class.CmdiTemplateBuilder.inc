@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\Core\Form\FormStateInterface;
+
 class CmdiTemplateBuilder
 {
     public static function build($component_id, $profile, $cmdi_tree)
@@ -55,7 +57,7 @@ class CmdiTemplateBuilder
 
     public static function buildLoadTemplateElement($profile, $component_id)
     {
-        $available_templates = CmdiTemplateData::getAvailableTemplates($profile, $component_id);
+        $available_templates = \CmdiTemplateData::getAvailableTemplates($profile, $component_id);
 
         if (count($available_templates) === 0) {
             return static::noTemplatesFound();
@@ -80,7 +82,7 @@ class CmdiTemplateBuilder
         ];
     }
 
-    public static function buildTemplateBlock($element, &$form_state)
+    public static function buildTemplateBlock($element, FormStateInterface $form_state)
     {
         if (!isset($element['#cmdi_template_fields']) || count($element['#cmdi_template_fields']) === 0) {
             return null;
@@ -115,7 +117,7 @@ class CmdiTemplateBuilder
         return $block;
     }
 
-    private static function getElementInput($element, &$form_state)
+    private static function getElementInput($element, FormStateInterface $form_state)
     {
         return array_reduce($element['#array_parents'], function($result, $index) {
 
@@ -123,7 +125,7 @@ class CmdiTemplateBuilder
               return (array_key_exists($index, $result)) ? $result[$index] : null;
             }
 
-        }, $form_state['input']);
+        }, $form_state->getUserInput());
     }
 
     private static function noTemplatesFound()

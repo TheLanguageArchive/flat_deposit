@@ -1,0 +1,34 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - flat_deposit
+    - node
+id: node.flat_policies
+field_name: flat_policies
+entity_type: node
+type: list_string
+module: core
+locked: false
+cardinality: 1
+settings:
+  allowed_values:
+    -
+      value: "_none"
+      label: "-- Select a policy --"
+    -
+      value: "public"
+      label: "public"
+    -
+      value: "authenticated"
+      label: "authenticated users"
+    -
+      value: "academic"
+      label: "academic users"
+    -
+      value: "private"
+      label: "private"
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

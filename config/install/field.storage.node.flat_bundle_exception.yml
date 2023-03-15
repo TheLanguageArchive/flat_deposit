@@ -1,0 +1,25 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - flat_deposit
+    - node
+id: node.flat_bundle_exception
+field_name: flat_bundle_exception
+entity_type: node
+type: text
+module: core
+locked: false
+cardinality: 1
+settings:
+  allowed_values:
+    -
+      value: 0
+      label: 'no'
+    -
+      value: 1
+      label: 'yes'
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

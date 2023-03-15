@@ -1,6 +1,6 @@
 <?php
 
-include_once('SIP.php');
+include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/IngestService/SIP.php';
 
 class Bundle extends SIP
 {
@@ -28,15 +28,15 @@ class Bundle extends SIP
         $this->logging('Starting init');
 
         if (!$info['nid']){
-            throw new IngestServiceException("Node id is not specified");
+            throw new \IngestServiceException("Node id is not specified");
         }
 
-        $this->node = node_load($info['nid']);
-        $this->wrapper = entity_metadata_wrapper('node',$this->node);
+        $this->node = \Drupal::entityTypeManager()->getStorage('node')->load($info['nid']);
+        // $this->wrapper = entity_metadata_wrapper('node',$this->node);
 
-        $info['cmdi_handling'] = $this->wrapper->flat_cmdi_option->value();
-        $info['policy'] = $this->wrapper->flat_policies->value();
-        $info['visibility'] = $this->wrapper->flat_metadata_visibility->value();
+        $info['cmdi_handling'] = $this->node->flat_cmdi_option->value;
+        $info['policy'] = $this->node->flat_policies->value;
+        $info['visibility'] = $this->node->flat_metadata_visibility->value;
 
         $required = array(
             'loggedin_user',
@@ -45,22 +45,21 @@ class Bundle extends SIP
             'cmdi_handling',
             'visibility'
         );
-        $diff = array_diff($required,array_keys($info));
-        if($diff){
 
-            throw new IngestServiceException('Not all required variables are defined. Following variables are missing: ' . implode(', ', $diff));
+        $diff = array_diff($required, array_keys($info));
+
+        if($diff){
+            throw new \IngestServiceException('Not all required variables are defined. Following variables are missing: ' . implode(', ', $diff));
 
         };
 
         $this->info = $info;
 
-
-
-
         // set status of bundle
         $status = $this->test ? 'validating' : 'processing';
-        $this->wrapper->flat_bundle_status->set($status);
-        $this->wrapper->save();
+
+        $this->node->flat_bundle_status->value = $status;
+        $this->node->save();
 
         $this->logging('Finishing init');
         return TRUE;
@@ -78,56 +77,52 @@ class Bundle extends SIP
     {
         $this->logging('Starting authentication');
 
-        $query = new EntityFieldQuery();
-        $query->entityCondition('entity_type', 'user')
-            ->propertyCondition('uid', $this->info['loggedin_user'])
-        ;
+        $query = \Drupal::entityQuery('node')
+            ->condition('type', 'user')
+            ->condition('uid', $this->info['loggedin_user']);
+
+        // $query = new EntityFieldQuery();
+        // $query->entityCondition('entity_type', 'user')
+        //     ->propertyCondition('uid', $this->info['loggedin_user'])
+        // ;
 
         $results = $query->execute();
 
 
         if (empty($results)){
-
             $id_loggedin_user = 0;
-
         } else {
-
             $id_loggedin_user = $this->info['loggedin_user'];
         }
 
-        $uid_bundle = $this->node->uid;
+        $uid_bundle = $this->node->getOwnerId();
+        $user = \Drupal::currentUser();
 
         // only bundle owner, editors and admins might validate the bundle
-        if ($this->test){
+        if ($this->test) {
 
-            if($id_loggedin_user === $uid_bundle OR user_access('validate bundles', user_load($id_loggedin_user))) {
+            if ($id_loggedin_user === $uid_bundle || $user->hasPermission('validate bundles')) {
 
                 $this->logging('Finishing authentication');
                 return TRUE;
 
             } else {
-
-                throw new IngestServiceException('User has not enough privileges to perform requested action');
-
+                throw new \IngestServiceException('User has not enough privileges to perform requested action');
             }
 
         } else {
+
             // only certified users and corpmanager might ingest the bundle
 
-            if (($id_loggedin_user === $uid_bundle AND user_access('certified user', user_load($id_loggedin_user))) OR user_access('ingest bundles', user_load($id_loggedin_user))) {
+            if (($id_loggedin_user === $uid_bundle && $user->hasPermission('certified user')) || $user->hasPermission('ingest bundles')) {
 
                 $this->logging('Finishing authentication');
                 return TRUE;
 
             } else {
-
-                throw new IngestServiceException('User has not enough privileges to perform requested action');
-
+                throw new \IngestServiceException('User has not enough privileges to perform requested action');
             }
         }
-
-
-
     }
 
     /**
@@ -142,7 +137,8 @@ class Bundle extends SIP
         $this->logging('Starting prepareSipData');
 
         // Validated bundles do not need to be prepared
-        if (!$this->test){
+        if (!$this->test) {
+
             $this->logging('Finishing prepareSipData');
             return TRUE;
 
@@ -150,29 +146,28 @@ class Bundle extends SIP
 
         module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
 
-        $move = FlatBundle::moveBundleData($this->node, 'data', 'freeze');
+        $move = \FlatBundle::moveBundleData($this->node, 'data', 'freeze');
 
         if (!$move){
-
-            throw new IngestServiceException('Unable to move bundle data to freeze');
-
+            throw new \IngestServiceException('Unable to move bundle data to freeze');
         }
 
-        if (!is_null($this->wrapper->flat_cmdi_file->value())){
+        if (!is_null($this->node->flat_cmdi_file->value)) {
 
-            $move = FlatBundle::moveBundleData($this->node, 'metadata', 'freeze');
+            $move = \FlatBundle::moveBundleData($this->node, 'metadata', 'freeze');
 
             if (!$move){
-
-                throw new IngestServiceException('Unable to move bundle metadata to freeze');
-
+                throw new \IngestServiceException('Unable to move bundle metadata to freeze');
             }
 
             // update local variables
-            $this->node = node_load($this->node->nid);
-            $this->wrapper = entity_metadata_wrapper('node', $this->node);
+            $this->node = \Drupal::entityTypeManager()->getStorage('node')->load($this->node->id());
+            /**
+             * @FIXME D9 fix no more wrapper for nodes
+             */
+            // $this->wrapper = entity_metadata_wrapper('node', $this->node);
 
-            $cmdi_info = $this->wrapper->flat_cmdi_file->value();;
+            $cmdi_info = $this->node->flat_cmdi_file->value;
             $file_name = $cmdi_info['uri'];
 
             $this->cmdiRecord = $file_name;
@@ -184,22 +179,20 @@ class Bundle extends SIP
 
     }
 
+    function validateResources() {
 
-    function validateResources(){
         $this->logging('Starting validateResources');
-        $path = $this->wrapper->flat_location->value();
+        $path = $this->node->flat_location->value;
 
         $fileNames = file_scan_directory($path, '/.*/', array('min_depth' => 0));
 
-        $deletedFiles = $this->wrapper->flat_deleted_resources ? $this->wrapper->flat_deleted_resources->value() : NULL;
+        $deletedFiles = $this->node->flat_deleted_resources->value ? $this->node->flat_deleted_resources->value : NULL;
 
-        if (!isset($deletedFiles) OR ($deletedFiles == '')) {
+        if (!isset($deletedFiles) || ($deletedFiles == '')) {
 
             if(empty($fileNames)){
-                throw new IngestServiceException('There are no (accessible) files in the chosen folder.');
-
+                throw new \IngestServiceException('There are no (accessible) files in the chosen folder.');
             }
-
         }
 
         $pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+\.[\da-zA-Z]{1,9}$/';
@@ -208,13 +201,14 @@ class Bundle extends SIP
         foreach ($fileNames as $uri => $file_array){
 
             $fileName = $file_array->filename;
-            if (preg_match($pattern, $fileName) == false){
-             $violators[] = $fileName;
-            }
 
+            if (preg_match($pattern, $fileName) == false) {
+                $violators[] = $fileName;
+            }
         }
 
         if (!empty($violators)){
+
             $message = 'Bundle contains files with names violating our file naming policy. ' .
             'Allowed are names starting with an alphanumeric characters (a-z,A-Z,0-9) followed by more alphanumeric characters '.
             'or these special characters (.-_). The name of the file needs to have an extension marked by a dot (".") '.
@@ -223,7 +217,7 @@ class Bundle extends SIP
             $message .= 'Following file(s) have triggered this message: ';
             $message .= implode(', ', $violators);
 
-            throw new IngestServiceException($message);
+            throw new \IngestServiceException($message);
         }
 
         $this->logging('Finishing validateResources');
@@ -238,20 +232,20 @@ class Bundle extends SIP
 
         $file_name = $this->cmdiTarget;
 
-        $cmdi = CmdiHandler::simplexml_load_cmdi_file($file_name);
+        $cmdi = \CmdiHandler::simplexml_load_cmdi_file($file_name);
 
-
-        if (!$cmdi OR !$cmdi->canBeValidated()){
-            throw new IngestServiceException('Unable to load record.cmdi file');
+        if (!$cmdi || !$cmdi->canBeValidated()){
+            throw new \IngestServiceException('Unable to load record.cmdi file');
         }
 
-        $directory = $this->wrapper->flat_location->value();
+        $directory = $this->node->flat_location->value;
 
         try{
 
-            $fid = isset($this->wrapper->flat_fid) ? $this->wrapper->flat_fid->value() : null;
-            $flat_type = isset($this->wrapper->flat_type) ? $this->wrapper->flat_type->value() : NULL;
-            $md_type = isset($this->wrapper->flat_cmdi_option) ? $this->wrapper->flat_cmdi_option->value() : NULL;
+            $fid = isset($this->node->flat_fid) ? $this->node->flat_fid->value : null;
+            $flat_type = isset($this->node->flat_type) ? $this->node->flat_type->value : NULL;
+            $md_type = isset($this->node->flat_cmdi_option) ? $this->node->flat_cmdi_option->value : NULL;
+
             if ($flat_type == 'update') {
                 $md_type = 'existing';
             }
@@ -274,28 +268,21 @@ class Bundle extends SIP
 
             $cmdi->addResources($md_type, $directory, $fid);
 
-        } catch (CmdiHandlerException $exception){
-
-            throw new IngestServiceException($exception->getMessage());
-
+        } catch (\CmdiHandlerException $exception){
+            throw new \IngestServiceException($exception->getMessage());
         }
 
         $check = $cmdi->asXML($file_name);
 
         if ($check !== TRUE){
-            throw new IngestServiceException($check);
+            throw new \IngestServiceException($check);
         }
+
         #$check = $xml->asXML('/lat/test.xml');
 
         $this->logging('Finishing addResourcesToCmdi');
         return TRUE;
     }
-
-
-
-
-
-
 
     function finish()
     {
@@ -310,34 +297,29 @@ class Bundle extends SIP
 
         $this->createBlogEntry(TRUE);
 
-        if ($this->test){
+        if ($this->test) {
 
-            $this->wrapper->flat_bundle_status->set('valid');
-            $this->wrapper->save();
+            $this->node->flat_bundle_status->value = 'valid';
+            $this->node->save();
 
         } else {
 
             // TODO remove comment when working
 
-            $dir = drupal_realpath($this->wrapper->flat_location->value());
-            if ($dir AND is_readable($dir) AND count(scandir($dir)) == 2){
-                unlink ($dir);
+            $file_system = \Drupal::service("file_system");
+            $dir = $file_system->realpath($this->node->flat_location->value);
+
+            if ($dir && is_readable($dir) && count(scandir($dir)) == 2) {
+                $file_system->unlink($dir);
             };
 
             node_delete_multiple(array($this->info['nid']));
-
-
-
         }
 
 
         $this->logging('Stop finish');
-
         return TRUE;
-
     }
-
-
 
     /**
      *
@@ -351,48 +333,55 @@ class Bundle extends SIP
 
         $this->logging('Starting createBlogEntry');
 
-        $host = variable_get('flat_deposit_ingest_service')['host_name'];
-        $scheme = variable_get('flat_deposit_ingest_service')['host_scheme'];
-        if (!$this->test AND $succeeded){
+        // @FIXME
+        // Could not extract the default value because it is either indeterminate, or
+        // not scalar. You'll need to provide a default value in
+        // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+        $host = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['host_name'];
+        // @FIXME
+        // Could not extract the default value because it is either indeterminate, or
+        // not scalar. You'll need to provide a default value in
+        // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+        $scheme = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['host_scheme'];
 
-            $url_link = 'islandora/object/' . $this->fid ;
-
+        if (!$this->test && $succeeded) {
+            $url_link = 'islandora/object/' . $this->fid;
         } else {
-
-            $url_link = 'node/' . (string)$this->node->nid;
-
+            $url_link = 'node/' . (string)$this->node->id();
         }
 
         $outcome = $succeeded ? 'succeeded' : 'failed' ;
         $action = $this->test ? 'Validation' : 'Archiving';
 
         $bundle = $this->node->title;
-        $collection = $this->wrapper->flat_parent_title->value();
+        $collection = $this->node->flat_parent_title->value;
 
         $summary = sprintf("<p>%s of %s %s</p>",$action, $bundle, $outcome);
-        $body = sprintf("<p>%s %s</p><p>%s of %s belonging to %s %s. Check bundle ". l(t('here'), $url_link, array('html' => TRUE, 'external' => FALSE, 'absolute' => TRUE, 'base_url' => $base_url)) . '</p>', $bundle, $collection, $action, $bundle, $collection, $outcome);
+        // @FIXME
+        // l() expects a Url object, created from a route name or external URI.
+        // $body = sprintf("<p>%s %s</p><p>%s of %s belonging to %s %s. Check bundle ". l(t('here'), $url_link, array('html' => TRUE, 'external' => FALSE, 'absolute' => TRUE, 'base_url' => $base_url)) . '</p>', $bundle, $collection, $action, $bundle, $collection, $outcome);
 
-        if ($additonal_message){ $body .=  '</p>Exception message:</p>' . $additonal_message ;};
 
-        $new_node = new stdClass();
+        if ($additonal_message) {
+            $body .= '</p>Exception message:</p>' . $additonal_message;
+        };
+
+        $new_node = new \stdClass();
         $new_node->type = 'blog';
-        $new_node->language = 'und';
         $new_node->title = sprintf("Result of processing bundle %s",$bundle);
-        $new_node->uid = $this->node->uid;
+        $new_node->uid = $this->node->id();
         $new_node->status = 1;
         $new_node->sticky = 0;
         $new_node->promote = 0;
         $new_node->format = 3;
         $new_node->revision = 0;
-        $new_node->body['und'][0]['format'] = 'full_html';
-        $new_node->body['und'][0]['summary'] = $summary;
-        $new_node->body['und'][0]['value'] = $body;
-        node_save($new_node);
+        $new_node->body[0]['format'] = 'full_html';
+        $new_node->body[0]['summary'] = $summary;
+        $new_node->body[0]['value'] = $body;
+        $new_node->save();
 
         $this->logging('Finishing createBlogEntry; Blog entry created');
     }
-
-
 
     function customRollback($message){
 
@@ -401,46 +390,17 @@ class Bundle extends SIP
         // bundles need to unfreeze (if frozen) during rollback
         module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
 
-        $move = FlatBundle::moveBundleData($this->node, 'data', 'unfreeze');
-        $move = FlatBundle::moveBundleData($this->node, 'metadata', 'unfreeze');
-
+        $move = \FlatBundle::moveBundleData($this->node, 'data', 'unfreeze');
+        $move = \FlatBundle::moveBundleData($this->node, 'metadata', 'unfreeze');
 
         // create blog entry
         $this->createBlogEntry(FALSE, $message);
 
         //set status of bundle
-        $this->wrapper->flat_bundle_status->set('failed');
-        $this->wrapper->save();
+        $this->node->flat_bundle_status->value = 'failed';
+        $this->node->save();
 
         $this->logging('Finishing customRollback');
         return;
-
-
-    }
-
-
-
-
-    function generateFlatEncryptionMetadata()
-    {
-        $this->logging('Starting generateFlatEncryptionMetadata');
-
-        // normalizing currently saved metadata, null, empty str will be marked as empty array
-        $marked = $this->wrapper->flat_encrypted_resources->value();
-        $marked = empty($marked) ? [] : explode(',', $marked);
-
-        $cmdi_dir = dirname($this->cmdiTarget);
-        $write = file_put_contents($cmdi_dir . '/flat_encryption.json', json_encode([
-            'marked' => $marked,
-        ]));
-
-        $this->logging('Files marked for encryption: ' . var_export($marked, true));
-
-        if (!$write) {
-            throw new IngestServiceException('Unable to write flat encryption metadata to target location (' . $cmdi_dir . ')');
-        }
-
-        $this->logging('Finishing generateFlatEncryptionMetadata');
-        return TRUE;
     }
 }

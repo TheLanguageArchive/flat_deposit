@@ -1,7 +1,14 @@
 <?php
 spl_autoload_register(function ($class_name) {
-    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.' . $class_name . '.inc';
 
+    $ns = explode('\\', $class_name);
+    $class_name = $ns[count($ns) - 1];
+
+    $path = drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.' . $class_name . '.inc';
+
+    if (file_exists($path)) {
+        include_once $path;
+    }
 });
 /**
  * User: danrhe

@@ -1,0 +1,19 @@
+# field.field.node.flat_collection.flat_fid.yml
+langcode: en
+status: true
+dependencies:
+    config:
+      - field.storage.node.flat_fid
+      - node.type.flat_collection
+id: node.flat_collection.flat_fid
+field_name: flat_fid
+field_type: text
+entity_type: node
+bundle: flat_collection
+label: Fedora commons ID
+description: 'ID assigned by fedora during ingest process'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: { }

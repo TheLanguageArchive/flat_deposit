@@ -22,8 +22,16 @@ class Doorkeeper
      */
     public function triggerServlet($sipId, $to=NULL, $namespace = NULL, $parentFid = NULL) {
 
-        $config = variable_get('flat_deposit_doorkeeper');
-        $config_general = variable_get('flat_deposit_general');
+        // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_doorkeeper');
+        // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$config_general = \Drupal::config('flat_deposit.settings')->get('flat_deposit_general');
         if (is_null($namespace) && is_null($parentFid)) {
         // Use default namespace from config, should not really be happening as there should always be a parent
         	$namespace = $config_general['namespace'];
@@ -88,7 +96,11 @@ class Doorkeeper
     public function doGetRequest($sipId, $code_only=FALSE)
     {
 
-        $config = variable_get('flat_deposit_doorkeeper');
+        // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_doorkeeper');
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $config['url'] . $sipId);

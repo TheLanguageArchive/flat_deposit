@@ -1,0 +1,22 @@
+flat_deposit.add_collection:
+  path: '/flat/collection/add'
+  defaults:
+    _title: 'Add Collection'
+    _form: '\Drupal\flat_deposit\Form\CollectionAddForm'
+  requirements:
+    _permission: 'access content'
+
+flat_deposit.cmdi.save:
+  path: '/flat/cmdi/save'
+  defaults:
+    _controller: '\Drupal\flat_deposit\Controller\CmdiController::saveAction'
+  requirements:
+    _permission: 'access content'
+
+flat_deposit.add_bundle:
+  path: '/flat/bundle/add'
+  defaults:
+    _title: 'Add Bundle'
+    _controller: '\Drupal\flat_deposit\Controller\BundleController::addAction'
+  requirements:
+    _permission: 'access content'

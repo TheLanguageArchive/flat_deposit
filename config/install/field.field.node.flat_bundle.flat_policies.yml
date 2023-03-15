@@ -1,0 +1,35 @@
+# field.field.node.flat_bundle.flat_policies.yml
+langcode: en
+status: true
+dependencies:
+    config:
+      - field.storage.node.flat_policies
+      - node.type.flat_bundle
+id: node.flat_bundle.flat_policies
+field_name: flat_policies
+field_type: list_string
+entity_type: node
+bundle: flat_bundle
+label: 'Which access policy do you want to apply?'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_values:
+    -
+      value: "_none"
+      label: "-- Select a policy --"
+    -
+      value: "public"
+      label: "public"
+    -
+      value: "authenticated"
+      label: "authenticated users"
+    -
+      value: "academic"
+      label: "academic users"
+    -
+      value: "private"
+      label: "private"

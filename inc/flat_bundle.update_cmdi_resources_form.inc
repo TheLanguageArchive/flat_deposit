@@ -11,13 +11,13 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
     }
 
     // hide blocks for nodes without assigned fedora ID (to be updated bundles) or $nodes without cmdi file
-    $node_wrapper = entity_metadata_wrapper('node', $node);
+    // $node_wrapper = entity_metadata_wrapper('node', $node);
 
-    $status = $node_wrapper->flat_bundle_status->value();
+    $status = $node->flat_bundle_status->value;
 
-    $fedora_id = $node_wrapper->flat_fid->value();
+    $fedora_id = $node->flat_fid->value;
 
-    $file = $node_wrapper->flat_cmdi_file->value();
+    $file = $node->flat_cmdi_file->value;
     $fName = $file['uri'];
 
     $form['values']['status'] = array(
@@ -39,21 +39,21 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
     module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
 
 
-    if(!file_exists(drupal_realpath($fName))){
-        drupal_set_message("Unable to read bundle metadata", 'error');
+    if(!file_exists(\Drupal::service("file_system")->realpath($fName))){
+        \Drupal::messenger()->addError("Unable to read bundle metadata");
         return $form;
     } else {
 
-        $cmd = @CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($fName));
+        $cmd = @CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($fName));
         if (!$cmd){
 
-            drupal_set_message("The CMDI metadata file of this bundle cannot be read as XML", 'error');
+            \Drupal::messenger()->addError("The CMDI metadata file of this bundle cannot be read as XML");
             return $form;
 
         }
     }
 
-    $location = $node_wrapper->flat_location->value();
+    $location = $node->flat_location->value;
 
     $new_files = [];
     if (file_exists($location)) {
@@ -108,8 +108,8 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
     $same_file_names = array_intersect($new_files, $existing_files);
 
     if ($same_file_names) {
-        drupal_set_message(t("Your selected folder contains files that have the same name as files that are already present in the bundle: " . implode(', ', $same_file_names) . ".<br/>If you proceed,
-         the new files will replace the existing ones and the existing ones will be versioned. If this is not your intention, please rename the newly added files first."), 'warning', FALSE);
+        \Drupal::messenger()->addWarning(t("Your selected folder contains files that have the same name as files that are already present in the bundle: " . implode(', ', $same_file_names) . ".<br/>If you proceed,
+         the new files will replace the existing ones and the existing ones will be versioned. If this is not your intention, please rename the newly added files first."));
     }
 
     $form['table_container']['data'] = array(
@@ -154,10 +154,11 @@ function flat_bundle_delete_cmdi_resource_submit($form, &$form_state){
     $index = 0;
     $count = 0;
 
-    $node = menu_get_object();
-    $wrapper = entity_metadata_wrapper('node', $node);
+    $node = \Drupal::routeMatch()->getParameter();
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
 
-    $resourceIDs = $wrapper->flat_deleted_resources->value() ? explode(',', $wrapper->flat_deleted_resources->value()) : [];
+    $resourceIDs = $node->flat_deleted_resources->value ? explode(',', $node->flat_deleted_resources->value) : [];
 
     module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
 
@@ -175,8 +176,8 @@ function flat_bundle_delete_cmdi_resource_submit($form, &$form_state){
 
     if ($count > 0){
         $cmd->stripResources($resourceIDs);
-        $wrapper->flat_deleted_resources->set(implode(",",$resourceIDs));
-        $wrapper->save();
+        $node->flat_deleted_resources->value = implode(",",$resourceIDs);
+        $node->save();
         $fid = $form_state['values']['data']['file_id'];
         $file = file_load($fid);
         $export = $cmd->asXML($file->uri);
@@ -185,15 +186,17 @@ function flat_bundle_delete_cmdi_resource_submit($form, &$form_state){
         }
     }
 
-            drupal_set_message(t('!number file(s) have been removed from the bundle', array('!number' => (string)$count)));
+    \Drupal::messenger()->addMessage(t('!number file(s) have been removed from the bundle', array('!number' => (string)$count)));
 }
 
 
 
 function flat_bundle_reset_cmdi_resource_submit($form, &$form_state){
 
-    $node = menu_get_object();
-    $wrapper = entity_metadata_wrapper('node', $node);
+    $node = \Drupal::routeMatch()->getParameter();
+
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
 
     $fid = $form_state['values']['data']['fedora_id'];
 
@@ -206,19 +209,19 @@ function flat_bundle_reset_cmdi_resource_submit($form, &$form_state){
 
     $cmdi_file = $ds->getContent($file->uri);
 
-    $wrapper->flat_deleted_resources->set('');
-    $wrapper->save();
+    $node->flat_deleted_resources->value = '';
+    $node->save();
 
 
     if ($cmdi_file) {
         file_save($file);
 
-        drupal_set_message(t('List of current files has been reset'));
+        \Drupal::messenger()->addMessage(t('List of current files has been reset'));
 
     }
 }
 
-function flat_deposit_form_flat_bundle_update_cmdi_resources_form_alter(&$form, &$form_state, $form_id) {
+function flat_deposit_form_flat_bundle_update_cmdi_resources_form_alter(&$form, \Drupal\Core\Form\FormStateInterface &$form_state, $form_id) {
     if($form_id == 'flat_bundle_update_cmdi_resources_form') {
         $status = $form['values']['status']['#value'];
         switch ($status) {

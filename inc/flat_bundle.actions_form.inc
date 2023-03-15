@@ -3,7 +3,7 @@
 
 function flat_bundle_action_form($form, &$form_state)
 {
-    form_load_include($form_state, 'inc', 'flat_deposit', 'inc/flat_bundle_action_helpers');
+    $form_state->loadInclude('flat_deposit', 'inc', 'inc/flat_bundle_action_helpers');
 
     $form['actions']['bundle_image'] = array(
         '#type' => 'image_button',
@@ -85,7 +85,7 @@ function flat_bundle_action_form($form, &$form_state)
 	'#suffix' => '</div><div><br/></div>',
     );
 
-    $node = menu_get_object();
+    $node = \Drupal::routeMatch()->getParameter();
 
     $form['values']['node'] = array(
         '#type' => 'value',
@@ -111,17 +111,18 @@ function flat_bundle_action_form($form, &$form_state)
 
 
 
-function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $form_id){
+function flat_deposit_form_flat_bundle_action_form_alter(&$form, \Drupal\Core\Form\FormStateInterface &$form_state, $form_id){
 
-    $node = menu_get_object();
-    $wrapper = entity_metadata_wrapper('node', $node);
+    $node = \Drupal::routeMatch()->getParameter();
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
 
     // Specify which handlers to become active and which bundle_image to display
     $form['actions']['edit_bundle']['#disabled'] = TRUE;
-    $status = $wrapper->flat_bundle_status->value();
+    $status = $node->flat_bundle_status->value;
 
     # deactivate link to file browser for local bundles
-    $source = $wrapper->flat_source->value();
+    $source = $node->flat_source->value;
     $enable_file_browser = in_array($source, array('local', 'cloud')) ? FALSE : TRUE;
 
     switch ($status) {
@@ -173,11 +174,11 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
         }
     }
 
-    $form['actions']['bundle_image']['#src'] = drupal_get_path('module', 'flat_deposit') . '/Images/' . $name . '.png';
+    $form['actions']['bundle_image']['#src'] = drupal_get_path('module', 'flat_deposit') . '/assets/images/' . $name . '.png';
 
     // Activate metadata creation button only if 1) cmdi option is 'new' 2) status is either open or failed and 3) no cmdi has been created
     // If metadata creation button is active (.e.g. if metadata file has been removed), validate button should be disabled.
-    if ($wrapper->flat_cmdi_option->value() == 'new' AND ($status == 'open' OR $status == 'failed') AND (empty($node->flat_cmdi_file))) {
+    if ($node->flat_cmdi_option->value == 'new' AND ($status == 'open' OR $status == 'failed') AND (empty($node->flat_cmdi_file))) {
 
         $form['actions']['describe_bundle']['#access'] = TRUE;
         $form['actions']['describe_bundle']['#attributes']['class'][] = 'btn-success';
@@ -198,11 +199,12 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, &$form_state, $
 function flat_bundle_action_form_describe_validate($form, &$form_state){
 
     $node = $form_state['values']['node'];
-    $wrapper = entity_metadata_wrapper('node', $node);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
 
-    $parent_nid = $wrapper->flat_parent_nid->value();
+    $parent_nid = $node->flat_parent_nid->value;
     if ($parent_nid === '0'){
-        form_set_error('describe_bundle', "You need to assign this bundle to a parent collection first before editing the metadata. Go to \"Edit Bundle Properties\" to select a parent collection.");
+        $form_state->setErrorByName('describe_bundle', "You need to assign this bundle to a parent collection first before editing the metadata. Go to \"Edit Bundle Properties\" to select a parent collection.");
         return $form;
 
     }
@@ -221,7 +223,7 @@ function flat_bundle_action_form_reopen_validate($form, &$form_state){
     $error = move_node_data($node->nid);
     if (!empty($error)){
 
-        form_set_error('reopen', t('Unable to move bundle !what to unfreeze', array('!what'=>$node->nid)));
+        $form_state->setErrorByName('reopen', t('Unable to move bundle !what to unfreeze', array('!what'=>$node->nid)));
 
     }
 
@@ -236,8 +238,9 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
 
     $node = $form_state['values']['node'];
     $nid = $node->nid;
-    $wrapper = entity_metadata_wrapper('node', $node);
-    $path = $wrapper->flat_location->value();
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
+    $path = $node->flat_location->value;
 
     $parent_is_known = parent_is_known($nid);
     $has_cmdi = has_cmdi($nid);
@@ -251,30 +254,38 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
     $invalid_file_extensions = bundle_invalid_file_extensions($nid);
     $has_new_or_deleted_files = (bundle_new_files($nid) OR bundle_deleted_files($nid));
 
-    $max_number_files = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
-    $max_size = variable_get('flat_deposit_ingest_service')['max_file_size'];
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$max_number_files = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['max_ingest_files'];
+    // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$max_size = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['max_file_size'];
 
     // validate that a collection has been selected
     if ($parent_is_known === false){
-        form_set_error('error', "The bundle has not been assigned to a collection");
+        $form_state->setErrorByName('error', "The bundle has not been assigned to a collection");
         return $form;
     }
 
     // In case no cmdi file exists
     if ($has_cmdi === false){
-        form_set_error('error', "No metadata file has been specified");
+        $form_state->setErrorByName('error', "No metadata file has been specified");
         return $form;
     }
 
     // Quick and dirty Check cmdi valid xml
     if ($valid_xml === false){
-        form_set_error('validate_bundle', t("The CMDI metadata file is not a valid xml file"));
+        $form_state->setErrorByName('validate_bundle', t("The CMDI metadata file is not a valid xml file"));
         return $form;
     }
 
     /* In case of wrong naming
     if ($good_name === false){
-        form_set_error('validate_bundle', t("Metadata file has wrong file name (record.cmdi expected)"));
+        $form_state->setErrorByName('validate_bundle', t("Metadata file has wrong file name (record.cmdi expected)"));
         return $form;
     }
     */
@@ -282,20 +293,20 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
     // Check existence external location
     if ($file_exists === false){
 
-        form_set_error('validate_bundle',t('Location does not exist (:path) ' , array(':path' => $path)));
+        $form_state->setErrorByName('validate_bundle',t('Location does not exist (:path) ' , array(':path' => $path)));
         return $form;
 
     }
 
     // Check user permissions
     if ($user_has_permissions === false){
-        form_set_error('validate_bundle', t('You do not have the permission to perform this action. Please contact the archive manager.'));
+        $form_state->setErrorByName('validate_bundle', t('You do not have the permission to perform this action. Please contact the archive manager.'));
         return $form;
     }
 
     // for imported (uploaded) CMDI file, check that the resourceproxy resourcerefs match with the provided files
-    $md_type = isset($wrapper->flat_cmdi_option) ? $wrapper->flat_cmdi_option->value() : NULL;
-    $flat_type = isset($wrapper->flat_type) ? $wrapper->flat_type->value() : NULL;
+    $md_type = isset($node->flat_cmdi_option) ? $node->flat_cmdi_option->value : NULL;
+    $flat_type = isset($node->flat_type) ? $node->flat_type->value : NULL;
     if ($flat_type == 'update') {
         $md_type = 'existing';
     }
@@ -344,7 +355,7 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
     }
 
     if (!empty($errors)) {
-        form_set_error('validate_bundle', implode('<br>', $errors));
+        $form_state->setErrorByName('validate_bundle', implode('<br>', $errors));
         return $form;
     }
 
@@ -355,14 +366,15 @@ function flat_bundle_action_form_submit($form, &$form_state)
 {
 
     $node = $form_state['values']['node'];
-    $wrapper = entity_metadata_wrapper('node', $node);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
 
     $action = $form_state['clicked_button']['#value'];
 
     switch ($action) {
         case 'Bundle image':
         case 'Upload data':
-            global $user;
+            $user = \Drupal::currentUser();
             $form_state['redirect'] = array('user/' . $user->uid . '/imce');
             break;
 
@@ -385,11 +397,11 @@ function flat_bundle_action_form_submit($form, &$form_state)
 
             send_request($node->nid, $action, $debug);
 
-            $processed = ($wrapper->flat_bundle_status->value() == 'valid') ? 'archived' : 'validated';
+            $processed = ($node->flat_bundle_status->value == 'valid') ? 'archived' : 'validated';
 
-            global $user;
+            $user = \Drupal::currentUser();
             $form_state['redirect'] = 'dashboard';
-            drupal_set_message("Bundle is being $processed");
+            \Drupal::messenger()->addMessage("Bundle is being $processed");
 
             break;
 
@@ -408,9 +420,9 @@ function flat_bundle_action_form_submit($form, &$form_state)
 
         case 'Re-open bundle':
 
-            $wrapper->flat_bundle_status->set('open');
-            $wrapper->save();
-            drupal_set_message('Bundle is open and can be modified again');
+            $node->flat_bundle_status->value = 'open';
+            $node->save();
+            \Drupal::messenger()->addMessage('Bundle is open and can be modified again');
 
             break;
 

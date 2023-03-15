@@ -38,7 +38,7 @@ function flat_reports_action_form_delete_2_weeks_submit($form, &$form_state){
     $num_deleted = $query->execute();
 
 
-    drupal_set_message('Deleted all reports older than 2 weeks');
+    \Drupal::messenger()->addMessage('Deleted all reports older than 2 weeks');
 }
 
 
@@ -52,7 +52,7 @@ function flat_reports_action_form_delete_all_submit($form, &$form_state){
     $num_deleted = $query->execute();
 
 
-drupal_set_message('Deleted all reports');
+\Drupal::messenger()->addMessage('Deleted all reports');
 }
 
 

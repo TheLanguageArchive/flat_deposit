@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\Core\Form\FormStateInterface;
+
 /**
  * This class will sync template data stored in drupal's form_state input array
  * towards values array
@@ -20,10 +22,10 @@ class CmdiValueExtractor
      *
      * @return array
      */
-    public static function extract($form_state)
+    public static function extract(FormStateInterface $form_state)
     {
-        $values = $form_state['values']['template_container']['elements'];
-        $input = $form_state['input']['template_container']['elements'];
+        $values = $form_state->getValue(['template_container', 'elements']);
+        $input = $form_state->getUserInput(['template_container', 'elements']);
 
         return static::recursiveExtraction($values, $input);
     }

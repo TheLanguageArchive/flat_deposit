@@ -7,7 +7,8 @@
 function flat_deposit_ui_list_uploads(){
 
     //define variants
-    $node_types = node_type_get_types();
+    // $node_types = node_type_get_types();
+    $node_types = \Drupal\node\Entity\NodeType::loadMultiple();
     #krumo($node_types);
     $stati = array(1); //0 = unpublished, 1 = published
 
@@ -20,7 +21,7 @@ function flat_deposit_ui_list_uploads(){
             #krumo($status);
 
             //SELECT COUNT FROM node WHERE type = $typename AND status = $status
-            $query = db_select('node', 'n')
+            $query = \Drupal::database()->select('node', 'n')
                 ->condition('type', $typename)
                 ->condition('status', $status);
             $query->addExpression('COUNT (nid)', 'node_count');

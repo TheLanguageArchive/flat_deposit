@@ -7,7 +7,7 @@
 #$drupal_path = '/var/www/html/flat/'; #remove when done
 $drupal_path = $_POST['drupal_path'];
 chdir($drupal_path);
-define('DRUPAL_ROOT', getcwd()); //the most important line
+define('\Drupal::root()', getcwd()); //the most important line
 require_once './includes/bootstrap.inc';
 drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
@@ -27,40 +27,42 @@ $test = ($test == 'Validate bundle') ? TRUE : FALSE;
 $posted_cmdi_handling = 'use existing';
 
 // get bundle info from node
-$node = node_load($nid);
-$wrapper = entity_metadata_wrapper('node',$node);
+$node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+// @FIXME entity_metadata_wrapper fix for drupal 9
+// $wrapper = entity_metadata_wrapper('node',$node);
 
 // get owner name from node
-$sipOwner = user_load($node->uid);
-$sipOwnerName = $sipOwner->name;
+$sipOwner = \Drupal::entityTypeManager()->getStorage('user')->load($node->getOwnerId());
+$sipOwnerName = $sipOwner->getAccountName();
 
 // define SIP type
 $sipType = 'Bundle';
 
 // get full record cmdi file path from node file field
-$metadata_file_info =$wrapper->flat_cmdi_file->value();
-$recordCmdi = drupal_realpath($metadata_file_info['uri']);
+$metadata_file_info = $node->flat_cmdi_file->value;
+$recordCmdi = \Drupal::service("file_system")->realpath($metadata_file_info['uri']);
 
 
 // get fedora ID of parent by loading node with node-id 'flat_parent_nid'
-$collection_nid = $wrapper->flat_parent_nid->value();
-$collection_node = node_load($collection_nid);
-$collection_wrapper = entity_metadata_wrapper('node',$collection_node);
-$collection_fid = $collection_wrapper->flat_fid->value();
+$collection_nid = $node->flat_parent_nid->value;
+$collection_node = \Drupal::entityTypeManager()->getStorage('node')->load($collection_nid);
+// @FIXME entity_metadata_wrapper fix for drupal 9
+// $collection_wrapper = entity_metadata_wrapper('node', $collection_node);
+$collection_fid = $collection_node->flat_fid->value;
 
 
 // instantiate client
 module_load_include('php','flat_deposit','Helpers/IngestService/IngestClient');
 
 try {
-    $ingest_client = new IngestClient($sipType, $sipOwnerName, $recordCmdi, $collection_fid, $test);
-} catch (IngestServiceException $exception){
+    $ingest_client = new \IngestClient($sipType, $sipOwnerName, $recordCmdi, $collection_fid, $test);
+} catch (\IngestServiceException $exception){
 
 }
 
 // set ingest parameters
 $info['loggedin_user'] = $loggedin_user;
-$info['nid']= $nid;
+$info['nid'] = $nid;
 
 $try = $ingest_client->requestSipIngest($info);
 

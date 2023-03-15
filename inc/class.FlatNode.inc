@@ -8,7 +8,7 @@
  */
 class FlatNode
 {
-    public static function transliteration_clean_filename($filename, $source_langcode = NULL)
+    public static function transliteration_clean_filename($filename, $source_langcode = 'en')
     {
         if (is_array($filename)) {
             foreach ($filename as $key => $value) {
@@ -24,18 +24,22 @@ class FlatNode
         // Remove multiple consecutive non-alphabetical characters.
         $filename = preg_replace('/(_)_+|(\.)\.+|(-)-+/', '\\1\\2\\3', $filename);
         // Force lowercase to prevent issues on case-insensitive file systems.
-        if (variable_get('transliteration_file_lowercase', TRUE)) {
+        // @FIXME
+// // @FIXME
+// // This looks like another module's variable. You'll need to rewrite this call
+// // to ensure that it uses the correct configuration object.
+// if (variable_get('transliteration_file_lowercase', TRUE)) {
+//             $filename = strtolower($filename);
+//         }
+        $transliteration_file_lowercase = \Drupal::config('flat_deposit.settings')->get('transliteration_file_lowercase') ?? true;
+        if ($transliteration_file_lowercase) {
             $filename = strtolower($filename);
         }
+
         return $filename;
     }
-    public static function transliteration_get($text, $unknown = '?', $source_langcode = NULL)
+    public static function transliteration_get($text, $unknown = '?', $source_langcode = 'en')
     {
-        static $loaded = FALSE;
-        if (!$loaded) {
-            module_load_include('inc', 'transliteration');
-            $loaded = TRUE;
-        }
-        return transliteration_process($text, $unknown, $source_langcode);
+        return \Drupal::service('transliteration')->transliterate($text, $source_langcode, $unknown);
     }
 }

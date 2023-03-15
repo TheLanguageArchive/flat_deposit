@@ -1,8 +1,16 @@
 <?php
 spl_autoload_register(function ($class_name) {
-    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.' . $class_name . '.inc';
 
+    $ns = explode('\\', $class_name);
+    $class_name = $ns[count($ns) - 1];
+
+    $path = drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.' . $class_name . '.inc';
+
+    if (file_exists($path)) {
+        include_once $path;
+    }
 });
+
 /**
  * Created by PhpStorm.
  * User: danrhe
@@ -27,12 +35,13 @@ abstract class CmdiComponent
     protected function convertValue($type, $value){
 
         switch ($type){
-            case 'date':
-                $month = (strlen($value['month']) == 2 ) ? $value['month'] : '0'. $value['month'];
-                $day = (strlen($value['day']) == 2 ) ? $value['day'] : '0'. $value['day'];
-                $date = $value['year'] . '-' . $month . '-' . $day;
-                $converted = $date;
-                break;
+            // case 'date':
+            //     $converted = $value;
+            //     $month = (strlen($value['month']) == 2 ) ? $value['month'] : '0'. $value['month'];
+            //     $day = (strlen($value['day']) == 2 ) ? $value['day'] : '0'. $value['day'];
+            //     $date = $value['year'] . '-' . $month . '-' . $day;
+            //     $converted = $date;
+            //     break;
             default :
                 $converted = $value;
         }

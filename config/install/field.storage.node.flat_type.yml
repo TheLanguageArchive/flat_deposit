@@ -1,0 +1,25 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - flat_deposit
+    - node
+id: node.flat_type
+field_name: flat_type
+entity_type: node
+type: list_string
+module: core
+locked: false
+cardinality: 1
+settings:
+  allowed_values:
+    -
+      value: new
+      label: 'Newly created content'
+    -
+      value: update
+      label: 'Update of existing content'
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

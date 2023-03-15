@@ -1,0 +1,20 @@
+services:
+  flat_deposit.stream_wrapper.metadata:
+    class: Drupal\flat_deposit\StreamWrapper\MetadataStreamWrapper
+    tags:
+      - { name: stream_wrapper, scheme: metadata }
+
+  flat_deposit.stream_wrapper.freeze:
+    class: Drupal\flat_deposit\StreamWrapper\FreezeStreamWrapper
+    tags:
+      - { name: stream_wrapper, scheme: freeze }
+
+  flat_deposit.stream_wrapper.external:
+    class: Drupal\flat_deposit\StreamWrapper\ExternalStreamWrapper
+    tags:
+      - { name: stream_wrapper, scheme: external }
+
+  flat_deposit.stream_wrapper.local:
+    class: Drupal\flat_deposit\StreamWrapper\LocalStreamWrapper
+    tags:
+      - { name: stream_wrapper, scheme: local }

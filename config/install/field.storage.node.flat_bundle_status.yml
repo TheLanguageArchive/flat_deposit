@@ -1,0 +1,38 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - flat_deposit
+    - node
+id: node.flat_bundle_status
+field_name: flat_bundle_status
+entity_type: node
+type: list_string
+module: core
+locked: false
+cardinality: 1
+settings:
+  allowed_values:
+    -
+      value: open
+      label: open
+    -
+      value: failed
+      label: failed
+    -
+      value: validating
+      label: validating
+    -
+      value: valid
+      label: valid
+    -
+      value: processing
+      label: processing
+    -
+      value: archived
+      label: archived
+
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

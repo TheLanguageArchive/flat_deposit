@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\Core\Form\FormStateInterface;
+
 /**
  * This class will sync modified form data when template has been loaded in form, even after
  * form generates form error
@@ -12,16 +14,22 @@
  */
 class CmdiValueSyncer
 {
-    public static function sync(&$form, &$form_state)
+    public static function sync(&$form, FormStateInterface $form_state)
     {
         if (!isset($form['template_container'])) {
             return;
         }
 
         $elements = &$form['template_container']['elements'];
-        $input = &$form_state['input']['template_container']['elements'];
+        $input = $form_state->getUserInput();
 
-        static::recursiveExtraction($input, $elements);
+        if (null !== $input && isset($input['template_container']['elements'])) {
+
+            $elementsInput = &$input['template_container']['elements'];
+
+            static::recursiveExtraction($elementsInput, $elements);
+            $form_state->setUserInput($input);
+        }
     }
 
     /**

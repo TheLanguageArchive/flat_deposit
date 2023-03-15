@@ -1,4 +1,7 @@
 <?php
+
+use Drupal\Core\Form\FormStateInterface;
+
 module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
 autoload_cmdicreator();
 
@@ -11,7 +14,7 @@ autoload_cmdicreator();
 class CmdiTemplateSaver
 {
     /**
-     * @var array Reference to drupal form_state
+     * @var FormStateInterface Reference to drupal form_state
      */
     private $form_state;
 
@@ -20,9 +23,9 @@ class CmdiTemplateSaver
      *
      * @param array $form_state
      */
-    public function __construct(&$form_state)
+    public function __construct(FormStateInterface $form_state)
     {
-        $this->form_state = &$form_state;
+        $this->form_state = $form_state;
     }
 
     /**
@@ -30,9 +33,9 @@ class CmdiTemplateSaver
      *
      * @return bool
      */
-    public function isSubmitted(): bool
+    public function isSubmitted()
     {
-        return isset($this->form_state['triggering_element']['#ajax']['callback']) && $this->form_state['triggering_element']['#ajax']['callback'] === 'flat_cmdi_templates_ajax_save_callback';
+        return $this->form_state->has(['triggering_element', '#ajax', 'callback']) && $this->form_state->get(['triggering_element', '#ajax', 'callback']) === 'flat_cmdi_templates_ajax_save_callback';
     }
 
     /**
@@ -42,20 +45,20 @@ class CmdiTemplateSaver
      */
     public function getProfile()
     {
-        if (isset($this->form_state['complete form']['select_profile_name']['#value'])) {
+        if ($this->form_state->has(['complete form', 'select_profile_name', '#value'])) {
 
             // update_collection.inc does not have the trigger field
             // using this
-            return $this->form_state['complete form']['select_profile_name']['#value'];
+            return $this->form_state->get(['complete form', 'select_profile_name', '#value']);
         }
 
-        if (!isset($this->form_state['complete form']['trigger']['select_profile_name']['#value'])) {
+        if (!$this->form_state->has(['complete form', 'trigger', 'select_profile_name', '#value'])) {
 
             // trigger was not found
             return null;
         }
 
-        return $this->form_state['complete form']['trigger']['select_profile_name']['#value'];
+        return $this->form_state->get(['complete form', 'trigger', 'select_profile_name', '#value']);
     }
 
     /**
@@ -65,8 +68,8 @@ class CmdiTemplateSaver
      */
     public function getUid()
     {
-        global $user;
-        return $user->uid;
+        $user = \Drupal::currentUser();
+        return $user->id();
     }
 
     /**
@@ -76,19 +79,22 @@ class CmdiTemplateSaver
      */
     public function getCmdiTree()
     {
-        return $this->form_state['triggering_element']['#cmdi_tree'];
+        $triggeringElement = $this->form_state->getTriggeringElement() ?? [];
+        return $triggeringElement['#cmdi_tree'] ?? [];
     }
 
     public function getComponentId()
     {
-        return $this->form_state['triggering_element']['#component_id'];
+        $triggeringElement = $this->form_state->getTriggeringElement() ?? [];
+        return $triggeringElement['#component_id'] ?? [];
     }
 
     public function getLabel()
     {
-        return $this->form_state['input'][
-            $this->form_state['triggering_element']['#label_field_name']
-        ];
+        $triggeringElement = $this->form_state->getTriggeringElement() ?? [];
+        return $this->form_state->getUserInput(['input',
+            $triggeringElement['#label_field_name']
+        ]);
     }
 
     /**
@@ -107,12 +113,13 @@ class CmdiTemplateSaver
         // get pressedButtons for tree
         $pressed = null;
 
-        if (isset($this->form_state['pressedButtons']['template_container']['elements'])) {
-            $pressed = drupal_array_get_nested_value($this->form_state['pressedButtons']['template_container']['elements'], $tree);
+        if ($this->form_state->has(['pressedButtons', 'template_container', 'elements'])) {
+            $pressed = \Drupal\Component\Utility\NestedArray::getValue($this->form_state->get(['pressedButtons', 'template_container', 'elements']), $tree);
         }
 
         // getting form state for tree
-        $state = drupal_array_get_nested_value($this->form_state['input']['template_container']['elements'], $tree);
+        $input = $this->form_state->getUserInput() ?? [];
+        $state = \Drupal\Component\Utility\NestedArray::getValue($input['template_container']['elements'], $tree);
 
         // removing all occurences of flat_cmdi_templates from form state for tree
         $state = drupal_array_unset_recursive($state, 'flat_cmdi_templates');
@@ -144,7 +151,7 @@ class CmdiTemplateSaver
 
         if (empty($label)) {
 
-            form_set_error('flat_cmdi_templates', 'Please provide a label for saving this block as a prest.');
+            $this->form_state->setErrorByName('flat_cmdi_templates', t('Please provide a label for saving this block as a preset.'));
             return false;
         }
 
@@ -158,7 +165,7 @@ class CmdiTemplateSaver
 
         if (null !== $block) {
 
-            CmdiTemplateDb::save($profile, $label, $this->getComponentId(), $block, $this->getUid());
+            \CmdiTemplateDb::save($profile, $label, $this->getComponentId(), $block, $this->getUid());
             return true;
         }
 

@@ -3,11 +3,19 @@
 function flat_deposit_bundle_edit_cmdi_form($form, &$form_state)
 {
 
-    drupal_set_title(t('Edit Bundle Metadata'));
+    // @FIXME
+// drupal_set_title() has been removed. There are now a few ways to set the title
+// dynamically, depending on the situation.
+//
+//
+// @see https://www.drupal.org/node/2067859
+// drupal_set_title(t('Edit Bundle Metadata'));
+
 
     $nid = $form_state['build_info']['args'][0]->nid;
 
-    $wrapper = entity_metadata_wrapper('node', $nid);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $nid);
 
     ctools_add_js('ajax-responder');
 
@@ -17,17 +25,17 @@ function flat_deposit_bundle_edit_cmdi_form($form, &$form_state)
     if (isset($form_state['parent_nid'])) {
         $parent_nid = $form_state['parent_nid'];
     } else {
-        $parent_nid = $wrapper->flat_parent_nid->value();
+        $parent_nid = $node->flat_parent_nid->value;
         $form_state['parent_nid'] = $parent_nid;
     }
 
     if ($parent_nid === '0') {
-        drupal_set_message('Cannot generate or edit form because collection is not specified', 'error');
+        \Drupal::messenger()->addError('Cannot generate or edit form because collection is not specified');
         return $form;
     }
 
-    $existing_cmdi = $wrapper->flat_cmdi_file->raw()['uri'];
-    $inheritedData = CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($existing_cmdi));
+    $existing_cmdi = $node->flat_cmdi_file->value['uri'];
+    $inheritedData = CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($existing_cmdi));
     if ($inheritedData) {
         $profile = $inheritedData->getNameById();
     } else {
@@ -37,7 +45,7 @@ function flat_deposit_bundle_edit_cmdi_form($form, &$form_state)
     $form['#prefix'] = "<div id='flat_bundle_edit_cmdi_form_wrapper'>";
     $form['#suffix'] = "</div>";
 
-    global $user;
+    $user = \Drupal::currentUser();
     $form['owner'] = array(
         '#title' => t('Owner of the collection'),
         '#type' => 'hidden',
@@ -117,10 +125,10 @@ function flat_deposit_bundle_edit_cmdi_form($form, &$form_state)
 
         // check if everything worked as expected
         if (!is_array($form['template_container']['elements'])) {
-            drupal_set_message('Unable to generate cmdi form based on profile', 'warning');
+            \Drupal::messenger()->addWarning('Unable to generate cmdi form based on profile');
         }
     } else {
-        drupal_set_message('Online editing of the metadata of this bundle is not supported');
+        \Drupal::messenger()->addMessage('Online editing of the metadata of this bundle is not supported');
         $form['Submit']['#disabled'] = TRUE;
     }
     return $form;
@@ -138,8 +146,9 @@ function flat_deposit_bundle_edit_cmdi_form_final_validate($form, &$form_state)
 {
     // Form Validation setup
     $nid = $form_state['build_info']['args'][0]->nid;
-    $node = node_load($nid);
-    $wrapper = entity_metadata_wrapper('node', $node);
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $wrapper = entity_metadata_wrapper('node', $node);
 
 
     $title = $node->title;
@@ -147,11 +156,11 @@ function flat_deposit_bundle_edit_cmdi_form_final_validate($form, &$form_state)
     $owner = $form_state['values']['owner'];
     $profile = $form_state['values']['select_profile_name'];
 
-    $cmdiFile = $wrapper->flat_cmdi_file->raw()['uri'];
+    $cmdiFile = $node->flat_cmdi_file->raw()['uri'];
 
     $form_state['values']['cmdiFile'] = $cmdiFile;
 
-    $parent_nid = $wrapper->flat_parent_nid->value();
+    $parent_nid = $node->flat_parent_nid->value;
 
     //****************************//
     // Perform general validation //
@@ -164,7 +173,7 @@ function flat_deposit_bundle_edit_cmdi_form_final_validate($form, &$form_state)
 
     // Validate if owner exists.
     if (!user_load_by_name($owner)) {
-        form_set_error('owner', t('Specified owner is unknown'));
+        $form_state->setErrorByName('owner', t('Specified owner is unknown'));
         return $form;
     };
 
@@ -182,24 +191,25 @@ function flat_deposit_bundle_edit_cmdi_form_final_validate($form, &$form_state)
     $title = $form_state['values']['template_container']['elements']['title_field'][0];
 
     if (!$title) {
-        form_set_error('error', t('title is not set for this cmdi file'));
+        $form_state->setErrorByName('error', t('title is not set for this cmdi file'));
         return $form;
     }
 
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
-    $parent_node = node_load($parent_nid);
-    $parent_wrapper = entity_metadata_wrapper('node', $parent_node);
+    $parent_node = \Drupal::entityTypeManager()->getStorage('node')->load($parent_nid);
+    // @FIXME entity_metadata_wrapper fix for drupal 9
+    // $parent_wrapper = entity_metadata_wrapper('node', $parent_node);
 
-    $parent_fid = $parent_wrapper->flat_fid->value();
+    $parent_fid = $parent_node->flat_fid->value;
     $values = FlatTuque::getChildrenLabels($parent_fid);
 
     if ($values === false) {
-        form_set_error('title', t('Unable to validate that collection name is unique at this location'));
+        $form_state->setErrorByName('title', t('Unable to validate that collection name is unique at this location'));
         return $form;
     }
 
     if (in_array(strtoupper($title), array_unique(array_map('strtoupper', $values)))) {
-        form_set_error('title', t('Another collection or bundle with same name exists at this location. Please use a different name'));
+        $form_state->setErrorByName('title', t('Another collection or bundle with same name exists at this location. Please use a different name'));
         return $form;
     }
 
@@ -219,14 +229,14 @@ function flat_deposit_bundle_edit_cmdi_form_final_validate($form, &$form_state)
         $creator->setCmdi($templateName, $form_data, $owner);
         $cmdi = $creator->getCmdi();
     } catch (CmdiCreatorException $e) {
-        form_set_error('error', $e->getMessage());
+        $form_state->setErrorByName('error', $e->getMessage());
         return $form;
     }
 
     $exported = $cmdi->asXML($cmdiFile);
 
     if (!$exported) {
-        form_set_error('error', t('Unable to save cmdi file'));
+        $form_state->setErrorByName('error', t('Unable to save cmdi file'));
     }
 
 
@@ -240,11 +250,11 @@ function flat_deposit_bundle_edit_cmdi_form_final_validate($form, &$form_state)
     // Validate cmdi profile //
     //***********************//
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
-    $cmdi = CmdiHandler::simplexml_load_cmdi_file(drupal_realpath($cmdiFile));
+    $cmdi = CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($cmdiFile));
     try {
         $cmdi->canBeValidated();
     } catch (CmdiHandlerException $cmdiHandlerException) {
-        form_set_error('cmdi_file', $cmdiHandlerException->getMessage());
+        $form_state->setErrorByName('cmdi_file', $cmdiHandlerException->getMessage());
         return $form;
     }
     return $form;
@@ -254,13 +264,18 @@ function flat_deposit_bundle_edit_cmdi_form_final_validate($form, &$form_state)
 
 function flat_deposit_bundle_edit_cmdi_form_submit($form, &$form_state)
 {
-    ctools_include('ajax');
+    // @FIXME
+// Most CTools APIs have been moved into core.
+//
+// @see https://www.drupal.org/node/2164623
+// ctools_include('ajax');
+
     ctools_add_js('ajax-responder');
 
     $nid = $form_state['build_info']['args'][0]->nid;
-    $node = node_load($nid);
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
 
-    drupal_set_message(t('Metadata for bundle %title has been saved', array('%title' => $node->title)));
+    \Drupal::messenger()->addMessage(t('Metadata for bundle %title has been saved', array('%title' => $node->title)));
 
     $commands[] = ctools_ajax_command_redirect('node/' .$nid);
     print ajax_render($commands);

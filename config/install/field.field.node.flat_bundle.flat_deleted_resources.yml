@@ -1,0 +1,19 @@
+# field.field.node.flat_bundle.flat_deleted_resources.yml
+langcode: en
+status: true
+dependencies:
+    config:
+      - field.storage.node.flat_deleted_resources
+      - node.type.flat_bundle
+id: node.flat_bundle.flat_deleted_resources
+field_name: flat_deleted_resources
+field_type: text
+entity_type: node
+bundle: flat_bundle
+label: Deleted Resources
+description: 'Resources of existing bundle that will be deleted'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: { }

@@ -1,7 +1,7 @@
 <?php
 function flat_collection_bundle_action_form($form, &$form_state, $var)
 {
-    form_load_include($form_state, 'inc', 'flat_deposit', 'inc/flat_bundle_action_helpers');
+    $form_state->loadInclude('flat_deposit', 'inc', 'inc/flat_bundle_action_helpers');
 
     $form['table_container'] = array
     (
@@ -13,13 +13,19 @@ function flat_collection_bundle_action_form($form, &$form_state, $var)
     );
 
 // query already existing links to collections
-    global $user;
+    $user = \Drupal::currentUser();
     $parent_nid = $var->nid;
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'flat_bundle')
-        ->fieldCondition('flat_parent_nid', 'value', "$parent_nid", '=')
-        ->propertyCondition('uid', $user->uid);
+
+    $query = \Drupal::entityQuery('node')
+        ->condition('type', 'flat_bundle')
+        ->condition('flat_parent_nid.value', $parent_nid, '=')
+        ->condition('uid', $user->id());
+
+    // $query = new EntityFieldQuery();
+    // $query->entityCondition('entity_type', 'node')
+    //     ->entityCondition('bundle', 'flat_bundle')
+    //     ->fieldCondition('flat_parent_nid', 'value', "$parent_nid", '=')
+    //     ->propertyCondition('uid', $user->uid);
 
     $user_bundle_nodes = $query->execute();
     $existing = [];
@@ -30,12 +36,14 @@ function flat_collection_bundle_action_form($form, &$form_state, $var)
     if (!empty($user_bundle_nodes['node'])) {
         foreach ($user_bundle_nodes['node'] as $entity) {
             $nid = $entity->nid;
-            $bundle =node_load($nid);
-            $bundle_wrapper = entity_metadata_wrapper('node', $bundle);
-            $metadata = !is_null($bundle_wrapper->flat_cmdi_file->value()) ? 'available' : 'not available';
-            $status = $bundle_wrapper->flat_bundle_status->value();
+            $bundle =\Drupal::entityTypeManager()->getStorage('node')->load($nid);
 
-            $source = $bundle_wrapper->flat_source->value();
+            // @FIXME entity_metadata_wrapper fix for drupal 9
+            // $bundle_wrapper = entity_metadata_wrapper('node', $bundle);
+            $metadata = !is_null($bundle->flat_cmdi_file->value) ? 'available' : 'not available';
+            $status = $bundle->flat_bundle_status->value;
+
+            $source = $bundle->flat_source->value;
 
             $disabled = ($metadata == 'available' AND ($status == 'open' OR $status == 'failed' OR $status == 'valid')) ? FALSE : TRUE;
 
@@ -75,7 +83,7 @@ function flat_collection_bundle_action_form($form, &$form_state, $var)
         );
 
     }
-    $node = menu_get_object();
+    $node = \Drupal::routeMatch()->getParameter();
 
     $form['values']['node'] = array(
         '#type' => 'value',
@@ -250,19 +258,21 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
             if (!empty($form_state['values']['reopen_bundles'])) {
 
                 foreach ($form_state['values']['reopen_bundles'] as $bundle){
-                    $node = node_load($bundle);
-                    $wrapper=entity_metadata_wrapper('node',$node);
-                    $wrapper->flat_bundle_status->set('open');
-                    $wrapper->save();
+                    $node = \Drupal::entityTypeManager()->getStorage('node')->load($bundle);
+
+                    // @FIXME entity_metadata_wrapper fix for drupal 9
+                    // $wrapper=entity_metadata_wrapper('node',$node);
+                    $node->flat_bundle_status->value = 'open';
+                    $node->save();
 
                 }
-                drupal_set_message('Re-open succeeded for bundle(s): ' . implode_comma_and($form_state['values']['reopen_bundle_titles']));
+                \Drupal::messenger()->addMessage('Re-open succeeded for bundle(s): ' . implode_comma_and($form_state['values']['reopen_bundle_titles']));
                 //$form_state['redirect'] = 'dashboard';
             }
 
             if (!empty($form_state['values']['reopen_error'])){
 
-                drupal_set_message('Unable to re-open bundle(s): ' .  implode_comma_and($form_state['values']['reopen_error_titles']) . '. Only valid or failed bundles can be re-opened.', 'error');
+                \Drupal::messenger()->addError('Unable to re-open bundle(s): ' .  implode_comma_and($form_state['values']['reopen_error_titles']) . '. Only valid or failed bundles can be re-opened.');
 
             }
             break;
@@ -279,16 +289,24 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
                     send_request($bundle, $action, false);
                 }
 
-                drupal_set_message('Validation submission succeeded for bundle(s) ' . implode_comma_and($form_state['values']['validate_bundle_titles']));
+                \Drupal::messenger()->addMessage('Validation submission succeeded for bundle(s) ' . implode_comma_and($form_state['values']['validate_bundle_titles']));
                 //$form_state['redirect'] = 'dashboard';
             }
 
             if (!empty($form_state['values']['reject_bundles'])) {
 
-                drupal_set_message('Validation failed for the following bundle(s): ' . implode_comma_and($form_state['values']['reject_bundle_titles']) . '.', 'error');
+                \Drupal::messenger()->addError('Validation failed for the following bundle(s): ' . implode_comma_and($form_state['values']['reject_bundle_titles']) . '.');
 
-                $max_files = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
-                $max_file_size = variable_get('flat_deposit_ingest_service')['max_file_size'];
+                // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$max_files = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['max_ingest_files'];
+                // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+$max_file_size = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['max_file_size'];
 
                 foreach ($form_state['values']['reject_bundles'] as $index => $rejected_bundle) {
 
@@ -332,7 +350,7 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
 
                     if (!empty($errors)) {
                         foreach ($errors as $error) {
-                            drupal_set_message($error, 'error');
+                            \Drupal::messenger()->addError($error);
                         }
                     }
 
@@ -353,14 +371,14 @@ function flat_collection_bundle_action_form_submit($form, &$form_state)
 
                 }
 
-                drupal_set_message('Bundle(s) submitted for archiving:  ' . implode_comma_and($form_state['values']['archive_bundle_titles']));
+                \Drupal::messenger()->addMessage('Bundle(s) submitted for archiving:  ' . implode_comma_and($form_state['values']['archive_bundle_titles']));
                 //$form_state['redirect'] = 'dashboard';
 
             }
 
             if (!empty($form_state['values']['archive_reject'])) {
 
-                drupal_set_message('Failed submitting bundle(s) for archiving: ' . implode_comma_and($form_state['values']['archive_reject_titles']) . '. Only valid bundles can be archived.', 'error');
+                \Drupal::messenger()->addError('Failed submitting bundle(s) for archiving: ' . implode_comma_and($form_state['values']['archive_reject_titles']) . '. Only valid bundles can be archived.');
 
             }
 

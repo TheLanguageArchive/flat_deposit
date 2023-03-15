@@ -1,0 +1,26 @@
+# field.field.node.flat_bundle.flat_metadata_visibility.yml
+langcode: en
+status: true
+dependencies:
+    config:
+      - field.storage.node.flat_metadata_visibility
+      - node.type.flat_bundle
+id: node.flat_bundle.flat_metadata_visibility
+field_name: flat_metadata_visibility
+field_type: list_string
+entity_type: node
+bundle: flat_bundle
+label: Visibility
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_values:
+    -
+      value: show
+      label: 'visible'
+    -
+      value: hide
+      label: 'hidden'

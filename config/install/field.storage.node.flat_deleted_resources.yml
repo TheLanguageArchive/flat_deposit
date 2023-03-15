@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - flat_deposit
+    - node
+id: node.flat_deleted_resources
+field_name: flat_deleted_resources
+entity_type: node
+type: text
+module: core
+locked: false
+cardinality: 1
+settings: { }
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

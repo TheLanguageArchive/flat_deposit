@@ -4,7 +4,7 @@
 function flat_deposit_cmdi_form($form, &$form_state)
 {
 
-    global $user;
+    $user = \Drupal::currentUser();
     $form['owner'] = array(
         '#title' => t('Owner of the collection'),
         '#type' => 'textfield',
@@ -182,12 +182,12 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     } catch (CmdiCreatorException $e){
 
 
-        form_set_error('debug',$e->getMessage());
+        $form_state->setErrorByName('debug',$e->getMessage());
         return $form;
 
     }
 
-    form_set_error('debug','debug');
+    $form_state->setErrorByName('debug','debug');
     return $form;
 
 
@@ -197,31 +197,43 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     $owner = $form_state['values']['owner'];
     if (!user_load_by_name($owner)) {
 
-        form_set_error('owner', 'Specified owner is unknown to drupal');
+        $form_state->setErrorByName('owner', 'Specified owner is unknown to drupal');
         return $form;
     };
 
     // Validate chosen option
     if ($form_state['values']['select_profile_name'] === '-- Select --') {
-        form_set_error('select_profile_name', 'Please choose correct option');
+        $form_state->setErrorByName('select_profile_name', 'Please choose correct option');
         return $form;
     }
 
     //validate existence output dir
+<<<<<<< HEAD
     $node = menu_get_object();
     $wrapper = entity_metadata_wrapper('node', $node);
 
     $title = $node->title;
     $collection = $wrapper->flat_parent_title->value();
+=======
+    $node = \Drupal::routeMatch()->getParameter();
+    // $wrapper = entity_metadata_wrapper('node', $node);
+
+    $title = $node->title;
+    $collection = $node->flat_parent_title->value;
+>>>>>>> c1c57f0 ([feature/d9])
 
 
     $export_dir = 'metadata://' . '/' . $owner . "/$collection/$title";
     if (!file_exists($export_dir)) {
+<<<<<<< HEAD
         drupal_mkdir($export_dir, NULL, TRUE);
+=======
+        \Drupal::service("file_system")->mkdir($export_dir, NULL, TRUE);
+>>>>>>> c1c57f0 ([feature/d9])
     }
 
     if (!file_exists($export_dir)) {
-        form_set_error('error', 'Cannot create directory to temporarily store cmdi files');
+        $form_state->setErrorByName('error', 'Cannot create directory to temporarily store cmdi files');
         return $form;
     }
 
@@ -243,7 +255,7 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
 
 
     if ($msg !== TRUE){
-        form_set_error('error', $msg);
+        $form_state->setErrorByName('error', $msg);
         return $form;
     }
 
@@ -284,10 +296,14 @@ function flat_deposit_cmdi_form_submit($form, &$form_state){
         $wrapper->flat_original_path->set($flat_original_path_original);
         $wrapper->save();
         $form_state['redirect'] = 'node/' .$node->nid;
-        drupal_set_message(t('Metadata for bundle %title has been saved', array('%title' => $node->title)));
+        \Drupal::messenger()->addMessage(t('Metadata for bundle %title has been saved', array('%title' => $node->title)));
     */
 
-    drupal_set_message(t('Metadata for bundle has been saved'));
+<<<<<<< HEAD
+    \Drupal::messenger()->addMessage(t('Metadata for bundle has been saved'));
+=======
+    \Drupal::messenger()->addMessage(t('Metadata for bundle has been saved'));
+>>>>>>> c1c57f0 ([feature/d9])
 
 
 }

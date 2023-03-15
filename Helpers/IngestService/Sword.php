@@ -22,7 +22,11 @@ class Sword
 
         $bagId = $sipId . '_sword';
 
-        $config = variable_get('flat_deposit_sword');
+        // @FIXME
+        // Could not extract the default value because it is either indeterminate, or
+        // not scalar. You'll need to provide a default value in
+        // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+        $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_sword');
         $ch = curl_init();
 
         $url = $config['url'].'collection';
@@ -59,7 +63,7 @@ class Sword
 
         if ($httpcode != 200 && $httpcode != 202 && $httpcode != 201) {
             $message = sprintf("SWORD Server error (HTTP error code (%d) ;\n", $httpcode) . $content;
-            throw new IngestServiceException($message);
+            throw new \IngestServiceException($message);
         } else {
             return TRUE;
         }
@@ -76,7 +80,11 @@ class Sword
      */
     function getRequest($bagId, $code_only = FALSE)
     {
-        $config = variable_get('flat_deposit_sword');
+        // @FIXME
+        // Could not extract the default value because it is either indeterminate, or
+        // not scalar. You'll need to provide a default value in
+        // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+        $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_sword');
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_URL, $config['url'] . 'statement/' . $bagId);
@@ -95,7 +103,6 @@ class Sword
         return $code_only ? $httpcode : $val;
     }
 
-
     /**
      * Create Bag at correct bag location
      *
@@ -105,7 +112,6 @@ class Sword
 
     function checkStatus($bagId)
     {
-
         #initial check request
         $val = $this->getRequest($bagId);
         $xml =simplexml_load_string($val) ;
@@ -122,7 +128,7 @@ class Sword
         // check outcome SWORD
         if ($status != 'SUBMITTED') {
             $message = "Error creating bag;\n" .  $val;
-            throw new IngestServiceException($message);
+            throw new \IngestServiceException($message);
         } else {
             return TRUE;
         }

@@ -16,8 +16,12 @@ class FlatTuque
      */
     public static function getChildrenLabels($pid)
     {
-
-        $config = variable_get('flat_deposit_general');
+        return [];
+        // @FIXME
+        // Could not extract the default value because it is either indeterminate, or
+        // not scalar. You'll need to provide a default value in
+        // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+        $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_general');
         $namespace = $config['namespace'];
 
         $values = false;
@@ -46,6 +50,7 @@ class FlatTuque
      */
     public static function getIsPartOfCollection($fid)
     {
+        return false;
         $return_value = false;
 
         $fObj = islandora_object_load($fid);
@@ -72,6 +77,7 @@ class FlatTuque
      */
     public static function getCModels($fedoraObject)
     {
+        return [];
         $model_array = [];
 
         $cmodels = $fedoraObject->relationships->get('info:fedora/fedora-system:def/model#', 'hasModel');

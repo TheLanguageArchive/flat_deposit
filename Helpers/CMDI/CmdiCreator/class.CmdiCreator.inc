@@ -3,9 +3,9 @@
 spl_autoload_register('autoload_cmdicreator');
 
 function autoload_cmdicreator() {
-    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.CmdiComponent.inc';
-    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.CmdiComposite.inc';
-    include drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.CmdiLeaf.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.CmdiComponent.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.CmdiComposite.inc';
+    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.CmdiLeaf.inc';
 
 }
 
@@ -60,8 +60,8 @@ class CmdiCreator
             $tree = $this->getTree($form_data, $owner);
             $components = $this->setCmdiComponents($templateName, $form_data) ;
             $this->cmdi = $this->mergeTreeAndComponents($tree, $components) ;
-        } catch (CmdiCreatorException $e){
-            throw new CmdiCreatorException($e->getMessage());
+        } catch (\CmdiCreatorException $e){
+            throw new \CmdiCreatorException($e->getMessage());
         }
 
     }
@@ -77,13 +77,12 @@ class CmdiCreator
      */
     private function setCmdiComponents($templateName, $data = null){
 
-
         $fName = self::FORM_TEMPLATES_PATH . $templateName . '.xml';
 
         $template = simplexml_load_file($fName);
 
         if (!$template){
-            throw new CmdiCreatorException('Unable to load template file');
+            throw new \CmdiCreatorException('Unable to load template file');
         }
 
         $this->components = simplexml_load_string('<Components></Components>');

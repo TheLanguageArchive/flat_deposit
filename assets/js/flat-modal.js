@@ -1,4 +1,4 @@
-(function ($) {
+(function ($, Drupal, drupalSettings) {
 
   // because of ajax, attach gets called a lot
   var FlatDepositModalAttached = false;
@@ -225,4 +225,4 @@
     }
   };
 
-  })(jQuery);
+  })(jQuery, Drupal, drupalSettings);

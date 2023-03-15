@@ -48,7 +48,14 @@ $instances['flat_deleted_resources'] = array(
     )
 );
 
-field_create_instance($instances['flat_deleted_resources']);
+// @FIXME
+// Fields and field instances are now exportable configuration entities, and
+// the Field Info API has been removed.
+//
+//
+// @see https://www.drupal.org/node/2012896
+// field_create_instance($instances['flat_deleted_resources']);
+
 
 
 /*

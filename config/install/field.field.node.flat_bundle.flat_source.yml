@@ -1,0 +1,27 @@
+# field.field.node.flat_bundle.flat_source.yml
+langcode: en
+status: true
+dependencies:
+    config:
+      - field.storage.node.flat_source
+      - node.type.flat_bundle
+id: node.flat_bundle.flat_source
+field_name: flat_source
+field_type: list_string
+entity_type: node
+bundle: flat_bundle
+label: How will you provide the files to be included in this bundle?
+description: ''
+required: true
+translatable: true
+default_value:
+  - "local"
+default_value_callback: ''
+settings:
+  allowed_values:
+    -
+      value: "external"
+      label: "Upload the files using the web browser"
+    -
+      value: "local"
+      label: "Select a folder in a workspace on the server"
