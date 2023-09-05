@@ -1,0 +1,6 @@
+flat_workspaces.admin_settings_form:  
+  title: 'FLAT Workspaces configuration'  
+  route_name: flat_workspaces.admin_settings_form  
+  description: 'FLAT Workspaces configuration'  
+  parent: system.admin_config_flat
+  weight: 99  

@@ -1,0 +1,13 @@
+# Menu list of FLAT configuration forms 
+system.admin_config_flat:
+  title: FLAT
+  parent: system.admin_config
+  route_name: system.admin_config_flat
+  weight: 100
+
+flat_deposit.admin_settings_form:  
+  title: 'FLAT Deposit configuration'  
+  route_name: flat_deposit.admin_settings_form  
+  description: 'FLAT Deposit configuration'  
+  parent: system.admin_config_flat
+  weight: 99  

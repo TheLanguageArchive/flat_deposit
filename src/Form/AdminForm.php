@@ -7,11 +7,19 @@
 
 namespace Drupal\flat_deposit\Form;
 
-use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element;
 
-class AdminForm extends FormBase {
+class AdminForm extends ConfigFormBase {
+
+  /**  
+   * {@inheritdoc}  
+   */  
+  protected function getEditableConfigNames() {  
+    return [  
+      'flat_deposit.adminsettings',  
+    ];  
+  }  
 
   /**
    * {@inheritdoc}
@@ -20,7 +28,7 @@ class AdminForm extends FormBase {
     return 'flat_deposit_admin_form';
   }
 
-  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state) {
 
     $form = [];
 
@@ -435,9 +443,6 @@ class AdminForm extends FormBase {
     $form['buttons']['submit'] = [
       '#type' => 'submit',
       '#value' => t('Save'),
-      '#validate' => [
-        'flat_deposit_admin_form_save_validate'
-        ],
       '#submit' => [
         'keep_default_password',
         'flat_deposit_admin_form_save_submit',
@@ -480,10 +485,10 @@ class AdminForm extends FormBase {
       '#weight' => 999,
     ];
 
-    return $form;
+    return parent::buildForm($form, $form_state);  
   }
 
-  public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state)
+  public function submitForm(array &$form, FormStateInterface $form_state)
   {
       module_load_include('inc', 'flat_deposit', 'inc/config');
 

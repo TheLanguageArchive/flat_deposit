@@ -26,24 +26,6 @@ flat_deposit_ingest_service:
   max_file_size: 300
   allowed_extensions: 'wav, mpg, mpeg, mp4, jpg, png, tiff, svg, eaf, pfsx, cha, tbt, TextGrid, txt, html, pdf, tbx, cut, typ, lng, set, xml, xsd, kml, img, hdr, eeg, seg, sav, spv, ehst, ehtp, mat, fig, IMA, ima, dcm, vhdr, vmkr, hfinf, pcl, sce, exp, Praat, praat, zip, gz, odt, ods, odp, csv'
 
-flat_workspaces:
-  activated:
-    - tg
-    - lac
-    - ladd
-    - lag
-  mount_folder: '/var/www/drupal/web/sites/default/files/private/flat_workspaces/'
-  workspace_folder: 'workspaces'
-  archive_folder: 'archive_deposit'
-  department_mapping:
-    lac: 'Language and Cognition'
-    ladd: 'Language Development'
-    lag: 'Language and Genetics'
-    nbl: 'Neurobiology of Language'
-    nvc: 'Neurogenetics of Vocal Communication'
-    pol: 'Psychology of Language'
-    tg: 'Technical group'
-
 flat_deposit_sword:
   url: 'http://localhost:90/flat/easy-deposit/'
   port: 90
