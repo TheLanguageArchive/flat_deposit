@@ -2,8 +2,10 @@ langcode: en
 status: true
 dependencies:
   module:
-    - flat_deposit
     - node
+  enforced:
+    module:
+      - flat_deposit
 id: node.flat_parent_nid_bundle
 field_name: flat_parent_nid_bundle
 entity_type: node
@@ -11,7 +13,7 @@ type: list_integer
 module: core
 locked: false
 cardinality: 1
-settings: { }
+settings: {  }
 translatable: true
 indexes: {  }
 persist_with_no_fields: false

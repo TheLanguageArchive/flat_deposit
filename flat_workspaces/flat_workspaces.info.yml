@@ -2,4 +2,4 @@ name: Flat Workspaces Module
 description: Flat Workspaces Module
 package: Flat
 type: module
-core_version_requirement: ^9
+core_version_requirement: ^10

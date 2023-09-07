@@ -24,10 +24,11 @@ class Bundle extends SIP
      *
      * @throws IngestServiceException
      */
-    public function init($info){
+    public function init($info)
+    {
         $this->logging('Starting init');
 
-        if (!$info['nid']){
+        if (!$info['nid']) {
             throw new \IngestServiceException("Node id is not specified");
         }
 
@@ -48,9 +49,8 @@ class Bundle extends SIP
 
         $diff = array_diff($required, array_keys($info));
 
-        if($diff){
+        if ($diff) {
             throw new \IngestServiceException('Not all required variables are defined. Following variables are missing: ' . implode(', ', $diff));
-
         };
 
         $this->info = $info;
@@ -78,8 +78,9 @@ class Bundle extends SIP
         $this->logging('Starting authentication');
 
         $query = \Drupal::entityQuery('node')
-            ->condition('type', 'user')
-            ->condition('uid', $this->info['loggedin_user']);
+            ->accessCheck(TRUE)
+            ->condition('type', 'user');
+        //->condition('uid', $this->info['loggedin_user']);
 
         // $query = new EntityFieldQuery();
         // $query->entityCondition('entity_type', 'user')
@@ -89,7 +90,7 @@ class Bundle extends SIP
         $results = $query->execute();
 
 
-        if (empty($results)){
+        if (empty($results)) {
             $id_loggedin_user = 0;
         } else {
             $id_loggedin_user = $this->info['loggedin_user'];
@@ -105,11 +106,9 @@ class Bundle extends SIP
 
                 $this->logging('Finishing authentication');
                 return TRUE;
-
             } else {
                 throw new \IngestServiceException('User has not enough privileges to perform requested action');
             }
-
         } else {
 
             // only certified users and corpmanager might ingest the bundle
@@ -118,7 +117,6 @@ class Bundle extends SIP
 
                 $this->logging('Finishing authentication');
                 return TRUE;
-
             } else {
                 throw new \IngestServiceException('User has not enough privileges to perform requested action');
             }
@@ -141,14 +139,13 @@ class Bundle extends SIP
 
             $this->logging('Finishing prepareSipData');
             return TRUE;
-
         }
 
         module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
 
         $move = \FlatBundle::moveBundleData($this->node, 'data', 'freeze');
 
-        if (!$move){
+        if (!$move) {
             throw new \IngestServiceException('Unable to move bundle data to freeze');
         }
 
@@ -156,7 +153,7 @@ class Bundle extends SIP
 
             $move = \FlatBundle::moveBundleData($this->node, 'metadata', 'freeze');
 
-            if (!$move){
+            if (!$move) {
                 throw new \IngestServiceException('Unable to move bundle metadata to freeze');
             }
 
@@ -171,15 +168,14 @@ class Bundle extends SIP
             $file_name = $cmdi_info['uri'];
 
             $this->cmdiRecord = $file_name;
-
         };
 
         $this->logging('Finishing prepareSipData; Data has been moved');
         return TRUE;
-
     }
 
-    function validateResources() {
+    function validateResources()
+    {
 
         $this->logging('Starting validateResources');
         $path = $this->node->flat_location->value;
@@ -190,7 +186,7 @@ class Bundle extends SIP
 
         if (!isset($deletedFiles) || ($deletedFiles == '')) {
 
-            if(empty($fileNames)){
+            if (empty($fileNames)) {
                 throw new \IngestServiceException('There are no (accessible) files in the chosen folder.');
             }
         }
@@ -198,7 +194,7 @@ class Bundle extends SIP
         $pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+\.[\da-zA-Z]{1,9}$/';
         $violators = [];
 
-        foreach ($fileNames as $uri => $file_array){
+        foreach ($fileNames as $uri => $file_array) {
 
             $fileName = $file_array->filename;
 
@@ -207,12 +203,12 @@ class Bundle extends SIP
             }
         }
 
-        if (!empty($violators)){
+        if (!empty($violators)) {
 
             $message = 'Bundle contains files with names violating our file naming policy. ' .
-            'Allowed are names starting with an alphanumeric characters (a-z,A-Z,0-9) followed by more alphanumeric characters '.
-            'or these special characters (.-_). The name of the file needs to have an extension marked by a dot (".") '.
-            'followed by 1 to 9 characters. ';
+                'Allowed are names starting with an alphanumeric characters (a-z,A-Z,0-9) followed by more alphanumeric characters ' .
+                'or these special characters (.-_). The name of the file needs to have an extension marked by a dot (".") ' .
+                'followed by 1 to 9 characters. ';
 
             $message .= 'Following file(s) have triggered this message: ';
             $message .= implode(', ', $violators);
@@ -224,23 +220,24 @@ class Bundle extends SIP
         return TRUE;
     }
 
-    function addResourcesToCmdi(){
+    function addResourcesToCmdi()
+    {
 
         $this->logging('Starting addResourcesToCmdi');
 
-        module_load_include('inc','flat_deposit','/Helpers/CMDI/class.CmdiHandler');
+        module_load_include('inc', 'flat_deposit', '/Helpers/CMDI/class.CmdiHandler');
 
         $file_name = $this->cmdiTarget;
 
         $cmdi = \CmdiHandler::simplexml_load_cmdi_file($file_name);
 
-        if (!$cmdi || !$cmdi->canBeValidated()){
+        if (!$cmdi || !$cmdi->canBeValidated()) {
             throw new \IngestServiceException('Unable to load record.cmdi file');
         }
 
         $directory = $this->node->flat_location->value;
 
-        try{
+        try {
 
             $fid = isset($this->node->flat_fid) ? $this->node->flat_fid->value : null;
             $flat_type = isset($this->node->flat_type) ? $this->node->flat_type->value : NULL;
@@ -259,22 +256,20 @@ class Bundle extends SIP
                 case 'existing':
                     if ($flat_type !== 'update') {
                         $cmdi->removeMdSelfLink();
-                    }
-                    else {
+                    } else {
                         $cmdi->cleanMdSelfLink();
                     }
                     break;
             }
 
             $cmdi->addResources($md_type, $directory, $fid);
-
-        } catch (\CmdiHandlerException $exception){
+        } catch (\CmdiHandlerException $exception) {
             throw new \IngestServiceException($exception->getMessage());
         }
 
         $check = $cmdi->asXML($file_name);
 
-        if ($check !== TRUE){
+        if ($check !== TRUE) {
             throw new \IngestServiceException($check);
         }
 
@@ -301,7 +296,6 @@ class Bundle extends SIP
 
             $this->node->flat_bundle_status->value = 'valid';
             $this->node->save();
-
         } else {
 
             // TODO remove comment when working
@@ -327,7 +321,8 @@ class Bundle extends SIP
      *
      * @param null|string $additonal_message possible error messages generated during processing
      */
-    protected function  createBlogEntry ($succeeded, $additonal_message = NULL){
+    protected function  createBlogEntry($succeeded, $additonal_message = NULL)
+    {
 
         global $base_url;
 
@@ -350,13 +345,13 @@ class Bundle extends SIP
             $url_link = 'node/' . (string)$this->node->id();
         }
 
-        $outcome = $succeeded ? 'succeeded' : 'failed' ;
+        $outcome = $succeeded ? 'succeeded' : 'failed';
         $action = $this->test ? 'Validation' : 'Archiving';
 
         $bundle = $this->node->title;
         $collection = $this->node->flat_parent_title->value;
 
-        $summary = sprintf("<p>%s of %s %s</p>",$action, $bundle, $outcome);
+        $summary = sprintf("<p>%s of %s %s</p>", $action, $bundle, $outcome);
         // @FIXME
         // l() expects a Url object, created from a route name or external URI.
         // $body = sprintf("<p>%s %s</p><p>%s of %s belonging to %s %s. Check bundle ". l(t('here'), $url_link, array('html' => TRUE, 'external' => FALSE, 'absolute' => TRUE, 'base_url' => $base_url)) . '</p>', $bundle, $collection, $action, $bundle, $collection, $outcome);
@@ -368,7 +363,7 @@ class Bundle extends SIP
 
         $new_node = new \stdClass();
         $new_node->type = 'blog';
-        $new_node->title = sprintf("Result of processing bundle %s",$bundle);
+        $new_node->title = sprintf("Result of processing bundle %s", $bundle);
         $new_node->uid = $this->node->id();
         $new_node->status = 1;
         $new_node->sticky = 0;
@@ -383,7 +378,8 @@ class Bundle extends SIP
         $this->logging('Finishing createBlogEntry; Blog entry created');
     }
 
-    function customRollback($message){
+    function customRollback($message)
+    {
 
         $this->logging('Starting customRollback');
 

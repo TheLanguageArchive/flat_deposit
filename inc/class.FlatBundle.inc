@@ -25,8 +25,9 @@ class FlatBundle
     public static function checkUniquenessNaming($user_id, $collection, $bundle_name)
     {
         $query = \Drupal::entityQuery('node')
+            ->accessCheck(TRUE)
             ->condition('type', 'flat_bundle')
-            ->condition('uid', $user_id)
+            //->condition('uid', $user_id)
             ->condition('title', $bundle_name)
             ->condition("flat_parent_title.value", $collection, "=");
 

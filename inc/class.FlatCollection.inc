@@ -22,8 +22,9 @@ class FlatCollection
     public static function getUserCollectionNodes($user_id, $fid = null)
     {
         $query = \Drupal::entityQuery('node')
-            ->condition('type', 'flat_collection')
-            ->condition('uid', $user_id);
+            ->accessCheck(TRUE)
+            ->condition('type', 'flat_collection');
+            //->condition('uid', $user_id);
 
         if ($fid) {
             $query = $query->condition("flat_fid.value", $fid, "=");

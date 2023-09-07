@@ -17,9 +17,10 @@ function flat_collection_bundle_action_form($form, &$form_state, $var)
     $parent_nid = $var->nid;
 
     $query = \Drupal::entityQuery('node')
+        ->accessCheck(TRUE)
         ->condition('type', 'flat_bundle')
-        ->condition('flat_parent_nid.value', $parent_nid, '=')
-        ->condition('uid', $user->id());
+        ->condition('flat_parent_nid.value', $parent_nid, '=');
+        //->condition('uid', $user->id());
 
     // $query = new EntityFieldQuery();
     // $query->entityCondition('entity_type', 'node')

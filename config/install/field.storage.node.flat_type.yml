@@ -2,8 +2,10 @@ langcode: en
 status: true
 dependencies:
   module:
-    - flat_deposit
     - node
+  enforced:
+    module:
+      - flat_deposit
 id: node.flat_type
 field_name: flat_type
 entity_type: node

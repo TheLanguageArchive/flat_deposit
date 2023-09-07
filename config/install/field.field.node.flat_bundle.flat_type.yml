@@ -14,8 +14,7 @@ label: Type of bundle
 description: 'Is the bundle newly created or is an existing bundle updated?'
 required: true
 translatable: true
-default_value:
-  - new
+default_value: {  }
 default_value_callback: ''
 settings:
   allowed_values:

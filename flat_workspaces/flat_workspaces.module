@@ -206,8 +206,9 @@ function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInter
                     // Validate that no other bundle is using same folder
 
                     $query = \Drupal::entityQuery('node')
+                        ->accessCheck(TRUE)
                         ->condition('type', 'flat_bundle')
-                        ->condition('uid', $this->info['loggedin_user'])
+                        //->condition('uid', $this->info['loggedin_user'])
                         ->condition("flat_original_path.value", $current, "=");
 
                     // $query = new EntityFieldQuery();
@@ -307,8 +308,9 @@ function flat_workspaces_flat_bundle_node_form_validate($form, FormStateInterfac
         }
 
         $query = \Drupal::entityQuery('node')
+            ->accessCheck(TRUE)
             ->condition('type', 'flat_bundle')
-            ->condition('uid', $this->info['loggedin_user'])
+            //->condition('uid', $this->info['loggedin_user'])
             ->condition("flat_original_path.value", $dir, "=");
 
         // $query = new EntityFieldQuery();
