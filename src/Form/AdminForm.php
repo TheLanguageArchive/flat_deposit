@@ -10,25 +10,38 @@ namespace Drupal\flat_deposit\Form;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
-class AdminForm extends ConfigFormBase {
+class AdminForm extends ConfigFormBase
+{
+
+  /** 
+   * Config settings.
+   *
+   * @var string
+   */
+  const SETTINGS = 'flat_deposit.settings';
 
   /**  
    * {@inheritdoc}  
-   */  
-  protected function getEditableConfigNames() {  
-    return [  
-      'flat_deposit.adminsettings',  
-    ];  
-  }  
+   */
+  protected function getEditableConfigNames()
+  {
+    return [
+      static::SETTINGS,
+    ];
+  }
 
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId()
+  {
     return 'flat_deposit_admin_form';
   }
 
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state)
+  {
+
+    $config = $this->config(static::SETTINGS);
 
     $form = [];
 
@@ -47,11 +60,7 @@ class AdminForm extends ConfigFormBase {
       '#tree' => TRUE,
     ];
 
-    // @FIXME
-    // Could not extract the default value because it is either indeterminate, or
-    // not scalar. You'll need to provide a default value in
-    // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
-    $general = \Drupal::config('flat_deposit.settings')->get('flat_deposit_general');
+    $general = $config->get('flat_deposit_general');
 
     $form['general']['namespace'] = [
       '#type' => 'textfield',
@@ -65,7 +74,7 @@ class AdminForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => t('Upload folder for external data'),
       '#description' => t('Directory where uploaded data will be stored'),
-      '#default_value' => $general ['external'],
+      '#default_value' => $general['external'],
       '#required' => TRUE,
     ];
 
@@ -73,7 +82,7 @@ class AdminForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => t('Metadata folder'),
       '#description' => t('Directory for temporarily storing metadata'),
-      '#default_value' => $general ['metadata'],
+      '#default_value' => $general['metadata'],
       '#required' => TRUE,
     ];
 
@@ -81,7 +90,7 @@ class AdminForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => t('Freeze folder'),
       '#description' => t('Directory where user bundles will be placed upon validation'),
-      '#default_value' => $general ['freeze'],
+      '#default_value' => $general['freeze'],
       '#required' => TRUE,
     ];
 
@@ -94,11 +103,7 @@ class AdminForm extends ConfigFormBase {
       '#tree' => TRUE,
     ];
 
-    // @FIXME
-    // Could not extract the default value because it is either indeterminate, or
-    // not scalar. You'll need to provide a default value in
-    // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
-    $profiles = \Drupal::config('flat_deposit.settings')->get('flat_deposit_cmdi_profiles');
+    $profiles = $config->get('flat_deposit_cmdi_profiles');
 
     $form['cmdi_profiles']['collection_profile_ids'] = [
       '#type' => 'textfield',
@@ -125,11 +130,7 @@ class AdminForm extends ConfigFormBase {
       '#tree' => TRUE,
     ];
 
-    // @FIXME
-    // Could not extract the default value because it is either indeterminate, or
-    // not scalar. You'll need to provide a default value in
-    // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
-    $service = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service');
+    $service = $config->get('flat_deposit_ingest_service');
 
     $form['ingest_service']['host_name'] = [
       '#type' => 'textfield',
@@ -167,7 +168,7 @@ class AdminForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => t('Bag folder'),
       '#description' => t('Backend directory where bags will be placed'),
-      '#default_value' => $service ['bag_dir'],
+      '#default_value' => $service['bag_dir'],
       '#required' => TRUE,
     ];
 
@@ -175,7 +176,7 @@ class AdminForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => t('Sword temporary folder'),
       '#description' => t('Directory sword uses to temporarily save bags'),
-      '#default_value' => $service ['sword_tmp_dir'],
+      '#default_value' => $service['sword_tmp_dir'],
       '#required' => TRUE,
     ];
 
@@ -234,11 +235,7 @@ class AdminForm extends ConfigFormBase {
       '#tree' => TRUE,
     ];
 
-    // @FIXME
-    // Could not extract the default value because it is either indeterminate, or
-    // not scalar. You'll need to provide a default value in
-    // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
-    $fits = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
+    $fits = $config->get('flat_deposit_fits');
 
     $form['fits']['url'] = [
       '#type' => 'textfield',
@@ -263,11 +260,7 @@ class AdminForm extends ConfigFormBase {
       '#tree' => TRUE,
     ];
 
-    // @FIXME
-    // Could not extract the default value because it is either indeterminate, or
-    // not scalar. You'll need to provide a default value in
-    // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
-    $sword = \Drupal::config('flat_deposit.settings')->get('flat_deposit_sword');
+    $sword = $config->get('flat_deposit_sword');
 
     $form['sword']['url'] = [
       '#type' => 'textfield',
@@ -304,11 +297,7 @@ class AdminForm extends ConfigFormBase {
       '#tree' => TRUE,
     ];
 
-    // @FIXME
-    // Could not extract the default value because it is either indeterminate, or
-    // not scalar. You'll need to provide a default value in
-    // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
-    $doorkeeper = \Drupal::config('flat_deposit.settings')->get('flat_deposit_doorkeeper');
+    $doorkeeper = $config->get('flat_deposit_doorkeeper');
 
     $form['doorkeeper']['url'] = [
       '#type' => 'textfield',
@@ -333,11 +322,7 @@ class AdminForm extends ConfigFormBase {
       '#tree' => TRUE,
     ];
 
-    // @FIXME
-    // Could not extract the default value because it is either indeterminate, or
-    // not scalar. You'll need to provide a default value in
-    // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
-    $fedora = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fedora');
+    $fedora = $config->get('flat_deposit_fedora');
 
     $form['fedora']['host_name'] = [
       '#type' => 'textfield',
@@ -397,11 +382,7 @@ class AdminForm extends ConfigFormBase {
       '#tree' => TRUE,
     ];
 
-    // @FIXME
-    // Could not extract the default value because it is either indeterminate, or
-    // not scalar. You'll need to provide a default value in
-    // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
-    $solr = \Drupal::config('flat_deposit.settings')->get('flat_deposit_solr');
+    $solr = $config->get('flat_deposit_solr');
 
     $form['solr']['host_name'] = [
       '#type' => 'textfield',
@@ -440,21 +421,12 @@ class AdminForm extends ConfigFormBase {
     ];
 
     // BUTTONS
-    $form['buttons']['submit'] = [
-      '#type' => 'submit',
-      '#value' => t('Save'),
-      '#submit' => [
-        'keep_default_password',
-        'flat_deposit_admin_form_save_submit',
-      ],
-    ];
-
     $form['buttons']['restore'] = [
       '#type' => 'submit',
       '#value' => t('Reset to defaults'),
       '#submit' => [
         'flat_deposit_admin_form_reset_submit'
-        ],
+      ],
       '#limit_validation_errors' => [],
     ];
 
@@ -463,7 +435,7 @@ class AdminForm extends ConfigFormBase {
       '#value' => t('Import settings'),
       '#submit' => [
         'flat_deposit_admin_form_import_submit'
-        ],
+      ],
       '#validate' => ['flat_deposit_admin_form_import_validate'],
     ];
 
@@ -472,7 +444,7 @@ class AdminForm extends ConfigFormBase {
       '#value' => t('Export settings'),
       '#submit' => [
         'flat_deposit_admin_form_export_submit'
-        ],
+      ],
     ];
 
     $form['file']['import'] = [
@@ -485,22 +457,23 @@ class AdminForm extends ConfigFormBase {
       '#weight' => 999,
     ];
 
-    return parent::buildForm($form, $form_state);  
+    return parent::buildForm($form, $form_state);
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state)
   {
-      module_load_include('inc', 'flat_deposit', 'inc/config');
+    $this->config(static::SETTINGS)
 
-      flat_deposit_set_general($form_state['values']['general']);
-      flat_deposit_set_cmdi_profiles($form_state['values']['cmdi_profiles']);
-      flat_deposit_set_fits($form_state['values']['fits']);
-      flat_deposit_set_ingest_service($form_state['values']['ingest_service']);
-      flat_deposit_set_sword($form_state['values']['sword']);
-      flat_deposit_set_doorkeeper($form_state['values']['doorkeeper']);
-      flat_deposit_set_fedora($form_state['values']['fedora']);
-      flat_deposit_set_solr($form_state['values']['solr']);
-      \Drupal::messenger()->addMessage(t('Changed values have been saved'));
+      ->set('flat_deposit_general', $form_state->getValue('general'))
+      ->set('flat_deposit_cmdi_profiles', $form_state->getValue('cmdi_profiles'))
+      ->set('flat_deposit_fits', $form_state->getValue('fits'))
+      ->set('flat_deposit_ingest_service', $form_state->getValue('ingest_service'))
+      ->set('flat_deposit_sword', $form_state->getValue('sword'))
+      ->set('flat_deposit_doorkeeper', $form_state->getValue('doorkeeper'))
+      ->set('flat_deposit_fedora', $form_state->getValue('fedora'))
+      ->set('flat_deposit_solr', $form_state->getValue('solr'))
+      ->save();
+
+    parent::submitForm($form, $form_state);
   }
-
 }
