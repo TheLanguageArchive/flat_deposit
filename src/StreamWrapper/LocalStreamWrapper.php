@@ -2,59 +2,78 @@
 
 namespace Drupal\flat_deposit\StreamWrapper;
 
-use Drupal\Core\StreamWrapper\PrivateStream;
+use Drupal\Core\StreamWrapper\LocalStream;
 use Drupal\Core\Url;
 
-class LocalStreamWrapper extends PrivateStream {
+class LocalStreamWrapper extends LocalStream
+{
 
-    /**
-     * @return string
-     */
-    public function getDirectoryPath() {
-        return \Drupal::config('flat_deposit.settings')->get('flat_workspaces')['mount_folder'];
-    }
+  protected $uri;
 
-    /**
-     * Overrides getExternalUrl().
-     *
-     * Return the HTML URI of a private file.
-     */
-    // public function getExternalUrl() {
+  public function getName()
+  {
+    return 'Local Stream';
+  }
 
-    //     $path = str_replace('\\', '/', $this->getTarget());
-    //     return Url::fromRoute('flat_deposit.metadata_file', $path, ['absolute' => true]);
-    // }
+  public function getDescription()
+  {
+    return 'Streamwrapper for local (workspace) files.';
+  }
 
-    /**
-     * Overrides StreamWrapperInterface::rename.
-     */
-    // public function rename($from_uri, $to_uri) {
-    //     return rename($this->getLocalPath($from_uri), $this->getLocalPath($to_uri));
-    // }
+  public function getExternalUrl()
+  {
+    return "";
+  }
 
-    /**
-     * Overrides StreamWrapperInterface::getLocalPath.
-     */
-    protected function getLocalPath($uri = null) {
+  /**
+   * @return string
+   */
+  public function getDirectoryPath()
+  {
+    return \Drupal::config('flat_workspaces.settings')->get('mount_folder');
+  }
 
-        $file_system = \Drupal::service('file_system');
+  /**
+   * Overrides getExternalUrl().
+   *
+   * Return the HTML URI of a private file.
+   */
+  // public function getExternalUrl() {
+
+  //     $path = str_replace('\\', '/', $this->getTarget());
+  //     return Url::fromRoute('flat_deposit.metadata_file', $path, ['absolute' => true]);
+  // }
+
+  /**
+   * Overrides StreamWrapperInterface::rename.
+   */
+  // public function rename($from_uri, $to_uri) {
+  //     return rename($this->getLocalPath($from_uri), $this->getLocalPath($to_uri));
+  // }
+
+  /**
+   * Overrides StreamWrapperInterface::getLocalPath.
+   */
+  /*     protected function getLocalPath($uri = NULL) {
         if (!isset($uri)) {
-            $uri = $this->uri;
+          $uri = $this->uri;
         }
-        $path = $this->getDirectoryPath() . '/' . $this->getTarget($uri);
+        $path = $this
+          ->getDirectoryPath() . $this
+          ->getTarget($uri);
+      
         $realpath = realpath($path);
-
         if (!$realpath) {
-
-            // This file does not yet exist.
-            $realpath = realpath(dirname($path)) . '/' . $file_system->basename($path);
+      
+          // This file does not yet exist.
+          $realpath = realpath(dirname($path)) . '/' . \Drupal::service('file_system')
+            ->basename($path);
         }
-
-        $directory = realpath($this->getDirectoryPath());
-
-        if (!$realpath || !$directory || strpos($realpath, $directory) !== 0) {
-            return false;
+        $directory = realpath($this
+          ->getDirectoryPath());
+        if (!$realpath || !$directory || !str_starts_with($realpath, $directory)) {
+          return FALSE;
         }
         return $realpath;
-    }
+      } */
 }

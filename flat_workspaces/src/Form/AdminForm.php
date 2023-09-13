@@ -144,13 +144,9 @@ class AdminForm extends ConfigFormBase
 function decode_department_mapping($mapping)
 {
 
-    $count = count($mapping);
     $output = '';
 
     foreach ($mapping as $key => $value) {
-        if (--$count <= 0) {
-            break;
-        }
 
         $output .= $key . ' = ' . $value . '&#10;';
     }

@@ -194,6 +194,7 @@ function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterfac
     hide($form['flat_create_cmdi']);
     hide($form['flat_external']);
     hide($form['flat_location']);
+    hide($form['flat_type']);
     hide($form['flat_fid']);
     hide($form['flat_original_path']);
     hide($form['flat_parent_title']);
@@ -202,11 +203,8 @@ function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterfac
     hide($form['flat_encrypted_auth_endpoint']);
     hide($form['actions']['preview']);
 
-    $form['flat_type']['#disabled'] = true;
-    // $form['flat_type']['#weight'] = -2;
-
     // Conditionally hide cmdi file field.
-    $form['flat_cmdi_file'][0]['#states'] = array(
+    $form['flat_cmdi_file']['#states'] = array(
         'visible' => array(
             array(
                 array(
@@ -233,7 +231,7 @@ function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterfac
     $query = \Drupal::entityQuery('node')
         ->accessCheck(TRUE)
         ->condition('type', 'flat_collection');
-        //->condition('uid', $userId);
+    //->condition('uid', $userId);
     //->condition("flat_fid.value", "NULL", "!=");
 
     $entities = $query->execute();
@@ -1018,10 +1016,10 @@ function flat_bundle_delete($node)
     $tail = str_replace('@', '_at_', $user->getAccountName()) . "/$collection/$bundle";
 
     // $bundle_resources_directory = drupal_realpath('external://') . "/$tail";.
-    $bundle_metadata_directory = drupal_realpath('metadata://') . "/$tail";
+    $bundle_metadata_directory = \Drupal::service('file_system')->realpath('metadata://') . "/$tail";
 
     // $bundle_resources_freeze_directory = drupal_realpath('freeze://data') . "/$tail";.
-    $bundle_metadata_freeze_directory = drupal_realpath('freeze://metadata') . "/$tail";
+    $bundle_metadata_freeze_directory = \Drupal::service('file_system')->realpath('freeze://metadata') . "/$tail";
 
     // $dirs = [$bundle_resources_directory, $bundle_metadata_directory, $bundle_resources_freeze_directory, $bundle_metadata_freeze_directory];.
     $dirs = [$bundle_metadata_directory, $bundle_metadata_freeze_directory];
@@ -1057,7 +1055,7 @@ function flat_deposit_form_alter(&$form, FormStateInterface $form_state, $form_i
                 ->accessCheck(TRUE)
                 ->condition('type', 'flat_bundle')
                 ->condition('flat_parent_nid_bundle.value', $nid, '=');
-                //->condition('uid', $user_id);
+            //->condition('uid', $user_id);
 
             // $query = new EntityFieldQuery();
             // $query->entityCondition('entity_type', 'node')
@@ -1494,13 +1492,14 @@ function flat_deposit_menu_alter(&$items)
 /**
  * hook_form_FORM_ID_alter().
  */
-function flat_deposit_form_node_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
-  $form['additional_settings']['#access'] = FALSE;
-  $form['meta']['#access'] = FALSE;
-  $form['menu']['#access'] = FALSE;
-  $form['path']['#access'] = FALSE;
-  $form['author']['#access'] = FALSE;
-  $form['options']['#access'] = FALSE;
+function flat_deposit_form_node_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id)
+{
+    $form['additional_settings']['#access'] = FALSE;
+    $form['meta']['#access'] = FALSE;
+    $form['menu']['#access'] = FALSE;
+    $form['path']['#access'] = FALSE;
+    $form['author']['#access'] = FALSE;
+    $form['options']['#access'] = FALSE;
 }
 
 /*

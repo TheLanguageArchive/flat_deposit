@@ -13,7 +13,6 @@ dependencies:
     - field.field.node.flat_bundle.flat_fid_super
     - field.field.node.flat_bundle.flat_location
     - field.field.node.flat_bundle.flat_metadata_visibility
-    - field.field.node.flat_bundle.flat_new_path
     - field.field.node.flat_bundle.flat_original_path
     - field.field.node.flat_bundle.flat_parent_nid_bundle
     - field.field.node.flat_bundle.flat_parent_title
@@ -72,14 +71,6 @@ content:
     weight: 6
     region: content
     settings: {  }
-    third_party_settings: {  }
-  flat_new_path:
-    type: string_textfield
-    weight: 7
-    region: content
-    settings:
-      size: 60
-      placeholder: ''
     third_party_settings: {  }
   flat_type:
     type: options_select

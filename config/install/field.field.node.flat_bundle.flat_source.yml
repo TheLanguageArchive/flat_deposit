@@ -20,5 +20,8 @@ default_value_callback: ''
 settings:
   allowed_values:
     -
-      value: "external"
-      label: "Upload the files using the web browser"
+      value: "local"
+      label: "Select a folder in a workspace on the server"
+    -
+      value: "cloud"
+      label: "Select a Nextcloud folder"
