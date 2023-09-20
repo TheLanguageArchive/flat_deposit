@@ -13,8 +13,10 @@ type: list_integer
 module: core
 locked: false
 cardinality: 1
-settings: {  }
 translatable: true
 indexes: {  }
 persist_with_no_fields: false
 custom_storage: false
+settings:
+  allowed_values: {  }
+  allowed_values_function: 'flat_deposit_get_user_active_collections'

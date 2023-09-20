@@ -3,7 +3,10 @@
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\node\NodeInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\node\Entity\Node;
+use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 
 /**
  * Implements hook_theme().
@@ -140,6 +143,33 @@ function flat_deposit_preprocess_bootstrap_panel(&$variables)
             $variables['panel_actions'] = $element['#panel_actions'];
         }
     }
+}
+
+function flat_deposit_get_user_active_collections(FieldStorageConfig $definition, ContentEntityInterface $entity = NULL, $cacheable)
+{
+
+    $options = [];
+
+    $user = \Drupal::currentUser();
+    $userId = $user->id();
+
+    $query = \Drupal::entityQuery('node')
+        ->accessCheck(TRUE)
+        ->condition('type', 'flat_collection')
+        ->condition('uid', $userId);
+    //->condition("flat_fid.value", "NULL", "!=");
+
+    $entities = $query->execute();
+
+    if (!empty($entities)) {
+        foreach ($entities as $entity) {
+            $collection_node = \Drupal::entityTypeManager()->getStorage('node')->load($entity);
+            $title = $collection_node->getTitle();
+            $options[$entity] = $title;
+        }
+    }
+
+    return $options;
 }
 
 /**
@@ -285,15 +315,15 @@ function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterfac
     if ($new_node and !$update) {
 
         $node_status = 'create';
-        $form['actions']['submit']['#submit'][0] = 'flat_deposit_flat_bundle_node_form_submit';
+        //$form['actions']['submit']['#submit'][0] = 'flat_deposit_flat_bundle_node_form_submit';
     } elseif ($new_node and $update) {
 
         $node_status = 'update';
-        $form['actions']['submit']['#submit'][0] = 'flat_deposit_flat_bundle_node_form_submit';
+        //$form['actions']['submit']['#submit'][0] = 'flat_deposit_flat_bundle_node_form_submit';
     } else {
 
         $node_status = 'edit';
-        $form['actions']['submit']['#submit'][0] = 'flat_deposit_flat_bundle_node_form_submit';
+        //$form['actions']['submit']['#submit'][0] = 'flat_deposit_flat_bundle_node_form_submit';
     }
 
     switch ($node_status) {
@@ -472,7 +502,8 @@ function flat_bundle_node_form_add_validate($form, FormStateInterface $form_stat
 
     $is_update = $form_state->getValue(['flat_type', 0, 'value']) == "update" ? true : false;
 
-    if ($collection != 'unassigned' and !$is_update) {
+    // TODO needs to be checked within Drupal, so for children of the given parent collection
+    /*     if ($collection != 'unassigned' and !$is_update) {
         // Validate that no other bundle or collection at same location exists.
         $collection_node = $node_storage->load($collection_nid);
         // $wrapper = entity_metadata_wrapper('node', $collection_node);
@@ -488,7 +519,7 @@ function flat_bundle_node_form_add_validate($form, FormStateInterface $form_stat
             $form_state->setErrorByName('title', t('Another collection or bundle with same name exists at this location. Please use a different name'));
             return $form;
         }
-    }
+    } */
 
     $flat_cmdi_option = $form_state->getValue(['flat_cmdi_option', 0, 'value']);
 
@@ -551,14 +582,15 @@ function flat_bundle_node_form_add_validate($form, FormStateInterface $form_stat
     $filesystem = \Drupal::service("file_system");
 
     // Validate that currently selected folder has no subfolders.
-    $dirs = array_filter(glob($original_path . '/*'), 'is_dir');
+    /*     $dirs = array_filter(glob($original_path . '/*'), 'is_dir');
     if (file_exists($filesystem->realpath($original_path)) and !empty(glob($filesystem->realpath($original_path) . '/*', GLOB_ONLYDIR))) {
+        //dd(glob($filesystem->realpath($original_path) . '/*', GLOB_ONLYDIR));
         $form_state->setErrorByName('department', t('Chosen directory contains subfolders'));
         return $form;
-    }
+    } */
 
     // Validate that no other bundle is using same folder.
-    $query = \Drupal::entityQuery('node')
+    /*     $query = \Drupal::entityQuery('node')
         ->accessCheck(FALSE)
         ->condition('type', 'flat_bundle')
         ->condition('flat_original_path.value', $original_path, '=');
@@ -567,7 +599,7 @@ function flat_bundle_node_form_add_validate($form, FormStateInterface $form_stat
     if (empty(!$results)) {
 
         $form_state->setErrorByName('flat_original_path', t('Specified path for resources is already in use'));
-    }
+    } */
 
     return $form;
 }
@@ -912,10 +944,12 @@ function flat_bundle_view($node, $view_mode)
  *
  * @ingroup node_api_hooks
  */
-function flat_deposit_node_view($node, $view_mode, $langcode)
+function flat_deposit_node_view(array &$build, Node $node, LayoutBuilderEntityViewDisplay $display, $view_mode)
 {
 
-    if ($node->type == 'flat_bundle' and $view_mode == 'full' and node_is_page($node)) {
+    $type = $node->getType();
+
+    if ($type == 'flat_bundle' and $view_mode == 'full' and node_is_page($node)) {
 
         // $wrapper = entity_metadata_wrapper('node', $node);
 
@@ -943,7 +977,7 @@ function flat_deposit_node_view($node, $view_mode, $langcode)
         unset($node->content['flat_type']);
     }
 
-    if ($node->type == 'blog' and $view_mode == 'full' and node_is_page($node)) {
+    if ($type == 'blog' and $view_mode == 'full' and node_is_page($node)) {
         // Modify breadcrumb for blog nodes (reports)
         $user = \Drupal::currentUser();
         drupal_set_breadcrumb(array(
@@ -951,7 +985,6 @@ function flat_deposit_node_view($node, $view_mode, $langcode)
             l(t('My Dashboard'), 'dashboard/' . $user->id() . '/notifications'),
         ));
     }
-
     /*
 $node->content['link_dashboard']['#title'] = 'Return to dashboard';
 $node->content['link_dashboard']['#markup'] = l('Shortcut to dashboard' , 'dashboard') ;
@@ -1078,11 +1111,13 @@ function flat_deposit_form_alter(&$form, FormStateInterface $form_state, $form_i
 /**
  * Custom form submit handler for flat_bundle in order to get rid of "node created" messages.
  */
-function flat_deposit_flat_bundle_node_form_submit($form, FormStateInterface $form_state)
+/* function flat_deposit_flat_bundle_node_form_submit($form, FormStateInterface $form_state)
 {
-    $node = node_form_submit_build_node($form, $form_state);
+    //$node = node_form_submit_build_node($form, $form_state);
+    $node = EntityForm::buildEntity($form, $form_state);
     $insert = empty($node->nid);
-    node_save($node);
+    //node_save($node);
+    EntityBase::save($node);
     $node_link = l(t('view'), 'node/' . $node->nid);
     $watchdog_args = array(
         '@type' => $node->type,
@@ -1113,7 +1148,7 @@ function flat_deposit_flat_bundle_node_form_submit($form, FormStateInterface $fo
 
     // Clear the page and block caches.
     cache_clear_all();
-}
+} */
 
 /**
  * Implements hook_block_info().
@@ -1261,7 +1296,7 @@ function flat_deposit_menu_access($op, $object)
 
     drupal_alter('flat_has_permissions', $has_permissions, $object);
 
-    if (user_access('use deposit module')) {
+    if (Drupal::currentUser()->hasPermission('use deposit module')) {
 
         module_load_include('inc', 'islandora', 'includes/utilities');
 
@@ -1442,7 +1477,7 @@ function flat_deposit_admin_paths_alter(&$paths)
  *
  * Restrict access to FLAT node types and blog (reports) to node owner and manager users.
  */
-function flat_deposit_node_access(NodeInterface $node, $op, AccountInterface $account)
+function flat_deposit_node_access(Node $node, $op, AccountInterface $account)
 {
     /**
      * @TODO why is blog in the node types array here? Can this be removed?

@@ -1,0 +1,8 @@
+name: FLAT Views
+description: FLAT Views module - defines views for FLAT deposit module
+package: Flat
+type: module
+core_version_requirement: ^10
+dependencies:
+    - drupal:views
+    - flat_deposit

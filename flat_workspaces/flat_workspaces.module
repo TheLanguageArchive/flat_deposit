@@ -1,6 +1,9 @@
 <?php
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\node\Entity\Node;
+use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 
 /**
  * Created by PhpStorm.
@@ -332,10 +335,12 @@ function flat_workspaces_flat_bundle_node_form_validate($form, FormStateInterfac
 }
 
 
-function flat_workspaces_node_view($node, $view_mode, $langcode)
+function flat_workspaces_node_view(array &$build, Node $node, LayoutBuilderEntityViewDisplay $display, $view_mode)
 {
 
-    if ($node->type == 'flat_bundle' and $view_mode == 'full' and node_is_page($node)) {
+    /*     $type = $node->getType();
+
+    if ($type == 'flat_bundle' and $view_mode == 'full' and node_is_page($node)) {
 
         // $wrapper = entity_metadata_wrapper('node', $node);
 
@@ -346,7 +351,7 @@ function flat_workspaces_node_view($node, $view_mode, $langcode)
             $path = str_replace('freeze://', '[protected folder on server]', $path);
             $node->content['flat_original_path'][0]['#markup'] = $path;
         }
-    }
+    } */
 }
 
 /**
@@ -357,8 +362,9 @@ function flat_workspaces_node_view($node, $view_mode, $langcode)
  * note! also gets called during node delete and metadata save, hence the extra checks
  *
  */
-function flat_workspaces_node_presave($node)
+/* function flat_workspaces_entity_presave(EntityInterface $entity)
 {
+    dd($entity);
     if (isset($node->form_id)) {
         if ($node->form_id == 'flat_bundle_node_form') {
             if (isset($node->flat_source)) {
@@ -372,4 +378,4 @@ function flat_workspaces_node_presave($node)
             }
         }
     }
-}
+} */

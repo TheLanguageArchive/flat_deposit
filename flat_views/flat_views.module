@@ -98,7 +98,7 @@ function flat_views_block_view($delta = '')
     switch ($delta){
         case 'reports_actions':
 
-        if (user_access('use deposit module')) {
+        if (Drupal::currentUser()->hasPermission('use deposit module')) {
 
             module_load_include('inc','flat_views','includes/flat_reports.actions_form');
 
