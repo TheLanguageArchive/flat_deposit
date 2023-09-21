@@ -73,7 +73,7 @@ class AdminForm extends ConfigFormBase
     $form['general']['external'] = [
       '#type' => 'textfield',
       '#title' => t('Upload folder for external data'),
-      '#description' => t('Directory where uploaded data will be stored'),
+      '#description' => t('Directory where uploaded data will be temporarily stored'),
       '#default_value' => $general['external'],
       '#required' => TRUE,
     ];

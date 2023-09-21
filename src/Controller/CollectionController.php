@@ -5,10 +5,10 @@ namespace Drupal\flat_deposit\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\node\Entity\NodeType;
 
-class BundleController extends ControllerBase
+class CollectionController extends ControllerBase
 {
 
-    public function addBundle()
+    public function addCollection()
     {
 
         /*         $user = \Drupal::currentUser();
@@ -41,7 +41,7 @@ class BundleController extends ControllerBase
 
         module_load_include('inc', 'node', 'node.pages');
 
-        $node_type = 'flat_bundle';
+        $node_type = 'flat_collection';
         $node = \Drupal::entityTypeManager()
             ->getStorage('node')
             ->create([
@@ -55,12 +55,12 @@ class BundleController extends ControllerBase
         return $form;
     }
 
-    public function updateBundle()
+    public function activateCollection()
     {
 
     }
 
-    public function updateMetadata()
+    public function updateCollection()
     {
 
     }

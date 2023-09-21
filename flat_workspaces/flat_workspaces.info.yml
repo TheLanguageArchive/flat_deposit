@@ -1,5 +1,5 @@
-name: Flat Workspaces Module
-description: Flat Workspaces Module
-package: Flat
+name: FLAT Workspaces
+description: Provides access to local "workspace" directories for including files to be deposited
+package: FLAT
 type: module
 core_version_requirement: ^10

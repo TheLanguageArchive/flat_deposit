@@ -1,0 +1,4 @@
+use deposit module:
+  title: 'Use FLAT Deposit'
+admin deposit module:
+  title: 'Administer FLAT Deposit'

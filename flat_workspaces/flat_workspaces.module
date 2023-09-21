@@ -4,6 +4,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\node\Entity\Node;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 
 /**
  * Created by PhpStorm.
@@ -334,8 +335,7 @@ function flat_workspaces_flat_bundle_node_form_validate($form, FormStateInterfac
     }
 }
 
-
-function flat_workspaces_node_view(array &$build, Node $node, LayoutBuilderEntityViewDisplay $display, $view_mode)
+function flat_workspaces_node_view(array &$build, Node $node, EntityViewDisplay $display, $view_mode)
 {
 
     /*     $type = $node->getType();

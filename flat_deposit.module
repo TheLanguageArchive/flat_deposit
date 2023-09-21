@@ -7,6 +7,8 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\Entity\Node;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\system\Entity\Menu;
 
 /**
  * Implements hook_theme().
@@ -944,7 +946,7 @@ function flat_bundle_view($node, $view_mode)
  *
  * @ingroup node_api_hooks
  */
-function flat_deposit_node_view(array &$build, Node $node, LayoutBuilderEntityViewDisplay $display, $view_mode)
+function flat_deposit_node_view(array &$build, Node $node, EntityViewDisplay $display, $view_mode)
 {
 
     $type = $node->getType();
@@ -1284,67 +1286,67 @@ function flat_deposit_block_view($delta = '')
 /**
  * @TODO fix menu access when fedora connection is fixed
  */
-function flat_deposit_menu_access($op, $object)
+function flat_deposit_menu_access(Menu $menu, $op, AccountInterface $account )
 {
-    return true;
+    //return true;
 
     $userId = \Drupal::currentUser()->id();
 
-    $has_access = false;
+    $has_access = AccessResult::forbidden();;
 
     $has_permissions = true;
 
-    drupal_alter('flat_has_permissions', $has_permissions, $object);
+    //drupal_alter('flat_has_permissions', $has_permissions, $object);
 
     if (Drupal::currentUser()->hasPermission('use deposit module')) {
 
-        module_load_include('inc', 'islandora', 'includes/utilities');
+        //module_load_include('inc', 'islandora', 'includes/utilities');
 
-        module_load_include('inc', 'flat_deposit', 'inc/class.FlatCollection');
+        //module_load_include('inc', 'flat_deposit', 'inc/class.FlatCollection');
 
-        $has_collectionCModel = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:collectionCModel'));
+        $has_collectionCModel = true; //!empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:collectionCModel'));
 
-        $has_cmdi_content_model = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:sp_cmdiCModel'));
+        $has_cmdi_content_model = true; //!empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:sp_cmdiCModel'));
 
-        $fid = $object->id;
+        //$fid = $object->id;
 
-        $has_node_in_my_collections = !empty(FlatCollection::getUserCollectionNodes($userId, $fid));
+        $has_node_in_my_collections = true; //!empty(FlatCollection::getUserCollectionNodes($userId, $fid));
 
         switch ($op) {
             case 'add current collection menu':
 
-                $has_access = ($has_permissions and $has_collectionCModel and !$has_node_in_my_collections) ? true : false;
+                $has_access = ($has_permissions and $has_collectionCModel and !$has_node_in_my_collections) ? AccessResult::allowed() : AccessResult::forbidden();
 
                 break;
 
             case 'add bundle menu':
 
-                $has_access = ($has_permissions and $has_collectionCModel and $has_cmdi_content_model and $has_node_in_my_collections) ? true : false;
+                $has_access = ($has_permissions and $has_collectionCModel and $has_cmdi_content_model and $has_node_in_my_collections) ? AccessResult::allowed() : AccessResult::forbidden();
 
                 break;
 
             case 'add collection menu':
 
-                $has_access = ($has_permissions and $has_collectionCModel and $has_node_in_my_collections) ? true : false;
+                $has_access = ($has_permissions and $has_collectionCModel and $has_node_in_my_collections) ? AccessResult::allowed() : AccessResult::forbidden();
 
                 break;
 
             case 'update collection menu':
 
-                $has_access = ($has_permissions and $has_collectionCModel and $has_cmdi_content_model and $has_node_in_my_collections) ? true : false;
+                $has_access = ($has_permissions and $has_collectionCModel and $has_cmdi_content_model and $has_node_in_my_collections) ? AccessResult::allowed() : AccessResult::forbidden();
 
                 break;
 
             case 'view node menu':
-                $fid = $object->id;
+                //$fid = $object->id;
 
                 $query = new EntityQuery('node');
-                $query->condition('type', 'flat_bundle')
-                    ->condition('flat_fid.value', $fid, '=');
+                $query->condition('type', 'flat_bundle');
+                    //->condition('flat_fid.value', $fid, '=');
 
                 $bundle_nodes = $query->execute();
 
-                $has_access = isset($bundle_nodes['node']);
+                $has_access = isset($bundle_nodes['node']) ? AccessResult::allowed() : AccessResult::forbidden();
 
                 break;
 
@@ -1356,20 +1358,20 @@ function flat_deposit_menu_access($op, $object)
                 // Check that archived bundle has no active bundle node (i.e. is being updated)
 
                 $query = new EntityQuery('node');
-                $query->condition('type', 'flat_bundle')
-                    ->condition('flat_fid.value', $fid, '=');
+                $query->condition('type', 'flat_bundle');
+                    //->condition('flat_fid.value', $fid, '=');
 
                 $bundle_nodes = $query->execute();
 
                 $has_no_active_node = empty($bundle_nodes);
 
-                $has_access = ($has_permissions and !$has_collectionCModel and $has_cmdi_content_model and $has_no_active_node) ? true : false;
+                $has_access = ($has_permissions and !$has_collectionCModel and $has_cmdi_content_model and $has_no_active_node) ? AccessResult::allowed() : AccessResult::forbidden();
 
                 break;
 
             default:
 
-                $has_access = null;
+                $has_access = AccessResult::forbidden();;
 
                 break;
         }
@@ -1523,6 +1525,17 @@ function flat_deposit_menu_alter(&$items)
     unset($items['blog/%user/feed']);
     unset($items['blog/feed']);
 }
+
+/**
+ * Implements hook_menu_local_tasks_alter
+ * 
+ * Get rid of edit/delete/revision tabs ("local tasks") on nodes
+ */
+function flat_deposit_menu_local_tasks_alter(&$data, $route_name, \Drupal\Core\Cache\RefinableCacheableDependencyInterface &$cacheability) {
+    unset($data['tabs'][0]['entity.node.edit_form']);
+    unset($data['tabs'][0]['entity.node.delete_form']);
+    unset($data['tabs'][0]['entity.node.version_history']);
+  }
 
 /**
  * hook_form_FORM_ID_alter().

@@ -1,0 +1,35 @@
+flat_deposit.activate_collection:
+  route_name: 'flat_deposit.activate_collection'
+  title: 'Activate'
+  base_route: 'entity.node.canonical'
+  weight: 100
+
+flat_deposit.add_collection:
+  route_name: 'flat_deposit.add_collection'
+  title: 'Add Collection'
+  base_route: 'entity.node.canonical'
+  weight: 100
+
+flat_deposit.update_collection:
+  route_name: 'flat_deposit.update_collection'
+  title: 'Update Collection'
+  base_route: 'entity.node.canonical'
+  weight: 100
+
+flat_deposit.add_bundle:
+  route_name: 'flat_deposit.add_bundle'
+  title: 'Add Bundle'
+  base_route: 'entity.node.canonical'
+  weight: 100
+
+flat_deposit.update_bundle:
+  route_name: 'flat_deposit.update_bundle'
+  title: 'Update Bundle'
+  base_route: 'entity.node.canonical'
+  weight: 100
+
+flat_deposit.update_metadata:
+  route_name: 'flat_deposit.update_metadata'
+  title: 'Update Metadata'
+  base_route: 'entity.node.canonical'
+  weight: 100

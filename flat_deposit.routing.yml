@@ -1,25 +1,82 @@
+flat_deposit.activate_collection:
+  path: '/node/{node}/activate-collection'
+  defaults:
+    _controller: '\Drupal\flat_deposit\Controller\CollectionController::activateCollection'
+    _title: 'Activate'
+  requirements:
+    _permission: 'use deposit module'
+  #  _custom_access: '\Drupal\flat_deposit\Controller\CollectionController::checkAccess'
+  options:
+    parameters:
+      node:
+        type: 'entity:node'
+
 flat_deposit.add_collection:
-  path: '/flat/collection/add'
+  path: '/node/{node}/add-collection'
   defaults:
     _title: 'Add Collection'
-    _form: '\Drupal\flat_deposit\Form\CollectionAddForm'
+    _controller: '\Drupal\flat_deposit\Controller\CollectionController::addCollection'
   requirements:
-    _permission: 'access content'
+    _permission: 'use deposit module'
+  options:
+    parameters:
+      node:
+        type: 'entity:node'
+
+flat_deposit.update_collection:
+  path: '/node/{node}/update-collection'
+  defaults:
+    _title: 'Update Collection'
+    _form: '\Drupal\flat_deposit\Controller\CollectionController::updateCollection'
+  requirements:
+    _permission: 'use deposit module'
+  options:
+    parameters:
+      node:
+        type: 'entity:node'
 
 flat_deposit.cmdi.save:
   path: '/flat/cmdi/save'
   defaults:
     _controller: '\Drupal\flat_deposit\Controller\CmdiController::saveAction'
   requirements:
-    _permission: 'access content'
+    _permission: 'use deposit module'
 
 flat_deposit.add_bundle:
-  path: '/flat/bundle/add'
+  path: '/node/{node}/add-bundle'
   defaults:
     _title: 'Add Bundle'
-    _controller: '\Drupal\flat_deposit\Controller\BundleController::addAction'
+    _controller: '\Drupal\flat_deposit\Controller\BundleController::addBundle'
   requirements:
-    _permission: 'access content'
+    _permission: 'use deposit module'
+  options:
+    parameters:
+      node:
+        type: 'entity:node'
+
+flat_deposit.update_bundle:
+  path: '/node/{node}/update-bundle'
+  defaults:
+    _title: 'Update Bundle'
+    _controller: '\Drupal\flat_deposit\Controller\BundleController::updateBundle'
+  requirements:
+    _permission: 'use deposit module'
+  options:
+    parameters:
+      node:
+        type: 'entity:node'
+
+flat_deposit.update_metadata:
+  path: '/node/{node}/update-metadata'
+  defaults:
+    _title: 'Update Metadata'
+    _controller: '\Drupal\flat_deposit\Controller\BundleController::updateMetadata'
+  requirements:
+    _permission: 'use deposit module'
+  options:
+    parameters:
+      node:
+        type: 'entity:node'
 
 # Menu list of FLAT configuration forms
 system.admin_config_flat:
