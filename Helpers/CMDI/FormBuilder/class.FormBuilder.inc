@@ -3,23 +3,22 @@ spl_autoload_register('autoload_formbuilder');
 
 function autoload_formbuilder()
 {
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormComponent.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormComposite.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormLeaf.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormField.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiModalBuilder.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiActionsBuilder.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateBuilder.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateRebuilder.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateSaveLoaded.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateLoader.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateSaver.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateDb.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateData.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateManager.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer.inc';
-
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormComponent');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormComposite');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormLeaf');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormField');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiModalBuilder');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiActionsBuilder');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateBuilder');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateRebuilder');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateSaveLoaded');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateLoader');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateSaver');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateDb');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateData');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateManager');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
 }
 
 use Drupal\Core\Form\FormStateInterface;
@@ -74,8 +73,8 @@ class FormBuilder
             $fileContentType = (string)$xml->header->content_type;
 
             if ($fileContentType === $content_type) {
-                $template_names [] = (string)$xml->header->template_name;
-                $template_descriptions [] = (string)$xml->header->template_description;
+                $template_names[] = (string)$xml->header->template_name;
+                $template_descriptions[] = (string)$xml->header->template_description;
             }
         }
         return array_combine($template_names, $template_descriptions);
@@ -84,7 +83,7 @@ class FormBuilder
     public static function checkTemplateItems($templateName)
     {
 
-        $filename = self::FORM_TEMPLATES_PATH . $templateName .".xml";
+        $filename = self::FORM_TEMPLATES_PATH . $templateName . ".xml";
 
         $xml = simplexml_load_file($filename);
         $res = $xml->xpath('/profileToDrupal/items/item');
@@ -165,7 +164,7 @@ class FormBuilder
         $this->setData($template);
 
         foreach ($this->formComponents as $key => $component) {
-            $this->form[$key]= $component;
+            $this->form[$key] = $component;
         }
 
         $this->form['data'] = $this->data;
@@ -189,7 +188,6 @@ class FormBuilder
     {
 
         return $this->form;
-
     }
 
 
@@ -201,13 +199,12 @@ class FormBuilder
         if (!empty($dataNode)) {
             if (!empty($dataNode->children('cmd', TRUE)->Name)) {
                 $title = $dataNode->children('cmd', TRUE)->Name;
-                }
-            else {
+            } else {
                 $title = $dataNode->children('cmd', TRUE)->Title;
             }
 
             if (isset($title[0])) {
-                    $title[0] = '';
+                $title[0] = '';
             }
         }
     }

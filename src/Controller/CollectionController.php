@@ -4,6 +4,9 @@ namespace Drupal\flat_deposit\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\node\Entity\NodeType;
+use Drupal\Core\Access\AccessResult;
+use Drupal\node\Entity\Node;
+use Drupal\Core\Session\AccountInterface;
 
 class CollectionController extends ControllerBase
 {
@@ -41,7 +44,7 @@ class CollectionController extends ControllerBase
 
         module_load_include('inc', 'node', 'node.pages');
 
-        $node_type = 'flat_collection';
+        /*         $node_type = 'flat_collection';
         $node = \Drupal::entityTypeManager()
             ->getStorage('node')
             ->create([
@@ -50,19 +53,33 @@ class CollectionController extends ControllerBase
 
 
         $form = \Drupal::service('entity.form_builder')
-            ->getForm($node);
+            ->getForm($node); */
+
+        $form = \Drupal::formBuilder()->getForm('Drupal\flat_deposit\Form\CollectionAddForm');
 
         return $form;
     }
 
+    public function addCollectionCheckAccess(Node $node, AccountInterface $account)
+    {
+        return AccessResult::allowedif($node->bundle() === 'flat_collection' && $account->hasPermission('use deposit module'));
+    }
+
     public function activateCollection()
     {
+    }
 
+    public function activateCollectionCheckAccess(Node $node, AccountInterface $account)
+    {
+        return AccessResult::allowedif($node->bundle() === 'flat_collection' && $account->hasPermission('use deposit module'));
     }
 
     public function updateCollection()
     {
-
     }
 
+    public function updateCollectionCheckAccess(Node $node, AccountInterface $account)
+    {
+        return AccessResult::allowedif($node->bundle() === 'flat_collection' && $account->hasPermission('use deposit module'));
+    }
 }

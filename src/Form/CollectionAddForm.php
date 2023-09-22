@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Contains \Drupal\flat_deposit\Form\CollectionAddForm.
@@ -13,16 +14,19 @@ use Drupal\Core\Render\Element;
 
 use Symfony\Component\HttpFoundation\Request;
 
-class CollectionAddForm extends FormBase {
+class CollectionAddForm extends FormBase
+{
 
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId()
+  {
     return 'flat_collection_add_form';
   }
 
-  public function buildForm(array $form, FormStateInterface $form_state, $fedoraObject = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $fedoraObject = NULL)
+  {
 
     $triggeringElement = $form_state->getTriggeringElement();
 
@@ -52,7 +56,7 @@ class CollectionAddForm extends FormBase {
     $available_profiles = \FormBuilder::getAvailableTemplates('flat_collection');
 
     // Add option to import a external file
-    $available_profiles ['Import'] = 'I want to upload a CMDI metadata file';
+    $available_profiles['Import'] = 'I want to upload a CMDI metadata file';
 
     $form['#prefix'] = "<div id='flat_collection_add_form_wrapper'>";
     $form['#suffix'] = "</div>";
@@ -71,8 +75,7 @@ class CollectionAddForm extends FormBase {
       'administrator',
     ], $user->getRoles())) > 0) {
       $show_namespace_field = TRUE;
-    }
-    else {
+    } else {
       $show_namespace_field = FALSE;
     }
     $form['namespace_toggle'] = [
@@ -92,9 +95,9 @@ class CollectionAddForm extends FormBase {
         'visible' => [
           ':input[name="namespace_toggle"]' => [
             'checked' => TRUE
-            ]
           ]
-        ],
+        ]
+      ],
     ];
 
     if (!\Drupal::currentUser()->hasPermission('admin collection')) {
@@ -125,13 +128,13 @@ class CollectionAddForm extends FormBase {
         'visible' => [
           ':input[name="select_profile_name"]' => [
             'value' => 'Import'
-            ]
-          ],
+          ]
+        ],
         'required' => [
           ':input[name="select_profile_name"]' => [
             'value' => 'Import'
-            ]
-          ],
+          ]
+        ],
       ],
     ];
 
@@ -163,9 +166,9 @@ class CollectionAddForm extends FormBase {
         'visible' => [
           ':input[name="select_policy"]' => [
             'value' => 'private'
-            ]
           ]
-        ],
+        ]
+      ],
     ];
 
     /*
@@ -199,16 +202,16 @@ class CollectionAddForm extends FormBase {
       '#attributes' => [
         'id' => [
           'template-form'
-          ]
-        ],
+        ]
+      ],
     ];
 
     // attach hidden data
     $form['data'] = [
       '#type' => 'value',
       '#value' => [
-        'fid' => 'entity:node/10:en',//$fedoraObject->id
-        ],
+        'fid' => 'entity:node/10:en', //$fedoraObject->id
+      ],
     ];
 
     $form['Submit'] = [
@@ -296,7 +299,8 @@ class CollectionAddForm extends FormBase {
    *
    * @return array
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state)
+  {
 
     $triggeringElement = $form_state->getTriggeringElement();
     if (null === $triggeringElement || !isset($triggeringElement['#name']) || $triggeringElement['#name'] !== 'submit') {
@@ -331,7 +335,7 @@ class CollectionAddForm extends FormBase {
     $fid = $form_state->getValue(['data', 'fid']);
     // stop validation if errors have previously occurred
     if ($form_state->getErrors()) {
-        return $form;
+      return $form;
     }
 
     //****************************//
@@ -340,25 +344,25 @@ class CollectionAddForm extends FormBase {
 
     // Validate that selected profile is not empty
     if ($form_state->getValue(['select_profile_name']) === '-- Select --') {
-        $form_state->setErrorByName('select_profile_name', t('Please choose an option from the list'));
-        return $form;
+      $form_state->setErrorByName('select_profile_name', t('Please choose an option from the list'));
+      return $form;
     }
 
     // Validate if owner exists.
     if (!user_load_by_name($owner)) {
 
-        $form_state->setErrorByName('owner', t('Specified owner is unknown'));
-        return $form;
+      $form_state->setErrorByName('owner', t('Specified owner is unknown'));
+      return $form;
     };
 
     // Validate that output directory for new cmdi exists or can be created
     if (!file_exists($export_dir)) {
-        \Drupal::service("file_system")->mkdir($export_dir, NULL, TRUE);
+      \Drupal::service("file_system")->mkdir($export_dir, NULL, TRUE);
     }
 
     if (!file_exists($export_dir)) {
-        $form_state->setError('error', t('Cannot create a directory to temporarily store CMDI files'));
-        return $form;
+      $form_state->setError('error', t('Cannot create a directory to temporarily store CMDI files'));
+      return $form;
     }
 
     //*******************************************//
@@ -369,136 +373,136 @@ class CollectionAddForm extends FormBase {
 
     switch (true) {
         // For all not imported cases
-        case $selected != 'Import':
-            //*******************//
-            // Title Validations //
-            //*******************//
-            $title = $form_state->getValue(['template_container', 'elements', 'title_field', 0]);
+      case $selected != 'Import':
+        //*******************//
+        // Title Validations //
+        //*******************//
+        $title = $form_state->getValue(['template_container', 'elements', 'title_field', 0]);
 
-            // 1. Validate that no other collection at same collection with very similar name exists
-            $values = \FlatTuque::getChildrenLabels($fid);
+        // 1. Validate that no other collection at same collection with very similar name exists
+        $values = \FlatTuque::getChildrenLabels($fid);
 
-            if ($values === false) {
-                $form_state->setErrorByName('title', t('Unable to validate that collection name is unique at this location'));
-                return $form;
-            }
+        if ($values === false) {
+          $form_state->setErrorByName('title', t('Unable to validate that collection name is unique at this location'));
+          return $form;
+        }
 
-            if (in_array(strtoupper($title), array_unique(array_map('strtoupper', $values)))) {
-                $form_state->setErrorByName('title', t('Another collection or bundle with same name exists at this location. Please use a different name'));
-                return $form;
-            }
+        if (in_array(strtoupper($title), array_unique(array_map('strtoupper', $values)))) {
+          $form_state->setErrorByName('title', t('Another collection or bundle with same name exists at this location. Please use a different name'));
+          return $form;
+        }
 
-            // 2. Validate that output directory for new cmdi exists or can be created
-            if (!file_exists($export_dir)) {
-                \Drupal::service("file_system")->mkdir($export_dir, NULL, TRUE);
-            }
+        // 2. Validate that output directory for new cmdi exists or can be created
+        if (!file_exists($export_dir)) {
+          \Drupal::service("file_system")->mkdir($export_dir, NULL, TRUE);
+        }
 
-            if (!file_exists($export_dir)) {
-                $form_state->setErrorByName('error', t('Cannot create directory to temporarily store cmdi files'));
-                return $form;
-            }
+        if (!file_exists($export_dir)) {
+          $form_state->setErrorByName('error', t('Cannot create directory to temporarily store cmdi files'));
+          return $form;
+        }
 
 
-            //*******************//
-            // Generate Cmdi file//
-            //*******************//
-            module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
-            module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
+        //*******************//
+        // Generate Cmdi file//
+        //*******************//
+        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
+        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
 
-            $templateName = $form_state->get(['selected']);
-            $owner = $form_state->getValue(['owner']);
-            $form_data = \CmdiValueExtractor::extract($form_state);
+        $templateName = $form_state->get(['selected']);
+        $owner = $form_state->getValue(['owner']);
+        $form_data = \CmdiValueExtractor::extract($form_state);
 
-            $creator = new \CmdiCreator();
+        $creator = new \CmdiCreator();
 
-            try {
-                $creator->setCmdi($templateName, $form_data, $owner);
-                $cmdi = $creator->getCmdi();
-            } catch (\CmdiCreatorException $e) {
-                $form_state->setErrorByName('error', $e->getMessage());
-                return $form;
-            }
+        try {
+          $creator->setCmdi($templateName, $form_data, $owner);
+          $cmdi = $creator->getCmdi();
+        } catch (\CmdiCreatorException $e) {
+          $form_state->setErrorByName('error', $e->getMessage());
+          return $form;
+        }
 
-            $exported = $cmdi->asXML($cmdiFile);
+        $exported = $cmdi->asXML($cmdiFile);
 
-            if (!$exported) {
-                $form_state->setErrorByName('error', t('Unable to save CMDI file on the server'));
-                return $form;
-            }
+        if (!$exported) {
+          $form_state->setErrorByName('error', t('Unable to save CMDI file on the server'));
+          return $form;
+        }
 
-            break;
+        break;
 
-        case 'Import':
-            module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
-            module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
+      case 'Import':
+        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
 
-            $file = file_save_upload('cmdi_file', array(
-                // Validate file extensions
-                'file_validate_extensions' => array('cmdi'),
-            ));
-            if (!$file) {
-                // No file specified or has incorrect extension
-                $form_state->setErrorByName('cmdi_file', t('No file was specified or it has an incorrect file extension (should be .cmdi)'));
-                return $form;
-            }
-            $cmdi = \CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($file->uri));
-            // Valid xml?
-            if (!$cmdi) {
-                $form_state->setErrorByName('cmdi_file', t('Your uploaded CMDI file is not a valid XML file'));
-                return $form;
-            }
-            // Check whether CMDI file has allowed CMDI collection profile
-            $type = $cmdi->getCmdiProfileType();
-            if ($type !== 'collection') {
-                $form_state->setErrorByName('cmdi_file', t('Your uploaded CMDI file has a profile that is not accepted as a Collection profile. See the deposit manual for more information about accepted CMDI profiles.'));
-                return $form;
-            }
+        $file = file_save_upload('cmdi_file', array(
+          // Validate file extensions
+          'file_validate_extensions' => array('cmdi'),
+        ));
+        if (!$file) {
+          // No file specified or has incorrect extension
+          $form_state->setErrorByName('cmdi_file', t('No file was specified or it has an incorrect file extension (should be .cmdi)'));
+          return $form;
+        }
+        $cmdi = \CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($file->uri));
+        // Valid xml?
+        if (!$cmdi) {
+          $form_state->setErrorByName('cmdi_file', t('Your uploaded CMDI file is not a valid XML file'));
+          return $form;
+        }
+        // Check whether CMDI file has allowed CMDI collection profile
+        $type = $cmdi->getCmdiProfileType();
+        if ($type !== 'collection') {
+          $form_state->setErrorByName('cmdi_file', t('Your uploaded CMDI file has a profile that is not accepted as a Collection profile. See the deposit manual for more information about accepted CMDI profiles.'));
+          return $form;
+        }
 
-            // Check that no other collection/bundle exists at this level with same or very similar name
-            $profile_name = $cmdi->getNameById();
-            $profile_filename = \FormBuilder::FORM_TEMPLATES_PATH . $profile_name .".xml";
-            $template_xml = simplexml_load_file($profile_filename);
-            $template_name = (string)$template_xml->xpath('/profileToDrupal/header/template_name')[0];
-            $title_field = (string)$template_xml->xpath('/profileToDrupal/items/item[@id="title_field"]/@name')[0];
-            $values = \FlatTuque::getChildrenLabels($fid);
-            $title = (string)$cmdi->xpath("/cmd:CMD/cmd:Components/cmd:$template_name/cmd:$title_field")[0];
-            if (!$title) {
-                //let's try without namespace
-                $title = (string)$cmdi->xpath("/CMD/Components/$template_name/$title_field")[0];
-            }
+        // Check that no other collection/bundle exists at this level with same or very similar name
+        $profile_name = $cmdi->getNameById();
+        $profile_filename = \FormBuilder::FORM_TEMPLATES_PATH . $profile_name . ".xml";
+        $template_xml = simplexml_load_file($profile_filename);
+        $template_name = (string)$template_xml->xpath('/profileToDrupal/header/template_name')[0];
+        $title_field = (string)$template_xml->xpath('/profileToDrupal/items/item[@id="title_field"]/@name')[0];
+        $values = \FlatTuque::getChildrenLabels($fid);
+        $title = (string)$cmdi->xpath("/cmd:CMD/cmd:Components/cmd:$template_name/cmd:$title_field")[0];
+        if (!$title) {
+          //let's try without namespace
+          $title = (string)$cmdi->xpath("/CMD/Components/$template_name/$title_field")[0];
+        }
 
-            if (!$title) {
-                $form_state->setErrorByName('cmdi_file', t('Unable to read the collection name from your uploaded CMDI file'));
-                return $form;
-            }
+        if (!$title) {
+          $form_state->setErrorByName('cmdi_file', t('Unable to read the collection name from your uploaded CMDI file'));
+          return $form;
+        }
 
-            if ($values === false) {
-                $form_state->setErrorByName('cmdi_file', t('Unable to validate that collection name is unique at this location'));
-                return $form;
-            }
+        if ($values === false) {
+          $form_state->setErrorByName('cmdi_file', t('Unable to validate that collection name is unique at this location'));
+          return $form;
+        }
 
-            if (in_array(strtoupper($title), array_unique(array_map('strtoupper', $values)))) {
-                $form_state->setErrorByName('cmdi_file', t('Another collection or bundle with same name exists at this location. Please use a different name'));
-                return $form;
-            }
+        if (in_array(strtoupper($title), array_unique(array_map('strtoupper', $values)))) {
+          $form_state->setErrorByName('cmdi_file', t('Another collection or bundle with same name exists at this location. Please use a different name'));
+          return $form;
+        }
 
-            // Remove MdSelfLink (new collections cannot have an existing MdSelfLink)
-            $cmdi->removeMdSelfLink();
+        // Remove MdSelfLink (new collections cannot have an existing MdSelfLink)
+        $cmdi->removeMdSelfLink();
 
-            // Remove Resources (new collections should not already link to resources)
-            $cmdi->stripResourceProxyAndResources();
+        // Remove Resources (new collections should not already link to resources)
+        $cmdi->stripResourceProxyAndResources();
 
-            $exported = $cmdi->asXML($cmdiFile);
+        $exported = $cmdi->asXML($cmdiFile);
 
-            if (!$exported) {
-                $form_state->setErrorByName('error', t('Unable to save CMDI file on the server'));
-                return $form;
-            }
+        if (!$exported) {
+          $form_state->setErrorByName('error', t('Unable to save CMDI file on the server'));
+          return $form;
+        }
 
-            break;
+        break;
 
-        default:
-            break;
+      default:
+        break;
     }
 
     //***************//
@@ -532,16 +536,16 @@ class CollectionAddForm extends FormBase {
 
     module_load_include('php', 'flat_deposit', 'Helpers/IngestService/IngestClient');
     try {
-        $ingest_client = new \IngestClient($sipType, $owner, $cmdiFile, $fid, $test, $namespace);
+      $ingest_client = new \IngestClient($sipType, $owner, $cmdiFile, $fid, $test, $namespace);
     } catch (\IngestServiceException $exception) {
-        $form_state->setErrorByName('debug', $exception->getMessage());
-        return $form;
+      $form_state->setErrorByName('debug', $exception->getMessage());
+      return $form;
     }
 
     $options = [];
-    $options ['policy'] = $form_state->getValue(['select_policy']);
-    $options ['content_type'] = 'flat_collection';
-    $options ['visibility'] = $form_state->getValue(['visibility']);
+    $options['policy'] = $form_state->getValue(['select_policy']);
+    $options['content_type'] = 'flat_collection';
+    $options['visibility'] = $form_state->getValue(['visibility']);
     $fid = $ingest_client->requestSipIngest($options);
 
     /**
@@ -551,8 +555,8 @@ class CollectionAddForm extends FormBase {
     // $fObject = islandora_object_load($fid);
 
     if (!$fObject) {
-        $form_state->setErrorByName('error', t('Check of FID for new collection item did not reveal valid data. Error message:' . $fid));
-        return $form;
+      $form_state->setErrorByName('error', t('Check of FID for new collection item did not reveal valid data. Error message:' . $fid));
+      return $form;
     }
 
     $form_state->setValue(['data', 'fid'], (string)$fid);
@@ -562,7 +566,8 @@ class CollectionAddForm extends FormBase {
     return $form;
   }
 
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state)
+  {
 
     $owner = user_load_by_name($form_state->getValue(['data', 'owner']));
     $uid = $owner->uid;
@@ -579,11 +584,13 @@ class CollectionAddForm extends FormBase {
     return $response;
   }
 
-  public function selectProfileNameAjaxCallback(array &$form, FormStateInterface $form_state, Request $request) {
+  public function selectProfileNameAjaxCallback(array &$form, FormStateInterface $form_state, Request $request)
+  {
     return $form['template_container'];
   }
 
-  public function submitAjaxHandler(array &$form, FormStateInterface $form_state, Request $request) {
+  public function submitAjaxHandler(array &$form, FormStateInterface $form_state, Request $request)
+  {
 
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
     \CmdiValueSyncer::sync($form, $form_state);

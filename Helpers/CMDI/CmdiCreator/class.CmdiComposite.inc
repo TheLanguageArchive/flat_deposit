@@ -1,15 +1,15 @@
 <?php
-spl_autoload_register(function ($class_name) {
+spl_autoload_register('autoload_cmdicomposite');
 
-    $ns = explode('\\', $class_name);
-    $class_name = $ns[count($ns) - 1];
+function autoload_cmdicomposite()
+{
 
-    $path = drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.' . $class_name . '.inc';
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiLeaf');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiComponent');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
 
-    if (file_exists($path)) {
-        include_once $path;
-    }
-});
+}
+
 /**
  * Created by PhpStorm.
  * User: danrhe

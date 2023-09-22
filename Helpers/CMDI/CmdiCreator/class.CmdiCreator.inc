@@ -3,12 +3,10 @@
 spl_autoload_register('autoload_cmdicreator');
 
 function autoload_cmdicreator() {
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.CmdiComponent.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.CmdiComposite.inc';
-    include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.CmdiLeaf.inc';
-
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiComponent');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiComposite');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiLeaf');
 }
-
 
 class CmdiCreatorException extends Exception {}
 /**

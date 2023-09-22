@@ -1,15 +1,14 @@
 <?php
-spl_autoload_register(function ($class_name) {
+spl_autoload_register('autoload_formleaf');
 
-    $ns = explode('\\', $class_name);
-    $class_name = $ns[count($ns) - 1];
+function autoload_formleaf()
+{
 
-    $path = drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.' . $class_name . '.inc';
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormComposite');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormComponent');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormField');
 
-    if (file_exists($path)) {
-        include_once $path;
-    }
-});
+}
 
 /**
  * Created by PhpStorm.

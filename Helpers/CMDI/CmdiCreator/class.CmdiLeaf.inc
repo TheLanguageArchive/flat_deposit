@@ -1,15 +1,16 @@
 <?php
-spl_autoload_register(function ($class_name) {
 
-    $ns = explode('\\', $class_name);
-    $class_name = $ns[count($ns) - 1];
+spl_autoload_register('autoload_cmdileaf');
 
-    $path = drupal_get_path('module', 'flat_deposit') . '/Helpers/CMDI/CmdiCreator/class.' . $class_name . '.inc';
+function autoload_cmdileaf()
+{
 
-    if (file_exists($path)) {
-        include_once $path;
-    }
-});
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiComposite');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiComponent');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
+
+}
+
 /**
  * User: danrhe
  * Date: 25/01/2018

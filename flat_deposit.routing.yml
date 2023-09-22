@@ -4,8 +4,7 @@ flat_deposit.activate_collection:
     _controller: '\Drupal\flat_deposit\Controller\CollectionController::activateCollection'
     _title: 'Activate'
   requirements:
-    _permission: 'use deposit module'
-  #  _custom_access: '\Drupal\flat_deposit\Controller\CollectionController::checkAccess'
+    _custom_access: '\Drupal\flat_deposit\Controller\CollectionController::activateCollectionCheckAccess'
   options:
     parameters:
       node:
@@ -17,7 +16,7 @@ flat_deposit.add_collection:
     _title: 'Add Collection'
     _controller: '\Drupal\flat_deposit\Controller\CollectionController::addCollection'
   requirements:
-    _permission: 'use deposit module'
+    _custom_access: '\Drupal\flat_deposit\Controller\CollectionController::addCollectionCheckAccess'
   options:
     parameters:
       node:
@@ -29,7 +28,7 @@ flat_deposit.update_collection:
     _title: 'Update Collection'
     _form: '\Drupal\flat_deposit\Controller\CollectionController::updateCollection'
   requirements:
-    _permission: 'use deposit module'
+    _custom_access: '\Drupal\flat_deposit\Controller\CollectionController::updateCollectionCheckAccess'
   options:
     parameters:
       node:
@@ -48,7 +47,7 @@ flat_deposit.add_bundle:
     _title: 'Add Bundle'
     _controller: '\Drupal\flat_deposit\Controller\BundleController::addBundle'
   requirements:
-    _permission: 'use deposit module'
+    _custom_access: '\Drupal\flat_deposit\Controller\BundleController::addBundleCheckAccess'
   options:
     parameters:
       node:
@@ -60,7 +59,7 @@ flat_deposit.update_bundle:
     _title: 'Update Bundle'
     _controller: '\Drupal\flat_deposit\Controller\BundleController::updateBundle'
   requirements:
-    _permission: 'use deposit module'
+    _custom_access: '\Drupal\flat_deposit\Controller\BundleController::updateBundleCheckAccess'
   options:
     parameters:
       node:
@@ -72,7 +71,7 @@ flat_deposit.update_metadata:
     _title: 'Update Metadata'
     _controller: '\Drupal\flat_deposit\Controller\BundleController::updateMetadata'
   requirements:
-    _permission: 'use deposit module'
+    _custom_access: '\Drupal\flat_deposit\Controller\BundleController::updateMetadataCheckAccess'
   options:
     parameters:
       node:

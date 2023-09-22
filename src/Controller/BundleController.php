@@ -4,6 +4,9 @@ namespace Drupal\flat_deposit\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\node\Entity\NodeType;
+use Drupal\Core\Access\AccessResult;
+use Drupal\node\Entity\Node;
+use Drupal\Core\Session\AccountInterface;
 
 class BundleController extends ControllerBase
 {
@@ -55,14 +58,26 @@ class BundleController extends ControllerBase
         return $form;
     }
 
+    public function addBundleCheckAccess(Node $node, AccountInterface $account)
+    {
+        return AccessResult::allowedif($node->bundle() === 'flat_collection' && $account->hasPermission('use deposit module'));
+    }
+
     public function updateBundle()
     {
+    }
 
+    public function updateBundleCheckAccess(Node $node, AccountInterface $account)
+    {
+        return AccessResult::allowedif($node->bundle() === 'flat_bundle' && $account->hasPermission('use deposit module'));
     }
 
     public function updateMetadata()
     {
-
     }
 
+    public function updateMetadataCheckAccess(Node $node, AccountInterface $account)
+    {
+        return AccessResult::allowedif($node->bundle() === 'flat_bundle' && $account->hasPermission('use deposit module'));
+    }
 }
