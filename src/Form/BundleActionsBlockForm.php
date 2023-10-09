@@ -44,11 +44,11 @@ class BundleActionsBlockForm extends FormBase
             '#attributes' => array('class' => array('container-inline')),
         );
 
-        $form['actions']['describe_bundle'] = array(
+        $form['actions']['enter_metadata'] = array(
             '#type' => 'submit',
             '#value' => t('Fill in metadata for bundle'),
             '#description' => t('Enter metadata for this bundle (required)'),
-            '#validate' => array('flat_bundle_action_form_describe_validate'),
+            '#validate' => array('flat_bundle_action_form_enter_metadata_validate'),
             '#access' => FALSE,
         );
 
@@ -57,12 +57,6 @@ class BundleActionsBlockForm extends FormBase
             '#value' => t('Edit metadata for bundle'),
             '#description' => t('Edit the metadata for this bundle'),
             '#access' => TRUE,
-        );
-
-        $form['actions']['upload_data'] = array(
-            '#type' => 'submit',
-            '#value' => t('Upload data'),
-            '#access' => FALSE,
         );
 
         $form['actions']['markup_1'] = array(

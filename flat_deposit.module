@@ -1574,32 +1574,34 @@ return true;
 }
  */
 
+
+/**
+ * Implements hook_form_alter
+ * 
+ * Enable/disable action buttons and change bundle_image depending on bundle status
+ * 
+ */
+
 function flat_deposit_form_bundle_actions_block_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id)
 
 {
     $node = \Drupal::routeMatch()->getParameter('node');
 
-    // @FIXME entity_metadata_wrapper fix for drupal 9
-    // $wrapper = entity_metadata_wrapper('node', $node);
-
-    // Specify which handlers to become active and which bundle_image to display
     $form['actions']['edit_bundle']['#disabled'] = TRUE;
-    $status_field = $node->get('flat_bundle_status');
-    $status = $status_field->value;
+    $flat_bundle_status_field = $node->get('flat_bundle_status');
+    $flat_bundle_status = $flat_bundle_status_field->value;
+    $flat_cmdi_option_field = $node->get('flat_cmdi_option');
+    $flat_cmdi_option = $flat_cmdi_option_field->value;
+    $flat_cmdi_file_field = $node->get('flat_cmdi_file');
+    $flat_cmdi_file = $flat_cmdi_file_field->value;
 
-    //ksm($status);
+    //ksm(empty($flat_cmdi_file));
 
-    $status = 'open';
+    $flat_bundle_status = 'failed';
 
-    # deactivate link to file browser for local bundles
-    $source = $node->flat_source->value;
-    $enable_file_browser = in_array($source, array('local', 'cloud')) ? FALSE : TRUE;
-
-    switch ($status) {
+    switch ($flat_bundle_status) {
         case 'open': {
 
-                $form['actions']['upload_data']['#access'] = $enable_file_browser;
-                $form['actions']['bundle_image']['#disabled'] = !$enable_file_browser;
                 if (empty($node->flat_cmdi_file)) {
                     $form['actions']['validate_bundle']['#disabled'] = TRUE;
                 } else {
@@ -1619,8 +1621,6 @@ function flat_deposit_form_bundle_actions_block_form_alter(&$form, \Drupal\Core\
             }
 
         case 'failed': {
-                $form['actions']['upload_data']['#access'] = $enable_file_browser;
-                $form['actions']['bundle_image']['#disabled'] = !$enable_file_browser;
                 $form['actions']['validate_bundle']['#disabled'] = FALSE;
                 $form['actions']['edit_bundle']['#disabled'] = FALSE;
                 $form['actions']['edit_metadata']['#disabled'] = FALSE;
@@ -1649,10 +1649,10 @@ function flat_deposit_form_bundle_actions_block_form_alter(&$form, \Drupal\Core\
 
     // Activate metadata creation button only if 1) cmdi option is 'new' 2) status is either open or failed and 3) no cmdi has been created
     // If metadata creation button is active (.e.g. if metadata file has been removed), validate button should be disabled.
-    if ($node->flat_cmdi_option->value == 'new' and ($status == 'open' or $status == 'failed') and (empty($node->flat_cmdi_file))) {
+    if ($flat_cmdi_option == 'new' and ($flat_bundle_status == 'open' or $flat_bundle_status == 'failed') and (empty($flat_cmdi_file))) {
 
-        $form['actions']['describe_bundle']['#access'] = TRUE;
-        $form['actions']['describe_bundle']['#attributes']['class'][] = 'btn-success';
+        $form['actions']['enter_metadata']['#access'] = TRUE;
+        $form['actions']['enter_metadata']['#attributes']['class'][] = 'btn-success';
         $form['actions']['edit_metadata']['#access'] = FALSE;
         $form['actions']['validate_bundle']['#disabled'] = TRUE;
     }
