@@ -5,9 +5,9 @@ module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/Form2CmdiParser');
 
 class RecursiveDotFilterIterator extends RecursiveFilterIterator
 {
-    public function accept()
+    public function accept(): bool
     {
-        return '.' !== substr($this->current()->getFilename(), 0, 1);
+        return ('.' !== substr($this->current()->getFilename(), 0, 1));
     }
 }
 

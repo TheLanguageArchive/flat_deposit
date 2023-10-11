@@ -9,6 +9,7 @@ namespace Drupal\flat_deposit\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 
 /**
  * Bundle Actions block form
@@ -48,7 +49,7 @@ class BundleActionsBlockForm extends FormBase
             '#type' => 'submit',
             '#value' => t('Fill in metadata for bundle'),
             '#description' => t('Enter metadata for this bundle (required)'),
-            '#validate' => array('flat_bundle_action_form_enter_metadata_validate'),
+            //'#validate' => array('flat_bundle_action_form_enter_metadata_validate'),
             '#access' => FALSE,
         );
 
@@ -128,18 +129,7 @@ class BundleActionsBlockForm extends FormBase
      */
     public function validateForm(array &$form, FormStateInterface $form_state)
     {
-        $phrases = $form_state->getValue('phrases');
-        // The value cannot be empty.
-        if (is_null($phrases)) $form_state->setErrorByName('phrases', t('This field cannot be empty.'));
-        // The value must be numeric.
-        if (!is_numeric($phrases)) {
-            $form_state->setErrorByName('phrases', t('Please use a number.'));
-        } else {
-            // A numeric value must still be an integer.
-            if (floor($phrases) != $phrases) $form_state->setErrorByName('phrases', t('No decimals, please.'));
-            // A numeric value cannot be zero or negative.
-            if ($phrases < 1) $form_state->setErrorByName('phrases', t('Please use a number greater than zero.'));
-        }
+
     }
 
     /**
@@ -148,12 +138,66 @@ class BundleActionsBlockForm extends FormBase
      */
     public function submitForm(array &$form, FormStateInterface $form_state)
     {
-        $form_state->setRedirect(
-            'loremipsum.generate',
-            array(
-                'paragraphs' => $form_state->getValue('paragraphs'),
-                'phrases' => $form_state->getValue('phrases'),
-            )
-        );
+
+        \Drupal::messenger()->addMessage("Default submit handler executed");
+
+        $node = \Drupal::routeMatch()->getParameter('node');
+        if ($node instanceof \Drupal\node\NodeInterface) {
+          $nid = $node->id();
+        }
+
+        //ksm($form_state);
+    
+        $action_element = $form_state->getTriggeringElement();
+        //$action = $action_element->value;
+        $action = 'Fill in metadata for bundle';
+    
+        switch ($action) {    
+            case 'Fill in metadata for bundle':
+                $form_state->setRedirect('flat_deposit.enter_metadata', ['node' => $nid]);
+                break;
+    
+            case 'Edit metadata for bundle':
+                $url = array('node/' . $nid . '/edit_cmdi');
+                $form_state['redirect'] = $url;
+                break;
+    
+    
+            case 'Validate bundle':
+            case 'Archive bundle':
+    
+                $debug = isset($form_state['values']['serial']) ? $form_state['values']['serial'] : false;
+    
+                send_request($node->nid, $action, $debug);
+    
+                $processed = ($node->flat_bundle_status->value == 'valid') ? 'archived' : 'validated';
+    
+                $user = \Drupal::currentUser();
+                $form_state['redirect'] = 'dashboard';
+                \Drupal::messenger()->addMessage("Bundle is being $processed");
+    
+                break;
+    
+    
+            case 'Edit bundle properties':
+                $form_state->setRedirect('entity.node.edit_form', ['node' => $nid]);
+                break;
+    
+    
+            case 'Delete bundle':
+                $form_state->setRedirect('entity.node.delete_form', ['node' => $nid]);
+                break;
+    
+            case 'Re-open bundle':
+    
+                $node->flat_bundle_status->value = 'open';
+                $node->save();
+                \Drupal::messenger()->addMessage('Bundle is open and can be modified again');
+    
+                break;
+    
+    
+        }
+
     }
 }
