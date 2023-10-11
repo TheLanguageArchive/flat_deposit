@@ -106,14 +106,12 @@ class FormField
         if (($this->formTemplateNode['inherited'] or $this->inheritAll) and $this->defaultValue) {
 
             $formField['#default_value'] = $this->convertValue($this->defaultValue);
-        }
-        else {
+        } else {
             // see if there's a default value in the template and use that
             if (isset($this->formTemplateNode->default)) {
                 $formField['#default_value'] = (string)$this->formTemplateNode->default;
             }
         }
-
     }
 
     /**
@@ -128,10 +126,9 @@ class FormField
     private function setFieldTree(&$formField)
     {
 
-        if (($this->formTemplateNode->type == 'fieldset') OR ($this->formTemplateNode->type == 'container')) {
+        if (($this->formTemplateNode->type == 'fieldset') or ($this->formTemplateNode->type == 'container')) {
 
             $formField['#tree'] = true;
-
         }
     }
 
@@ -181,7 +178,7 @@ class FormField
 
             case 'container':
 
-                 $type = 'container';
+                $type = 'container';
 
                 break;
 
@@ -199,10 +196,8 @@ class FormField
 
             default:
                 $type = 'textfield';
-
         }
         $formField['#type'] = $type;
-
     }
 
     /**
@@ -218,7 +213,6 @@ class FormField
 
             $formField['#required'] = true;
         }
-
     }
 
     /**
@@ -232,7 +226,6 @@ class FormField
         if (isset($this->formTemplateNode->description)) {
             $formField['#description'] = (string)$this->formTemplateNode->description;
         }
-
     }
 
     /**
@@ -248,7 +241,6 @@ class FormField
                 $formField['#attributes']['data-' . $attribute] = (string)$value;
             }
         }
-
     }
 
     private function convertValue($value)
@@ -277,7 +269,6 @@ class FormField
         }
 
         return $convertedValue;
-
     }
 
     /**
@@ -289,7 +280,7 @@ class FormField
      * @param String $buttonId
      *
      */
-    public function addNestedComponents($existingCmdiNode, $pressedButtons, $index = 0, $buttonId, $inheritAll = false)
+    public function addNestedComponents($existingCmdiNode, $pressedButtons, $buttonId, $index = 0, $inheritAll = false)
     {
 
         if (isset($this->formTemplateNode->item)) {
@@ -344,11 +335,8 @@ class FormField
                     $attributeNodeName = $attributeFormComponent->getFormKeyName($attribute);
 
                     $this->formField[$attributeNodeName] = $attributeFormComponent->getFormComponent();
-
                 }
-
             }
-
         }
 
         // attributes of the composite items
@@ -376,14 +364,11 @@ class FormField
                 $attributeNodeName = $attributeFormComponent->getFormKeyName($attribute);
 
                 $this->formField[$attributeNodeName] = $attributeFormComponent->getFormComponent();
-
             }
-
         }
 
         // $this->formField['#cmdi_template_fields'] = array_filter(array_keys($this->formField), function($field) {
         //     return $field !== 'flat_cmdi_templates' || $field !== '#panel_actions';
         // });
     }
-
 }

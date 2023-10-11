@@ -62,7 +62,7 @@ class BundleController extends ControllerBase
     {
         module_load_include('inc', 'node', 'node.pages');
 
-        $form = \Drupal::formBuilder()->getForm('Drupal\flat_deposit\Form\BundleEditCmdiForm');
+        $form = \Drupal::formBuilder()->getForm('Drupal\flat_deposit\Form\BundleEnterCmdiForm');
 
         return $form;
     }

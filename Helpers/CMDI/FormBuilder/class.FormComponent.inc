@@ -8,7 +8,6 @@ function autoload_formcomponent()
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormComposite');
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormLeaf');
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormField');
-
 }
 
 /**
@@ -103,13 +102,13 @@ abstract class FormComponent
 
         // in case node is not present in the existing CMDI, check whether an attribute with the name is present
         $is_attribute = false;
-            if ($existingCmdiNode && ($count == 0)) {
-                $attributes = $existingCmdiNode->attributes();
-                $data = isset($attributes[$componentName]) ? $attributes[$componentName] : null;
-                if ($data) {
-                    $count = 1; // there can be only one attribute with the same name
-                    $is_attribute = true;
-                }
+        if ($existingCmdiNode && ($count == 0)) {
+            $attributes = $existingCmdiNode->attributes();
+            $data = isset($attributes[$componentName]) ? $attributes[$componentName] : null;
+            if ($data) {
+                $count = 1; // there can be only one attribute with the same name
+                $is_attribute = true;
+            }
         }
 
         // in case of a template node with a skipParentInCMDI attribute, the default value is the value of the existing CMDI node itself
@@ -140,7 +139,7 @@ abstract class FormComponent
         for ($index = 0; $index < $this->numberElements; $index++) {
 
             $defaultValue = isset($defaultValues[$index]) ? $defaultValues[$index] : null;
-            if (!$defaultValue AND isset($templateNode->default)) {
+            if (!$defaultValue and isset($templateNode->default)) {
                 // see if there's a default value in the template and use that
                 $defaultValue = (string)$templateNode->default;
             }
@@ -157,22 +156,26 @@ abstract class FormComponent
             $element->setCmdiProfile($this->cmdiProfile);
             $element->setCmdiTree($tree);
             $element->setFormField();
-            $element->addNestedComponents($existingCmdiNode, $componentButtonPresses, $index, $buttonId, $inheritAll);
+            $element->addNestedComponents($existingCmdiNode, $componentButtonPresses, $buttonId, $index, $inheritAll);
             $componentElements[] = $element->getFormField();
         }
 
         $this->addButtonsToFormComponent($templateNode, $componentElements, $buttonId);
 
-#        $this->addMenuToFormComponent($templateNode, $componentElements, $buttonId);
+        #        $this->addMenuToFormComponent($templateNode, $componentElements, $buttonId);
 
         $this->formComponent = $this->nestComponentElements($templateNode, $componentElements);
     }
 
     public function getNumberElements()
-    {return $this->numberElements;}
+    {
+        return $this->numberElements;
+    }
 
     public function getMinNumberElements()
-    {return $this->minNumberElements;}
+    {
+        return $this->minNumberElements;
+    }
 
     public function setNumberElements($numberElements)
     {
@@ -194,13 +197,10 @@ abstract class FormComponent
         if ($buttonId == null) {
 
             $buttonId = $nodeId;
-
         } else {
 
             $buttonId .= "_" . $nodeId;
-
         }
-
     }
 
     /**
@@ -220,7 +220,6 @@ abstract class FormComponent
         if ($this->getNumberElements() < $this->getMinNumberElements()) {
             $this->setNumberElements($this->getMinNumberElements());
         }
-
     }
 
     /**
@@ -234,7 +233,7 @@ abstract class FormComponent
     {
         $showButtons = false;
 
-        if (($templateNode->type == 'hidden') OR ($templateNode->type == 'container')) {
+        if (($templateNode->type == 'hidden') or ($templateNode->type == 'container')) {
             // do not add buttons to hidden form elements or containers
             return;
         }
@@ -291,7 +290,5 @@ abstract class FormComponent
 
             );
         }
-
     }
-
 }

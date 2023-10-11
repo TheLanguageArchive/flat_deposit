@@ -2,6 +2,14 @@
 
 use Drupal\Core\Form\FormStateInterface;
 
+include_once 'class.CmdiTemplateBuilder.inc';
+include_once 'class.CmdiActionsBuilder.inc';
+include_once 'class.CmdiModalBuilder.inc';
+include_once 'class.CmdiTemplateRebuilder.inc';
+include_once 'class.CmdiTemplateSaver.inc';
+include_once 'class.CmdiTemplateSaveLoaded.inc';
+include_once 'class.CmdiTemplateLoader.inc';
+
 class CmdiTemplateManager
 {
     public static function build($component_id, $profile, $cmdi_tree)
@@ -45,10 +53,12 @@ class CmdiTemplateManager
     }
 }
 
-function flat_cmdi_templates_ajax_save_callback($form, &$form_state) {
+function flat_cmdi_templates_ajax_save_callback($form, &$form_state)
+{
     return $form['template_container'];
 }
 
-function flat_cmdi_templates_ajax_load_callback($form, &$form_state) {
+function flat_cmdi_templates_ajax_load_callback($form, &$form_state)
+{
     return $form['template_container'];
 }

@@ -61,21 +61,22 @@ class BundleEditCmdiForm extends FormBase
         return $form;
       }
 
+      $inheritedData = NULL;
+
       //$existing_cmdi = $node->get('flat_cmdi_file')['uri'];
       $existing_cmdi = $node->get('flat_cmdi_file')->target_id;
-      if($existing_cmdi) {
-      $existing_cmdi_file = File::load($existing_cmdi);
-      $existing_cmdi_url = $existing_cmdi_file->createFileUrl();
-      $inheritedData = \CmdiHandler::simplexml_load_cmdi_file(\Drupal::service('file_system')->realpath($existing_cmdi_url));
-      if ($inheritedData) {
-        $profile = $inheritedData->getNameById();
+      if ($existing_cmdi) {
+        $existing_cmdi_file = File::load($existing_cmdi);
+        $existing_cmdi_url = $existing_cmdi_file->createFileUrl();
+        $inheritedData = \CmdiHandler::simplexml_load_cmdi_file(\Drupal::service('file_system')->realpath($existing_cmdi_url));
+        if ($inheritedData) {
+          $profile = $inheritedData->getNameById();
+        } else {
+          $profile = NULL;
+        }
       } else {
         $profile = NULL;
       }
-    }
-    else {
-      $profile = NULL;
-    }
 
       $form['#prefix'] = "<div id='flat_bundle_edit_cmdi_form_wrapper'>";
       $form['#suffix'] = "</div>";
@@ -123,25 +124,26 @@ class BundleEditCmdiForm extends FormBase
       //********************************************************************
       // Generate profile specific form render array and attach to container
       //********************************************************************
-      module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
+      include_once DRUPAL_ROOT . '/' . \Drupal::service('extension.path.resolver')->getPath('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormBuilder.inc';
+      //module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.CmdiTemplateManager');
+      include_once DRUPAL_ROOT . '/' . \Drupal::service('extension.path.resolver')->getPath('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateManager.inc';
 
       // load template if selected
-      CmdiTemplateManager::load($form_state);
+      \CmdiTemplateManager::load($form_state);
 
       // adding modal component to form
-      $form['flat_modal'] = CmdiTemplateManager::modal();
+      $form['flat_modal'] = \CmdiTemplateManager::modal();
 
       // adding save cmdi template feature
-      $saved = CmdiTemplateManager::save($form_state);
+      $saved = \CmdiTemplateManager::save($form_state);
 
-      $availableFormTemplates = FormBuilder::getAvailableTemplates('flat_bundle');
+      $availableFormTemplates = \FormBuilder::getAvailableTemplates('flat_bundle');
 
 
 
       if (array_key_exists($profile, $availableFormTemplates)) {
         // Load form builder app
-        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
-        $formBuilder = new FormBuilder($form_state->getBuildInfo());
+        $formBuilder = new \FormBuilder($form_state->getBuildInfo());
 
         // count button presses per field
         $formBuilder->aggregatePressedButtons($form_state);
