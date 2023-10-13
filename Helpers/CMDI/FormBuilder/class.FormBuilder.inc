@@ -147,11 +147,13 @@ class FormBuilder
 
         $dataNode = $this->getHeadNode($cmdi);
 
+        // TODO figure out how to do this from Drupal nodes rather than Fedora objects
+        /*
         if ($this->node) {
             if ((get_class($this->node)) !== 'IslandoraFedoraObject') {
                 $this->clearInheritedTitle($dataNode);
             }
-        }
+        } */
 
         // adding this so profile can be referenced in CmdiTemplateManager
         // for the CmdiTemplate functionality
@@ -161,6 +163,7 @@ class FormBuilder
         if (!$setComponets) {
             return false;
         }
+
         $this->setData($template);
 
         foreach ($this->formComponents as $key => $component) {
@@ -169,12 +172,22 @@ class FormBuilder
 
         $this->form['data'] = $this->data;
 
+        // TODO figure out how to do this from Drupal nodes rather than Fedora objects
+        /* 
         if ($this->node) {
             if ((get_class($this->node)) == 'IslandoraFedoraObject') {
                 $this->form['title_field'][0]['#default_value'] = $this->node->label;
             } else {
                 $this->form['title_field'][0]['#default_value'] = $this->node->title;
             }
+        } */
+
+        // this works for new bundles/collections but not for existing
+        $node = \Drupal::routeMatch()->getParameter('node');
+
+        if ($node) {
+            $title = $node->get('title')->value;
+            $this->form['title_field'][0]['#default_value'] = $title;
         }
 
         return true;

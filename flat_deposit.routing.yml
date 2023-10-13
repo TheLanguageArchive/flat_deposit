@@ -77,6 +77,18 @@ flat_deposit.enter_metadata:
       node:
         type: 'entity:node'
 
+flat_deposit.edit_metadata:
+  path: '/node/{node}/edit-metadata'
+  defaults:
+    _title: 'Edit Metadata'
+    _controller: '\Drupal\flat_deposit\Controller\BundleController::editMetadata'
+  requirements:
+    _custom_access: '\Drupal\flat_deposit\Controller\BundleController::editMetadataCheckAccess'
+  options:
+    parameters:
+      node:
+        type: 'entity:node'
+
 flat_deposit.update_metadata:
   path: '/node/{node}/update-metadata'
   defaults:

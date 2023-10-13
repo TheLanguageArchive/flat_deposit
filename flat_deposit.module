@@ -194,7 +194,6 @@ function flat_bundle_form($node, $form_state)
  */
 function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterface $form_state, $form_id)
 {
-    // dd($form);
     if (isset($form['additional_settings'])) {
         $form['additional_settings']['#access'] = false;
     }
@@ -219,9 +218,6 @@ function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterfac
     $user = \Drupal::currentUser();
     $userId = $user->id();
 
-    ksm($form);
-
-    // dd($form_state->getFormObject()->getEntity());
     // Hide unwanted buttons and fields.
     hide($form['flat_bundle_status']);
     hide($form['flat_exception']);

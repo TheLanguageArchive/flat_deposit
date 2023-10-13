@@ -3,6 +3,8 @@
 /**
  * @file
  * Contains \Drupal\flat_deposit\Form\BundleUpdateCmdiForm.
+ * 
+ * Form to update the metadata for a bundle that is already archived. Submitting the form will immediately ingest the new metadata via the DoorKeeper.
  */
 
 namespace Drupal\flat_deposit\Form;
@@ -11,23 +13,26 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 
-class BundleUpdateCmdiForm extends FormBase {
+class BundleUpdateCmdiForm extends FormBase
+{
 
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId()
+  {
     return 'flat_bundle_update_cmdi_form';
   }
 
-  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state, $fedora_object = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $fedora_object = NULL)
+  {
     // @FIXME
-// drupal_set_title() has been removed. There are now a few ways to set the title
-// dynamically, depending on the situation.
-//
-//
-// @see https://www.drupal.org/node/2067859
-// drupal_set_title(t('Update Bundle Metadata'));
+    // drupal_set_title() has been removed. There are now a few ways to set the title
+    // dynamically, depending on the situation.
+    //
+    //
+    // @see https://www.drupal.org/node/2067859
+    // drupal_set_title(t('Update Bundle Metadata'));
 
 
     ctools_add_js('ajax-responder');
@@ -37,8 +42,7 @@ class BundleUpdateCmdiForm extends FormBase {
     $inheritedData = CmdiHandler::simplexml_load_cmdi_string($ds->content);
     if ($inheritedData) {
       $profile = $inheritedData->getNameById();
-    }
-    else {
+    } else {
       $profile = NULL;
     }
 
@@ -78,8 +82,8 @@ class BundleUpdateCmdiForm extends FormBase {
       '#attributes' => [
         'id' => [
           'template-form'
-          ]
-        ],
+        ]
+      ],
     ];
 
     // attach hidden data
@@ -87,7 +91,7 @@ class BundleUpdateCmdiForm extends FormBase {
       '#type' => 'value',
       '#value' => [
         'fid' => $fedora_object->id
-        ],
+      ],
     ];
 
     if ($inheritedData) {
@@ -141,8 +145,7 @@ class BundleUpdateCmdiForm extends FormBase {
           'template_container',
           'elements',
         ]);
-      }
-      else {
+      } else {
         $pressedButtonsRoot = NULL;
       }
 
@@ -158,15 +161,15 @@ class BundleUpdateCmdiForm extends FormBase {
       if (!is_array($form['template_container']['elements'])) {
         \Drupal::messenger()->addWarning('Unable to generate cmdi form based on profile');
       }
-    }
-    else {
+    } else {
       \Drupal::messenger()->addMessage('Online editing of the metadata of this bundle is not supported');
       $form['Submit']['#disabled'] = TRUE;
     }
     return $form;
   }
 
-  public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state)
+  {
     $fid = $form_state->getValue(['data', 'fid']);
     $target = 'islandora/object/' . $fid;
 

@@ -146,9 +146,6 @@ function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInter
 
         //Scan workspace directory; non-existing directories will return false, existing dirs will populate the
         // workspace field options
-
-        //dd(\Drupal::service('file_system')->realpath($workspaces_directory));
-
         $workspaces = \Workspaces::listAccessibleFolderContent($workspaces_directory, ['isDir', 'userHasReadPermissions', 'webUserHasReadPermissions', 'isNotCurrentDir']);
 
         if (!empty($workspaces)) {
@@ -364,7 +361,6 @@ function flat_workspaces_node_view(array &$build, Node $node, EntityViewDisplay 
  */
 /* function flat_workspaces_entity_presave(EntityInterface $entity)
 {
-    dd($entity);
     if (isset($node->form_id)) {
         if ($node->form_id == 'flat_bundle_node_form') {
             if (isset($node->flat_source)) {

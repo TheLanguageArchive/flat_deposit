@@ -10,7 +10,7 @@ namespace Drupal\flat_deposit\Form;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element;
+use Drupal\Core\Ajax\RedirectCommand;
 
 use Symfony\Component\HttpFoundation\Request;
 
@@ -39,9 +39,7 @@ class CollectionAddForm extends FormBase
     // drupal_set_title(t('Add Collection'));
 
 
-    // ctools_add_js('ajax-responder');
     // Set selected profile as this is updated on every AJAX request
-
     if ($form_state->hasValue(['select_profile_name'])) {
       $form_state->set(['selected'], $form_state->getValue(['select_profile_name']));
     }

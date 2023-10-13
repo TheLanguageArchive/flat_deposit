@@ -1,5 +1,7 @@
 <?php
 
+use \AllowDynamicProperties;
+
 spl_autoload_register('autoload_cmdicreator');
 
 function autoload_cmdicreator() {
@@ -12,6 +14,7 @@ class CmdiCreatorException extends Exception {}
 /**
  * Class for building a CMDI xml based on drupal form data and a form template
  */
+#[AllowDynamicProperties] 
 class CmdiCreator
 {
 

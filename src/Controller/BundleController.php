@@ -67,6 +67,15 @@ class BundleController extends ControllerBase
         return $form;
     }
 
+    public function editMetadata()
+    {
+        module_load_include('inc', 'node', 'node.pages');
+
+        $form = \Drupal::formBuilder()->getForm('Drupal\flat_deposit\Form\BundleEditCmdiForm');
+
+        return $form;
+    }
+
     public function addBundleCheckAccess(Node $node, AccountInterface $account)
     {
         return AccessResult::allowedif($node->bundle() === 'flat_collection' && $account->hasPermission('use deposit module'));
@@ -86,6 +95,11 @@ class BundleController extends ControllerBase
     }
 
     public function enterMetadataCheckAccess(Node $node, AccountInterface $account)
+    {
+        return AccessResult::allowedif($node->bundle() === 'flat_bundle' && $account->hasPermission('use deposit module'));
+    }
+
+    public function editMetadataCheckAccess(Node $node, AccountInterface $account)
     {
         return AccessResult::allowedif($node->bundle() === 'flat_bundle' && $account->hasPermission('use deposit module'));
     }
