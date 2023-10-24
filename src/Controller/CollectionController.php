@@ -62,7 +62,9 @@ class CollectionController extends ControllerBase
 
     public function addCollectionCheckAccess(Node $node, AccountInterface $account)
     {
-        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $account->hasPermission('use deposit module'));
+        $node = \Drupal::routeMatch()->getParameter('node');
+        $model = $node->get('field_model')->referencedEntities()[0]->getName();
+        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $model == "Collection" && $account->hasPermission('use deposit module'));
     }
 
     public function activateCollection()
@@ -71,7 +73,9 @@ class CollectionController extends ControllerBase
 
     public function activateCollectionCheckAccess(Node $node, AccountInterface $account)
     {
-        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $account->hasPermission('use deposit module'));
+        $node = \Drupal::routeMatch()->getParameter('node');
+        $model = $node->get('field_model')->referencedEntities()[0]->getName();
+        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $model == "Collection" && $account->hasPermission('use deposit module'));
     }
 
     public function updateCollection()
@@ -80,6 +84,8 @@ class CollectionController extends ControllerBase
 
     public function updateCollectionCheckAccess(Node $node, AccountInterface $account)
     {
-        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $account->hasPermission('use deposit module'));
+        $node = \Drupal::routeMatch()->getParameter('node');
+        $model = $node->get('field_model')->referencedEntities()[0]->getName();
+        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $model == "Collection" && $account->hasPermission('use deposit module'));
     }
 }

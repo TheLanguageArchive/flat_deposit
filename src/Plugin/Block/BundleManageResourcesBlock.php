@@ -7,15 +7,15 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Session\AccountInterface;
 
 /**
- * Provides Action buttons for FLAT Deposit Bundles
+ * Provides form that displays resources to be added to a bundle
  *
  * @Block(
- *   id = "bundle_actions_block",
- *   admin_label = @Translation("Bundle Actions block"),
+ *   id = "bundle_manage_resources_block",
+ *   admin_label = @Translation("Bundle Manage Resources block"),
  *   category = @Translation("Forms")
  * )
  */
-class BundleActionsBlock extends BlockBase
+class BundleManageResourcesBlock extends BlockBase
 {
 
     /**
@@ -23,8 +23,8 @@ class BundleActionsBlock extends BlockBase
      */
     public function build()
     {
-        // Return the form @ Form/BundleActionsBlockForm.php
-        return \Drupal::formBuilder()->getForm('Drupal\flat_deposit\Form\BundleActionsBlockForm');
+        // Return the form @ Form/BundleManageResourcesBlockForm.php
+        return \Drupal::formBuilder()->getForm('Drupal\flat_deposit\Form\BundleManageResourcesBlockForm');
     }
 
     /**

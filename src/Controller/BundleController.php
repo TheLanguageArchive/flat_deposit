@@ -78,7 +78,9 @@ class BundleController extends ControllerBase
 
     public function addBundleCheckAccess(Node $node, AccountInterface $account)
     {
-        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $account->hasPermission('use deposit module'));
+        $node = \Drupal::routeMatch()->getParameter('node');
+        $model = $node->get('field_model')->referencedEntities()[0]->getName();
+        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $model == "Collection" && $account->hasPermission('use deposit module'));
     }
 
     public function updateBundle()
@@ -87,7 +89,9 @@ class BundleController extends ControllerBase
 
     public function updateBundleCheckAccess(Node $node, AccountInterface $account)
     {
-        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $account->hasPermission('use deposit module'));
+        $node = \Drupal::routeMatch()->getParameter('node');
+        $model = $node->get('field_model')->referencedEntities()[0]->getName();
+        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $model == "Compound Object" && $account->hasPermission('use deposit module'));
     }
 
     public function updateMetadata()
@@ -96,16 +100,18 @@ class BundleController extends ControllerBase
 
     public function enterMetadataCheckAccess(Node $node, AccountInterface $account)
     {
-        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $account->hasPermission('use deposit module'));
+        return AccessResult::allowedif($node->bundle() === 'flat_bundle' && $account->hasPermission('use deposit module'));
     }
 
     public function editMetadataCheckAccess(Node $node, AccountInterface $account)
     {
-        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $account->hasPermission('use deposit module'));
+        return AccessResult::allowedif($node->bundle() === 'flat_bundle' && $account->hasPermission('use deposit module'));
     }
 
     public function updateMetadataCheckAccess(Node $node, AccountInterface $account)
     {
-        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $account->hasPermission('use deposit module'));
+        $node = \Drupal::routeMatch()->getParameter('node');
+        $model = $node->get('field_model')->referencedEntities()[0]->getName();
+        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $model == "Compound Object" && $account->hasPermission('use deposit module'));
     }
 }

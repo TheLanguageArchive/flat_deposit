@@ -265,7 +265,7 @@ function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterfac
 
     $query = \Drupal::entityQuery('node')
         ->accessCheck(TRUE)
-        ->condition('type', 'flat_collection');
+        ->condition('type', 'islandora_object');
     //->condition('uid', $userId);
     //->condition("flat_fid.value", "NULL", "!=");
 
@@ -1541,6 +1541,8 @@ function flat_deposit_menu_local_tasks_alter(&$data, $route_name, \Drupal\Core\C
     unset($data['tabs'][0]['entity.node.edit_form']);
     unset($data['tabs'][0]['entity.node.delete_form']);
     unset($data['tabs'][0]['entity.node.version_history']);
+    unset($data['tabs'][0]['views_view:view.manage_members.page_1']);
+    unset($data['tabs'][0]['views_view:view.media_of.page_1']);
 }
 
 /**
@@ -1583,69 +1585,74 @@ function flat_deposit_form_bundle_actions_block_form_alter(&$form, FormStateInte
 {
     $node = \Drupal::routeMatch()->getParameter('node');
 
-    $form['actions']['edit_bundle']['#disabled'] = TRUE;
-    $flat_bundle_status_field = $node->get('flat_bundle_status');
-    $flat_bundle_status = $flat_bundle_status_field->value;
-    $flat_cmdi_option_field = $node->get('flat_cmdi_option');
-    $flat_cmdi_option = $flat_cmdi_option_field->value;
-    $flat_cmdi_file_field = $node->get('flat_cmdi_file');
-    $flat_cmdi_file_id = $flat_cmdi_file_field->target_id;
+    if ($node->bundle() === 'flat_bundle') {
 
-    switch ($flat_bundle_status) {
-        case 'open': {
+        $form['actions']['edit_bundle']['#disabled'] = TRUE;
+        $flat_bundle_status_field = $node->get('flat_bundle_status');
+        $flat_bundle_status = $flat_bundle_status_field->value;
+        $flat_cmdi_option_field = $node->get('flat_cmdi_option');
+        $flat_cmdi_option = $flat_cmdi_option_field->value;
+        $flat_cmdi_file_field = $node->get('flat_cmdi_file');
+        $flat_cmdi_file_id = $flat_cmdi_file_field->target_id;
 
-                if (empty($flat_cmdi_file_id)) {
-                    $form['actions']['validate_bundle']['#disabled'] = TRUE;
-                } else {
-                    $form['actions']['validate_bundle']['#disabled'] = FALSE;
-                    $form['actions']['validate_bundle']['#attributes']['class'][] = 'btn-success';
+
+
+        switch ($flat_bundle_status) {
+            case 'open': {
+
+                    if (empty($flat_cmdi_file_id)) {
+                        $form['actions']['validate_bundle']['#disabled'] = TRUE;
+                    } else {
+                        $form['actions']['validate_bundle']['#disabled'] = FALSE;
+                        $form['actions']['validate_bundle']['#attributes']['class'][] = 'btn-success';
+                    }
+                    $form['actions']['edit_bundle']['#disabled'] = FALSE;
+                    $name = 'open_bundle';
+                    break;
                 }
-                $form['actions']['edit_bundle']['#disabled'] = FALSE;
-                $name = 'open_bundle';
-                break;
-            }
 
-        case 'validating': {
-                $name = 'process_bundle';
-                $form['actions']['reopen_bundle']['#disabled'] = FALSE;
-                $form['actions']['edit_metadata']['#disabled'] = TRUE;
-                break;
-            }
+            case 'validating': {
+                    $name = 'process_bundle';
+                    $form['actions']['reopen_bundle']['#disabled'] = FALSE;
+                    $form['actions']['edit_metadata']['#disabled'] = TRUE;
+                    break;
+                }
 
-        case 'failed': {
-                $form['actions']['validate_bundle']['#disabled'] = FALSE;
-                $form['actions']['edit_bundle']['#disabled'] = FALSE;
-                $form['actions']['edit_metadata']['#disabled'] = FALSE;
-                $name = 'closed_bundle_failed';
-                break;
-            }
+            case 'failed': {
+                    $form['actions']['validate_bundle']['#disabled'] = FALSE;
+                    $form['actions']['edit_bundle']['#disabled'] = FALSE;
+                    $form['actions']['edit_metadata']['#disabled'] = FALSE;
+                    $name = 'closed_bundle_failed';
+                    break;
+                }
 
-        case 'valid': {
-                $form['actions']['archive_bundle']['#disabled'] = FALSE;
-                $form['actions']['reopen_bundle']['#disabled'] = FALSE;
-                $form['actions']['archive_bundle']['#attributes']['class'][] = 'btn-success';
-                $form['actions']['edit_metadata']['#disabled'] = TRUE;
-                $name = 'closed_bundle';
-                break;
-            }
-        case 'processing': {
-                $name = 'process_bundle';
+            case 'valid': {
+                    $form['actions']['archive_bundle']['#disabled'] = FALSE;
+                    $form['actions']['reopen_bundle']['#disabled'] = FALSE;
+                    $form['actions']['archive_bundle']['#attributes']['class'][] = 'btn-success';
+                    $form['actions']['edit_metadata']['#disabled'] = TRUE;
+                    $name = 'closed_bundle';
+                    break;
+                }
+            case 'processing': {
+                    $name = 'process_bundle';
 
-                break;
-            }
-    }
+                    break;
+                }
+        }
 
-    $form['actions']['bundle_image']['#src'] = \Drupal::service('extension.list.module')->getPath('flat_deposit') . '/assets/images/' . $name . '.png';
+        $form['actions']['bundle_image']['#src'] = \Drupal::service('extension.list.module')->getPath('flat_deposit') . '/assets/images/' . $name . '.png';
 
 
 
-    // Activate metadata creation button only if 1) cmdi option is 'new' 2) status is either open or failed and 3) no cmdi has been created
-    // If metadata creation button is active (.e.g. if metadata file has been removed), validate button should be disabled.
-    if ($flat_cmdi_option == 'new' and ($flat_bundle_status == 'open' or $flat_bundle_status == 'failed') and (empty($flat_cmdi_file_id))) {
+        // Activate metadata creation button only if 1) cmdi option is 'new' 2) status is either open or failed and 3) no cmdi has been created
+        // If metadata creation button is active (.e.g. if metadata file has been removed), validate button should be disabled.
+        if ($flat_cmdi_option == 'new' and ($flat_bundle_status == 'open' or $flat_bundle_status == 'failed') and (empty($flat_cmdi_file_id))) {
 
-        $form['actions']['enter_metadata']['#access'] = TRUE;
-        $form['actions']['enter_metadata']['#attributes']['class'][] = 'btn-success';
-        $form['actions']['edit_metadata']['#access'] = FALSE;
-        $form['actions']['validate_bundle']['#disabled'] = TRUE;
+            $form['actions']['enter_metadata']['#access'] = TRUE;
+            $form['actions']['enter_metadata']['#attributes']['class'][] = 'btn-success';
+            $form['actions']['edit_metadata']['#access'] = FALSE;
+            $form['actions']['validate_bundle']['#disabled'] = TRUE;
+        }
     }
 }

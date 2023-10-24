@@ -29,97 +29,103 @@ class BundleActionsBlockForm extends FormBase
      */
     public function buildForm(array $form, FormStateInterface $form_state)
     {
-        $form['actions']['bundle_image'] = array(
-            '#type' => 'image_button',
-            '#value' => t('Bundle image'),
-            '#disabled' => TRUE,
-            '#prefix' => '<div><br></div>',
-            '#src' => '',
-
-        );
-
-        $form['actions']['container'] = array(
-            '#type' => 'container',
-            '#attributes' => array('class' => array('container-inline')),
-        );
-
-        $form['actions']['enter_metadata'] = array(
-            '#type' => 'submit',
-            '#value' => t('Fill in metadata for bundle'),
-            '#description' => t('Enter metadata for this bundle (required)'),
-            //'#validate' => array('flat_bundle_action_form_enter_metadata_validate'),
-            '#access' => FALSE,
-        );
-
-        $form['actions']['edit_metadata'] = array(
-            '#type' => 'submit',
-            '#value' => t('Edit metadata for bundle'),
-            '#description' => t('Edit the metadata for this bundle'),
-            '#access' => TRUE,
-        );
-
-        $form['actions']['markup_1'] = array(
-            '#markup' => '<div><br></div>'
-        );
-
-        $form['actions']['validate_bundle'] = array(
-            '#type' => 'submit',
-            '#value' => t('Validate bundle'),
-            '#validate' => array('flat_bundle_action_form_validate_validate'),
-            '#description' => t('Validate the bundle. Valid bundles cannot be altered, unless they are re-opened again.'),
-            '#disabled' => TRUE,
-        );
-
-        $form['actions']['reopen_bundle'] = array(
-            '#type' => 'submit',
-            '#value' => t('Re-open bundle'),
-            //'#validate' => array('flat_bundle_action_form_reopen_validate'),
-            '#description' => t('Re-open the bundle to allow modifications of its metadata or included files'),
-            '#disabled' => TRUE,
-        );
-
-        $form['actions']['archive_bundle'] = array(
-            '#type' => 'submit',
-            '#value' => t('Archive bundle'),
-            '#description' => t('Submit the bundle to be stored in the archive.'),
-            '#disabled' => TRUE,
-        );
-
-        $form['actions']['edit_bundle'] = array(
-            '#type' => 'submit',
-            '#value' => t('Edit bundle properties'),
-            '#prefix' => '<div><br/></div>',
-        );
-
-        $form['actions']['delete_bundle'] = array(
-            '#type' => 'submit',
-            '#value' => t('Delete bundle'),
-            '#suffix' => '<div><br/></div>',
-        );
-
-        $form['actions']['note'] = array(
-            '#prefix' => '<div id="form-actions-note">',
-            '#markup' => t('Note: Deleting a bundle will only delete it from your active bundles. In case you are modifying an existing bundle in the archive, clicking "Delete bundle" will leave the original in the archive untouched.'),
-            '#suffix' => '</div><div><br/></div>',
-        );
-
         $node = \Drupal::routeMatch()->getParameter('node');
-
         if ($node instanceof \Drupal\node\NodeInterface) {
-            $nid = $node->id();
+            if ($node->bundle() === 'flat_bundle') {
+
+                $form['actions']['bundle_image'] = array(
+                    '#type' => 'image_button',
+                    '#value' => t('Bundle image'),
+                    '#disabled' => TRUE,
+                    '#prefix' => '<div><br></div>',
+                    '#src' => '',
+
+                );
+
+                $form['actions']['container'] = array(
+                    '#type' => 'container',
+                    '#attributes' => array('class' => array('container-inline')),
+                );
+
+                $form['actions']['enter_metadata'] = array(
+                    '#type' => 'submit',
+                    '#value' => t('Fill in metadata for bundle'),
+                    '#description' => t('Enter metadata for this bundle (required)'),
+                    //'#validate' => array('flat_bundle_action_form_enter_metadata_validate'),
+                    '#access' => FALSE,
+                );
+
+                $form['actions']['edit_metadata'] = array(
+                    '#type' => 'submit',
+                    '#value' => t('Edit metadata for bundle'),
+                    '#description' => t('Edit the metadata for this bundle'),
+                    '#access' => TRUE,
+                );
+
+                $form['actions']['markup_1'] = array(
+                    '#markup' => '<div><br></div>'
+                );
+
+                $form['actions']['validate_bundle'] = array(
+                    '#type' => 'submit',
+                    '#value' => t('Validate bundle'),
+                    '#validate' => array('flat_bundle_action_form_validate_validate'),
+                    '#description' => t('Validate the bundle. Valid bundles cannot be altered, unless they are re-opened again.'),
+                    '#disabled' => TRUE,
+                );
+
+                $form['actions']['reopen_bundle'] = array(
+                    '#type' => 'submit',
+                    '#value' => t('Re-open bundle'),
+                    //'#validate' => array('flat_bundle_action_form_reopen_validate'),
+                    '#description' => t('Re-open the bundle to allow modifications of its metadata or included files'),
+                    '#disabled' => TRUE,
+                );
+
+                $form['actions']['archive_bundle'] = array(
+                    '#type' => 'submit',
+                    '#value' => t('Archive bundle'),
+                    '#description' => t('Submit the bundle to be stored in the archive.'),
+                    '#disabled' => TRUE,
+                );
+
+                $form['actions']['edit_bundle'] = array(
+                    '#type' => 'submit',
+                    '#value' => t('Edit bundle properties'),
+                    '#prefix' => '<div><br/></div>',
+                );
+
+                $form['actions']['delete_bundle'] = array(
+                    '#type' => 'submit',
+                    '#value' => t('Delete bundle'),
+                    '#suffix' => '<div><br/></div>',
+                );
+
+                $form['actions']['note'] = array(
+                    '#prefix' => '<div id="form-actions-note">',
+                    '#markup' => t('Note: Deleting a bundle will only delete it from your active bundles. In case you are modifying an existing bundle in the archive, clicking "Delete bundle" will leave the original in the archive untouched.'),
+                    '#suffix' => '</div><div><br/></div>',
+                );
+
+                $node = \Drupal::routeMatch()->getParameter('node');
+
+                if ($node instanceof \Drupal\node\NodeInterface) {
+                    $nid = $node->id();
+                }
+
+                $form['values']['node'] = array(
+                    '#type' => 'value',
+                    '#value' => $node
+                );
+
+                $form['values']['origin_url'] = array(
+                    '#type' => 'value',
+                    '#value' => 'node/' . $nid
+                );
+
+                return $form;
+            }
         }
-
-        $form['values']['node'] = array(
-            '#type' => 'value',
-            '#value' => $node
-        );
-
-        $form['values']['origin_url'] = array(
-            '#type' => 'value',
-            '#value' => 'node/' . $nid
-        );
-
-        return $form;
     }
 
     /**
