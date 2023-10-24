@@ -1,20 +1,21 @@
 <?php
 
-use \AllowDynamicProperties;
-
 spl_autoload_register('autoload_cmdicreator');
 
-function autoload_cmdicreator() {
+function autoload_cmdicreator()
+{
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiComponent');
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiComposite');
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiLeaf');
 }
 
-class CmdiCreatorException extends Exception {}
+class CmdiCreatorException extends Exception
+{
+}
 /**
  * Class for building a CMDI xml based on drupal form data and a form template
  */
-#[AllowDynamicProperties] 
+#[AllowDynamicProperties]
 class CmdiCreator
 {
 
@@ -34,13 +35,16 @@ class CmdiCreator
     /**
      * CmdiCreator constructor.
      */
-    public function __construct(){}
+    public function __construct()
+    {
+    }
 
     /**
      * Getter for Cmdi file
      * @return CmdiHandler
      */
-    public function getCmdi(){
+    public function getCmdi()
+    {
         return $this->cmdi;
     }
 
@@ -54,17 +58,17 @@ class CmdiCreator
      * @param string $owner name of the user generating the form
      *
      */
-    public function setCmdi($templateName, $form_data, $owner){
+    public function setCmdi($templateName, $form_data, $owner)
+    {
 
 
-        try{
+        try {
             $tree = $this->getTree($form_data, $owner);
-            $components = $this->setCmdiComponents($templateName, $form_data) ;
-            $this->cmdi = $this->mergeTreeAndComponents($tree, $components) ;
-        } catch (\CmdiCreatorException $e){
+            $components = $this->setCmdiComponents($templateName, $form_data);
+            $this->cmdi = $this->mergeTreeAndComponents($tree, $components);
+        } catch (\CmdiCreatorException $e) {
             throw new \CmdiCreatorException($e->getMessage());
         }
-
     }
 
 
@@ -76,13 +80,14 @@ class CmdiCreator
      *
      * @param null $data
      */
-    private function setCmdiComponents($templateName, $data = null){
+    private function setCmdiComponents($templateName, $data = null)
+    {
 
         $fName = self::FORM_TEMPLATES_PATH . $templateName . '.xml';
 
         $template = simplexml_load_file($fName);
 
-        if (!$template){
+        if (!$template) {
             throw new \CmdiCreatorException('Unable to load template file');
         }
 
@@ -97,7 +102,6 @@ class CmdiCreator
             $cmdiComponent = new $className();
 
             $cmdiComponent->setCmdiComponent($rootNewComponents, $component, $data);
-
         }
 
         return $rootNewComponents;
@@ -138,68 +142,57 @@ class CmdiCreator
                     }
                 }
             }
+        } else {
 
+
+            if (isset($item->container)) {
+
+                $container = (string)$item->container;
+                $fieldset_data = $form_data[$container][$id];
             } else {
 
-
-                if (isset($item->container)) {
-
-                    $container = (string)$item->container;
-                    $fieldset_data = $form_data[$container][$id];
-
-                } else {
-
-                    $fieldset_data = $form_data[$id];
-
-                }
-
-                $newNode->addChild($name);
-                #$name = (string)$item['name'];
-                if (isset($fieldset_data['add'])) unset($fieldset_data['add']);
-                if (isset($fieldset_data['remove'])) unset($fieldset_data['remove']);
-
-                foreach ($item->item as $newItem) {
-
-                    foreach ($fieldset_data as $data){
-
-                        $this->_setCmdiElement($newNode->{$name}, $newItem, $data, $multivals);
-
-                    }
-
-
-                }
+                $fieldset_data = $form_data[$id];
             }
 
+            $newNode->addChild($name);
+            #$name = (string)$item['name'];
+            if (isset($fieldset_data['add'])) unset($fieldset_data['add']);
+            if (isset($fieldset_data['remove'])) unset($fieldset_data['remove']);
 
+            foreach ($item->item as $newItem) {
+
+                foreach ($fieldset_data as $data) {
+
+                    $this->_setCmdiElement($newNode->{$name}, $newItem, $data, $multivals);
+                }
+            }
+        }
     }
 
-        private function hasValue($fieldset){
+    private function hasValue($fieldset)
+    {
 
 
-            $outcomes = [];
-            foreach ($fieldset as $value){
+        $outcomes = [];
+        foreach ($fieldset as $value) {
 
-                if (!is_array($value)){
+            if (!is_array($value)) {
 
-                    if (is_string($value) AND !empty($value)) {
+                if (is_string($value) and !empty($value)) {
 
-                        $outcomes[] = TRUE;
-
-                    } else {
-
-                        $outcomes[] = FALSE;
-
-                    }
-
+                    $outcomes[] = TRUE;
                 } else {
 
-                    $outcomes [] = $this->hasValue($value);
+                    $outcomes[] = FALSE;
                 }
+            } else {
+
+                $outcomes[] = $this->hasValue($value);
             }
-
-            return in_array( TRUE, $outcomes);
-
         }
+
+        return in_array(TRUE, $outcomes);
+    }
 
 
 
@@ -222,7 +215,6 @@ class CmdiCreator
         #$fName = drupal_get_path('module','flat_deposit') .  '/Helpers/CMDI/Profiles/GENERATED_EXAMPLE.xml';
         #$domTree->save($fName);
         return simplexml_import_dom($domTree, 'CmdiHandler');
-
     }
 
     /**
@@ -234,7 +226,8 @@ class CmdiCreator
      *
      * @return SimpleXMLElement
      */
-    private function getTree($form_data, $owner){
+    private function getTree($form_data, $owner)
+    {
 
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
 
@@ -243,9 +236,10 @@ class CmdiCreator
         $tree = simplexml_load_string('<CMD/>', 'CmdiHandler');
 
         // add processing instructions
-        $processing_instruction = array (
+        $processing_instruction = array(
             0 => 'xml-stylesheet',
-            1 => 'type="text/xsl" href="/cmdi-xslt-1.0/browser_cmdi2html.xsl"');
+            1 => 'type="text/xsl" href="/cmdi-xslt-1.0/browser_cmdi2html.xsl"'
+        );
         $tree->addProcessingInstruction($processing_instruction[0], $processing_instruction[1]);
 
         // add attributes
@@ -253,7 +247,7 @@ class CmdiCreator
         $CMD_attributes = array(
             'xmlns:xmlns:xsi' => "http://www.w3.org/2001/XMLSchema-instance",
             'xmlns' => "http://www.clarin.eu/cmd/",
-            'xmlns:xmlns:cmd' => "http://www.clarin.eu/cmd/" ,
+            'xmlns:xmlns:cmd' => "http://www.clarin.eu/cmd/",
             'xmlns:xmlns:imdi' => "http://www.mpi.nl/IMDI/Schema/IMDI",
             'xmlns:xmlns:lat' => "http://lat.mpi.nl/",
             'xmlns:xmlns:iso' => "http://www.iso.org/",
@@ -264,7 +258,7 @@ class CmdiCreator
             'xmlns:xsi:schemaLocation' => $xsd,
         );
 
-        $tree->add_attribute_tree_to_xml($CMD_attributes,$tree);
+        $tree->add_attribute_tree_to_xml($CMD_attributes, $tree);
 
 
         // add (almost) empty xml data fields (=tree)
@@ -279,12 +273,12 @@ class CmdiCreator
                 'ResourceProxyList' => '',
                 'JournalFileProxyList' => '',
                 'ResourceRelationList' => '',
-                'IsPartOfList' => ''),
+                'IsPartOfList' => ''
+            ),
         );
-        $tree->array_to_xml($basis_tree,$tree);
+        $tree->array_to_xml($basis_tree, $tree);
 
 
         return $tree;
     }
-
 }

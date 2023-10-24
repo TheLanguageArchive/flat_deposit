@@ -62,7 +62,7 @@ class CollectionController extends ControllerBase
 
     public function addCollectionCheckAccess(Node $node, AccountInterface $account)
     {
-        return AccessResult::allowedif($node->bundle() === 'flat_collection' && $account->hasPermission('use deposit module'));
+        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $account->hasPermission('use deposit module'));
     }
 
     public function activateCollection()
@@ -71,7 +71,7 @@ class CollectionController extends ControllerBase
 
     public function activateCollectionCheckAccess(Node $node, AccountInterface $account)
     {
-        return AccessResult::allowedif($node->bundle() === 'flat_collection' && $account->hasPermission('use deposit module'));
+        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $account->hasPermission('use deposit module'));
     }
 
     public function updateCollection()
@@ -80,6 +80,6 @@ class CollectionController extends ControllerBase
 
     public function updateCollectionCheckAccess(Node $node, AccountInterface $account)
     {
-        return AccessResult::allowedif($node->bundle() === 'flat_collection' && $account->hasPermission('use deposit module'));
+        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $account->hasPermission('use deposit module'));
     }
 }

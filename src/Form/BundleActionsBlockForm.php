@@ -73,7 +73,7 @@ class BundleActionsBlockForm extends FormBase
         $form['actions']['reopen_bundle'] = array(
             '#type' => 'submit',
             '#value' => t('Re-open bundle'),
-            '#validate' => array('flat_bundle_action_form_reopen_validate'),
+            //'#validate' => array('flat_bundle_action_form_reopen_validate'),
             '#description' => t('Re-open the bundle to allow modifications of its metadata or included files'),
             '#disabled' => TRUE,
         );
@@ -165,7 +165,6 @@ class BundleActionsBlockForm extends FormBase
                 $user = \Drupal::currentUser();
                 $form_state['redirect'] = 'dashboard';
                 \Drupal::messenger()->addMessage("Bundle is being $processed");
-
                 break;
 
 
@@ -179,8 +178,7 @@ class BundleActionsBlockForm extends FormBase
                 break;
 
             case 'Re-open bundle':
-
-                $node->flat_bundle_status->value = 'open';
+                $node->set('flat_bundle_status', 'open');
                 $node->save();
                 \Drupal::messenger()->addMessage('Bundle is open and can be modified again');
 
