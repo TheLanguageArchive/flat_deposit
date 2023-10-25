@@ -79,8 +79,12 @@ class BundleController extends ControllerBase
     public function addBundleCheckAccess(Node $node, AccountInterface $account)
     {
         $node = \Drupal::routeMatch()->getParameter('node');
-        $model = $node->get('field_model')->referencedEntities()[0]->getName();
-        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $model == "Collection" && $account->hasPermission('use deposit module'));
+        $content_type = $node->bundle();
+        $model = NULL;
+        if ($content_type === 'islandora_object') {
+            $model = $node->get('field_model')->referencedEntities()[0]->getName();
+        }
+        return AccessResult::allowedif($content_type === 'islandora_object' && $model == "Collection" && $account->hasPermission('use deposit module'));
     }
 
     public function updateBundle()
@@ -90,7 +94,11 @@ class BundleController extends ControllerBase
     public function updateBundleCheckAccess(Node $node, AccountInterface $account)
     {
         $node = \Drupal::routeMatch()->getParameter('node');
-        $model = $node->get('field_model')->referencedEntities()[0]->getName();
+        $content_type = $node->bundle();
+        $model = NULL;
+        if ($content_type === 'islandora_object') {
+            $model = $node->get('field_model')->referencedEntities()[0]->getName();
+        }
         return AccessResult::allowedif($node->bundle() === 'islandora_object' && $model == "Compound Object" && $account->hasPermission('use deposit module'));
     }
 
@@ -111,7 +119,11 @@ class BundleController extends ControllerBase
     public function updateMetadataCheckAccess(Node $node, AccountInterface $account)
     {
         $node = \Drupal::routeMatch()->getParameter('node');
-        $model = $node->get('field_model')->referencedEntities()[0]->getName();
+        $content_type = $node->bundle();
+        $model = NULL;
+        if ($content_type === 'islandora_object') {
+            $model = $node->get('field_model')->referencedEntities()[0]->getName();
+        }
         return AccessResult::allowedif($node->bundle() === 'islandora_object' && $model == "Compound Object" && $account->hasPermission('use deposit module'));
     }
 }
