@@ -30,7 +30,7 @@ class BundleManageResourcesBlockForm extends FormBase
         if ($node instanceof \Drupal\node\NodeInterface) {
             if ($node->bundle() === 'flat_bundle') {
 
-                $form['flat_bundle_manage_resources'] = [
+                $form['flat_bundle_manage_resources']['widget'] = [
 
                     '#theme' => 'flat_bundle_manage_resources',
                     // Need to set #tree to be able to differentiate
@@ -39,10 +39,12 @@ class BundleManageResourcesBlockForm extends FormBase
                     '#tree' => TRUE,
                 ];
 
-                $location = $node->get('flat_location')->value();
+                ksm($node);
+
+                $location = $node->get('flat_location')->value;
 
                 $files = [];
-                if (file_exists($location)) {
+                if ($location && file_exists($location)) {
 
                     // We ignore hidden files (starting with a dot). These will not be added
                     // to the bundle later on either.
@@ -50,19 +52,19 @@ class BundleManageResourcesBlockForm extends FormBase
                 }
 
                 // normalizing currently saved metadata, null, empty str will be marked as empty array
-                $marked = $node->get('flat_encrypted_resources')->value();
+/*                 $marked = $node->get('flat_encrypted_resources')->value;
                 $marked = empty($marked) ? [] : explode(',', $marked);
-
+ */
                 foreach ($files as $file) {
 
                     // using md5 on the filename to differentiate the resources
-                    $id = md5($file);
-
+              $id = md5($file);
+/*
                     $form['flat_bundle_manage_resources'][$id]['encrypt'] = [
 
                         '#type' => 'checkbox',
                         '#default_value' => in_array($id, $marked),
-                    ];
+                    ]; */
 
                     $form['flat_bundle_manage_resources'][$id]['filename'] = [
                         '#markup' => t('!label', ['!label' => $file]),
@@ -73,7 +75,7 @@ class BundleManageResourcesBlockForm extends FormBase
 
                     '#type' => 'submit',
                     '#value' => t('Save'),
-                    '#submit' => ['flat_bundle_manage_resources_form_submit'],
+                    //'#submit' => ['flat_bundle_manage_resources_form_submit'],
                     '#attributes' => [
                         'class' => ['btn-success']
                     ]

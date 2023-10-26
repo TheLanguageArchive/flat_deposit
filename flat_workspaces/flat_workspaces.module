@@ -122,7 +122,8 @@ function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInter
 
         if (empty($form_state->getValue(['department'])) and $flat_original_path and $is_local_original_path) {
 
-            $form_state->setValue(['flat_ws_path', 0, 'value'], $flat_original_path);
+            $form_state->setValue('flat_ws_path', $flat_original_path);
+            $form_state->setRebuild();
         }
 
         // set the local departments' workspaces folder
@@ -196,7 +197,13 @@ function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInter
         }
 
         // alter default value of the flat_ws_path field to attach value of current directory to flat_bundle node
-        $form['flat_ws_path'][0]['value']['#default_value'] = $current;
+        //$form_state->setValue('flat_ws_path', $current);
+        //$form['flat_location']['widget']['#default_value'] = $current;
+        //$form_state->setValue('flat_location', $current);
+        $form["flat_location"]["widget"][0]["#default_value"] = $current;
+
+
+        ksm($form);
 
         // print result to screen
         $form['workspace_navigation']['field']['current_directory']['#markup'] = 'Currently selected folder: <strong><br/>' .
@@ -359,18 +366,16 @@ function flat_workspaces_node_view(array &$build, Node $node, EntityViewDisplay 
  * note! also gets called during node delete and metadata save, hence the extra checks
  *
  */
-/* function flat_workspaces_entity_presave(EntityInterface $entity)
+/* function flat_workspaces_node_presave(EntityInterface $node)
 {
-    if (isset($node->form_id)) {
-        if ($node->form_id == 'flat_bundle_node_form') {
-            if (isset($node->flat_source)) {
-                if ($node->flat_source[0]['value'] == 'local') {
-                    if (isset($node->flat_ws_path)) {
-                        $value = $node->flat_ws_path[0]['value'];
-                        $node->flat_original_path[0]['value'] = $value;
-                        $node->flat_location[0]['value'] = $value;
-                    }
-                }
+    if ($node instanceof \Drupal\node\NodeInterface) {
+        if ($node->bundle() === 'flat_bundle') {
+            $flat_source = $node->get('flat_source')->value;
+            if ($flat_source == 'local') {
+                $flat_ws_path = $node->get('flat_ws_path')->value;
+                ksm($flat_ws_path);
+                $node->set('flat_original_path', $flat_ws_path);
+                $node->set('flat_location', $flat_ws_path);
             }
         }
     }

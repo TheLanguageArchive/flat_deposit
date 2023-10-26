@@ -223,7 +223,7 @@ function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterfac
     hide($form['flat_exception']);
     hide($form['flat_create_cmdi']);
     hide($form['flat_external']);
-    hide($form['flat_location']);
+    //hide($form['flat_location']);
     hide($form['flat_type']);
     hide($form['flat_fid']);
     hide($form['flat_original_path']);
@@ -651,7 +651,7 @@ function flat_bundle_node_form_add_submit($form, &$form_state)
     }
 
     // Add resource_directory to node.
-    $form_state->setValue(['flat_location'][0]['value'], $resource_dir);
+    //$form_state->setValue(['flat_location'][0]['value'], $resource_dir);
 
     // Adapt Is part of collection info.
     // Change naming of uploaded file.

@@ -109,7 +109,6 @@ class Workspaces
         // 3) Otherwise take saved value
         $value = $form_state->hasValue(['flat_ws_path', 0, 'value']) ? $form_state->getValue(['flat_ws_path', 0, 'value']) : $project_root;
 
-
         if (strpos($value, $project_root) === FALSE) {
 
             $current = $project_root;
@@ -278,6 +277,6 @@ class Workspaces
 
 function reload_workspace_navigation_container_ajax_callback($form, FormStateInterface $form_state)
 {
-
+    $form["flat_location"]["widget"][0]["#default_value"] = 'test';
     return $form['workspace_navigation'];
 }

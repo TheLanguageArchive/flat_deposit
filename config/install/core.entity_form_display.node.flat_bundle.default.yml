@@ -78,6 +78,14 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
+  flat_location:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
 hidden:
   created: true
   flat_bundle_exception: true
@@ -85,7 +93,6 @@ hidden:
   flat_deleted_resources: true
   flat_external: true
   flat_fid_super: true
-  flat_location: true
   flat_original_path: true
   flat_parent_title: true
   langcode: true
