@@ -1,5 +1,6 @@
 <?php
 
+use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\node\Entity\Node;
@@ -74,7 +75,7 @@ function flat_workspaces_menu()
  * create form elements for selecting a workspace folder as the source of the files to be added to the bundle
  *
  */
-function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInterface $form_state, $form_id)
+function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormState $form_state, $form_id)
 {
 
     hide($form['flat_ws_path']);
@@ -200,10 +201,14 @@ function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInter
         //$form_state->setValue('flat_ws_path', $current);
         //$form['flat_location']['widget']['#default_value'] = $current;
         //$form_state->setValue('flat_location', $current);
-        $form["flat_location"]["widget"][0]["#default_value"] = $current;
+        $form["flat_ws_path"]["widget"]["#default_value"] = $current;
+        $form_state->setValue(['flat_ws_path', 0, 'value'], $current);
 
+        $form_state->setRebuid();
 
         ksm($form);
+        ksm($form_state);
+
 
         // print result to screen
         $form['workspace_navigation']['field']['current_directory']['#markup'] = 'Currently selected folder: <strong><br/>' .
@@ -366,7 +371,7 @@ function flat_workspaces_node_view(array &$build, Node $node, EntityViewDisplay 
  * note! also gets called during node delete and metadata save, hence the extra checks
  *
  */
-/* function flat_workspaces_node_presave(EntityInterface $node)
+function flat_workspaces_node_presave(EntityInterface $node)
 {
     if ($node instanceof \Drupal\node\NodeInterface) {
         if ($node->bundle() === 'flat_bundle') {
@@ -379,4 +384,4 @@ function flat_workspaces_node_view(array &$build, Node $node, EntityViewDisplay 
             }
         }
     }
-} */
+}

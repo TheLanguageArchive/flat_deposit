@@ -89,7 +89,7 @@ class Workspaces
 
 
     /**
-     * Get the path of a bundles" resource files. If value of node field 'flat_ws_path' is not set yet, path is set to project root.
+     * Get the path of a bundles' resource files. If value of node field 'flat_ws_path' is not set yet, path is set to project root.
      * Otherwise, if project root folder has changed set 'ws path' to root folder. Otherwise take saved value
 
      * @param $form_state
