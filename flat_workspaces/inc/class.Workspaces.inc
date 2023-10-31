@@ -38,6 +38,11 @@ class Workspaces
                     '#markup' => '',
                 ),
 
+                'chosen_ws' => array(
+                    '#type' => 'textfield',
+                    '#title' => t('Chosen ws'),
+                ),
+
                 'department' => array(
                     '#type' => 'radios',
                     '#title' => t('Department'),
@@ -277,6 +282,5 @@ class Workspaces
 
 function reload_workspace_navigation_container_ajax_callback($form, FormStateInterface $form_state)
 {
-    $form["flat_location"]["widget"][0]["#default_value"] = 'test';
     return $form['workspace_navigation'];
 }

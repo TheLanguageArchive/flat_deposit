@@ -10,7 +10,7 @@ field_name: flat_ws_path
 field_type: text
 entity_type: node
 bundle: flat_bundle
-label: Selected workspace path of locally stored data
+label: Path to workspace directory that includes files to be added to the bunlde
 description: ''
 required: false
 translatable: true

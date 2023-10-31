@@ -3,3 +3,7 @@ description: Provides access to local "workspace" directories for including file
 package: FLAT
 type: module
 core_version_requirement: ^10
+dependencies:
+  - flat_deposit
+update_module_enable:
+  - flat_workspaces

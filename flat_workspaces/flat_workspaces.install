@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\flat_workspaces\FieldStorageDefinition;
+
 /**
  * Implements hook_install
  *
@@ -65,9 +67,21 @@ function flat_workspaces_install()
 
     // }
 
+    /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $form_display */
+    $form_display = \Drupal::entityTypeManager()
+        ->getStorage('entity_form_display')
+        ->load('node.flat_bundle.default');
+    
+    $form_display->setComponent('flat_ws_path', [
+    'type' => 'text_textfield',
+    ]);
+
+    $form_display->save();
+
 
 
 }
+
 
 /**
  * Implements hook_uninstall
@@ -94,3 +108,32 @@ function flat_workspaces_uninstall()
 
 
 }
+
+/* function flat_workspaces_update_8003() {
+
+    $fields['flat_ws_path'] = FieldStorageDefinition::create('string')
+      ->setLabel(t('Flat workspace path'))
+      ->setDescription(t('Path to a folder containing resources to be added to the bundle.'))
+      ->setComputed(TRUE)
+      ->setReadOnly(FALSE)
+      ->setInternal(FALSE)
+      ->setDisplayOptions('view', [
+        'label' => 'hidden',
+        'region' => 'hidden',
+        'weight' => -5,
+      ])
+      ->setDisplayOptions('form', [
+        'label' => 'hidden',
+        'region' => 'hidden',
+        'weight' => -5,
+      ])
+      ->setTargetEntityTypeId('node')
+      ->setTargetBundle('flat_bundle')
+      ->setName('flat_ws_path')
+      ->setDisplayConfigurable('form', FALSE)
+      ->setDisplayConfigurable('view', FALSE);
+  
+    // Notify the storage about the new field.
+    \Drupal::service('field_definition.listener')->onFieldDefinitionCreate($fields['flat_ws_path']);
+  } */
+

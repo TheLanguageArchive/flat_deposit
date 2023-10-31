@@ -72,6 +72,12 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
+  flat_bundle_status:
+    type: options_select
+    weight: 7
+    region: content
+    settings: {  }
+    third_party_settings: {  }
   flat_type:
     type: options_select
     weight: 8
@@ -89,7 +95,6 @@ content:
 hidden:
   created: true
   flat_bundle_exception: true
-  flat_bundle_status: true
   flat_deleted_resources: true
   flat_external: true
   flat_fid_super: true

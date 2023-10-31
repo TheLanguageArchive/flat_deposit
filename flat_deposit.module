@@ -220,17 +220,17 @@ function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterfac
     $userId = $user->id();
 
     // Hide unwanted buttons and fields.
-    hide($form['flat_bundle_status']);
+    //hide($form['flat_bundle_status']);
     hide($form['flat_exception']);
     hide($form['flat_create_cmdi']);
     hide($form['flat_external']);
     //hide($form['flat_location']);
-    hide($form['flat_type']);
-    hide($form['flat_fid']);
-    hide($form['flat_original_path']);
-    hide($form['flat_parent_title']);
-    hide($form['flat_deleted_resources']);
-    hide($form['flat_encrypted_resources']);
+    //hide($form['flat_type']);
+    //hide($form['flat_fid']);
+    //hide($form['flat_original_path']);
+    //hide($form['flat_parent_title']);
+    //hide($form['flat_deleted_resources']);
+    //hide($form['flat_encrypted_resources']);
     hide($form['flat_encrypted_auth_endpoint']);
     hide($form['actions']['preview']);
     hide($form['meta']);
@@ -693,7 +693,7 @@ function flat_bundle_node_form_add_submit($form, &$form_state)
     ksm($form_state);
     $entity = $form_state->getFormObject()->getEntity();
     ksm($entity);
-    $entity->save();
+    //$entity->save();
 }
 
 /**
