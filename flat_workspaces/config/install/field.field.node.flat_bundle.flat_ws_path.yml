@@ -7,7 +7,7 @@ dependencies:
       - node.type.flat_bundle
 id: node.flat_bundle.flat_ws_path
 field_name: flat_ws_path
-field_type: text
+field_type: string
 entity_type: node
 bundle: flat_bundle
 label: Path to workspace directory that includes files to be added to the bunlde

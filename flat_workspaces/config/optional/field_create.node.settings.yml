@@ -1,8 +1,0 @@
-flat_ws_path:
-  name: flat_ws_path
-  label: Path to workspace directory that includes files to be added to the bunlde
-  type: string
-  force: true
-  bundles:
-    flat_bundle:
-      label: Path to workspace directory that includes files to be added to the bunlde

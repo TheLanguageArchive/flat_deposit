@@ -9,7 +9,7 @@ dependencies:
 id: node.flat_ws_path
 field_name: flat_ws_path
 entity_type: node
-type: text
+type: string
 module: core
 locked: false
 cardinality: 1

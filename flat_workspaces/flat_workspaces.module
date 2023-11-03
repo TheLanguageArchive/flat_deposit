@@ -74,20 +74,21 @@ function flat_workspaces_menu()
 /**
  * Implements hook_field_create_definitions().
  */
-function flat_workspaces_field_create_definitions_alter(array &$definitions) {
+function flat_workspaces_field_create_definitions_alter(array &$definitions)
+{
     // Define your fields here by entity type.
     $definitions['node'] = [
-      'flat_ws_path' => [
-        'name'    => 'flat_ws_path',
-        'label'   => 'Flat workspace path',
-        'type'    => 'string',
-        'force'   => FALSE, // No update once field exists.
-        'bundles' => [
-          'flat_bundle' => [],
+        'flat_ws_path' => [
+            'name'    => 'flat_ws_path',
+            'label'   => 'Flat workspace path',
+            'type'    => 'string',
+            'force'   => FALSE, // No update once field exists.
+            'bundles' => [
+                'flat_bundle' => [],
+            ],
         ],
-      ],
     ];
-  }
+}
 
 /**
  * Implements hook_entity_base_field_info().
@@ -122,7 +123,7 @@ function flat_workspaces_field_create_definitions_alter(array &$definitions) {
   }
   return $fields;
 } */
-      
+
 
 /**
  * Implements hook_entity_bundle_field_info_alter() to update the field map.
@@ -145,14 +146,12 @@ function flat_workspaces_field_create_definitions_alter(array &$definitions) {
  */
 function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInterface $form_state)
 {
-
-    //hide($form['flat_ws_path']);
-    // also hide flat_nc_path, in case the nextcloud module was installed but is not active
+    // hide flat_nc_path, in case the nextcloud module was installed but is not active
     if (isset($form['flat_nc_path'])) {
         hide($form['flat_nc_path']);
     }
 
-    $form['flat_ws_path']['widget'][0]['#access'] = true;
+    //$form['flat_ws_path']['widget'][0]['#access'] = true;
 
     $form['#validate'][] = 'flat_workspaces_flat_bundle_node_form_validate';
 
@@ -211,10 +210,8 @@ function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInter
             $department = 'none';
         }
 
-        // $config_names = variable_get('flat_workspaces');
         $config = \Drupal::config('flat_workspaces.settings');
         $workspaces_directory = 'local://' . $department . '/' . $config->get('workspace_folder');
-        //$workspaces_directory = 'local://tg/' . $config->get('workspace_folder');
 
         //Scan workspace directory; non-existing directories will return false, existing dirs will populate the
         // workspace field options
@@ -268,19 +265,17 @@ function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInter
         }
 
         // alter default value of the flat_ws_path field to attach value of current directory to flat_bundle node
-        //$form_state->setValue('flat_ws_path', $current);
-        //$form['flat_location']['widget']['#default_value'] = $current;
-        //$form_state->setValue('flat_location', $current);
-        $form["flat_ws_path"]["widget"][0]["#default_value"] = $current;
+        // TODO: check which one of these is really necessary
+        $form['flat_ws_path']['widget'][0]['value']['#type'] = 'hidden';
+        $form['flat_ws_path']['widget'][0]['value']['#default_value'] = $current;
         $form_state->setValue(['flat_ws_path', 0, 'value'], $current);
 
-        //$form_state->setRebuid();
 
         // print result to screen
         $form['workspace_navigation']['field']['current_directory']['#markup'] = 'Currently selected folder: <strong><br/>' .
             str_replace('local://', '[Workspaces]/', $current . '</strong><br/><br/>');
-        $form['workspace_navigation']['field']
-        //$form['workspace_navigation']['field']['chosen_ws']['value'] = $current;
+        $form['workspace_navigation']['field']['chosen_ws']['#value'] = $current;
+
         // Add dropdown menu with lower level directories to go into
         $subDirs = \Workspaces::listAccessibleFolderContent($current, ['hasValidDirectoryName', 'isDir', 'userHasWritePermissions', 'webUserHasWritePermissions', 'isNotCurrentDir']);
         if (!empty($subDirs)) {
@@ -315,8 +310,9 @@ function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInter
             }
         }
 
-        ksm($form);
-        ksm($form_state);
+        // add custom submit handler and place it first
+        $form['actions']['submit']['#submit'][] = 'flat_workspaces_form_node_flat_bundle_form_submit';
+        array_unshift($form['actions']['submit']['#submit'], 'flat_workspaces_form_node_flat_bundle_form_submit');
     }
 }
 
@@ -412,7 +408,6 @@ function flat_workspaces_flat_bundle_node_form_validate($form, FormStateInterfac
                 $form_state->setErrorByName('next_directories', 'The selected workspace folder is already in use for a different bundle.');
             }
         }
-
     }
 }
 
@@ -455,4 +450,11 @@ function flat_workspaces_node_presave(EntityInterface $node)
             }
         }
     }
+}
+
+function flat_workspaces_form_node_flat_bundle_form_submit(array $form, \Drupal\Core\Form\FormStateInterface $form_state)
+{
+    $ws_path = $form_state->getValue(['chosen_ws']);
+    $form['flat_ws_path']['widget'][0]['value']['#default_value'] = $ws_path;
+    $form_state->setValue('flat_ws_path', [['value' => $ws_path]]);
 }

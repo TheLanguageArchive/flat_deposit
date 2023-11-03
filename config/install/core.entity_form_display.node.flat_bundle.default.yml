@@ -87,7 +87,7 @@ content:
   flat_location:
     type: string_textfield
     weight: 0
-    region: content
+    region: hidden
     settings:
       size: 60
       placeholder: ''

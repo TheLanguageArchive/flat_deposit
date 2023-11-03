@@ -203,6 +203,9 @@ function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterfac
         $form['revision_information']['#access'] = false;
     }
 
+    $form['#prefix'] = '<div class="flat-bundle-form">';
+    $form['#suffix'] = '</div>';
+
     // Remove after next install.
     $form['flat_parent_nid_bundle']['#required'] = false;
 
@@ -311,7 +314,7 @@ function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterfac
     // Form alterations depending on node status.
     $node = $form_state->getFormObject()->getEntity();
 
-    ksm($node);
+    //ksm($node);
 
     if ($node->isNew()) {
         $new_node = true;
@@ -635,9 +638,9 @@ function flat_bundle_node_form_add_submit($form, &$form_state)
     //$collection = $form_state->getValue(['flat_parent_title'][0]['value']);
     $collection = $form_state->getValue(['flat_parent_title']);
 
-    $path = $form_state->getValue(['flat_ws_path']);
+    // $path = $form_state->getValue(['flat_ws_path']);
 
-    \Drupal::messenger()->addMessage($path, 'error');
+    //ksm($path);
 
     $user = \Drupal::currentUser();
     /* removed this since we no longer use IMCE. Should remove entire IMCE dependency at some point
@@ -690,9 +693,8 @@ function flat_bundle_node_form_add_submit($form, &$form_state)
             \Drupal::messenger()->addMessage(t('Error during move of metadata file'), 'error');
         }
     }
-    ksm($form_state);
-    $entity = $form_state->getFormObject()->getEntity();
-    ksm($entity);
+    //$entity = $form_state->getBuildInfo()['callback_object']->getEntity();
+    //ksm($entity);
     //$entity->save();
 }
 

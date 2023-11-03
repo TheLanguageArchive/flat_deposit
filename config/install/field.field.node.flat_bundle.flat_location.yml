@@ -7,7 +7,7 @@ dependencies:
       - node.type.flat_bundle
 id: node.flat_bundle.flat_location
 field_name: flat_location
-field_type: text
+field_type: string
 entity_type: node
 bundle: flat_bundle
 label: Location where data is stored
