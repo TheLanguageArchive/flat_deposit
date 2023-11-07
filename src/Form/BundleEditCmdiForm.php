@@ -162,6 +162,9 @@ class BundleEditCmdiForm extends FormBase
         \Drupal::messenger()->addMessage('Online editing of the metadata of this bundle is not supported');
         $form['Submit']['#disabled'] = TRUE;
       }
+
+      //ksm($form);
+
       return $form;
     } else {
       \Drupal::messenger()->addWarning('Unable to load metadata editing form');

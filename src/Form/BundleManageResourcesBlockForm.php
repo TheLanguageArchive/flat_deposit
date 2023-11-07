@@ -30,17 +30,6 @@ class BundleManageResourcesBlockForm extends FormBase
         if ($node instanceof \Drupal\node\NodeInterface) {
             if ($node->bundle() === 'flat_bundle') {
 
-                $form['flat_bundle_manage_resources']['widget'] = [
-
-                    '#theme' => 'flat_bundle_manage_resources',
-                    // Need to set #tree to be able to differentiate
-                    // between the various delete buttons upon
-                    // submission.
-                    '#tree' => TRUE,
-                ];
-
-                ksm($node);
-
                 $location = $node->get('flat_location')->value;
 
                 $files = [];
@@ -51,25 +40,73 @@ class BundleManageResourcesBlockForm extends FormBase
                     $files = array_diff(preg_grep('/^([^.])/', scandir($location)), ['..', '.']);
                 }
 
-                // normalizing currently saved metadata, null, empty str will be marked as empty array
-/*                 $marked = $node->get('flat_encrypted_resources')->value;
-                $marked = empty($marked) ? [] : explode(',', $marked);
- */
+                $options = [];
+
                 foreach ($files as $file) {
 
                     // using md5 on the filename to differentiate the resources
-              $id = md5($file);
-/*
+                    $id = md5($file);
+                    /*
                     $form['flat_bundle_manage_resources'][$id]['encrypt'] = [
 
                         '#type' => 'checkbox',
                         '#default_value' => in_array($id, $marked),
                     ]; */
 
-                    $form['flat_bundle_manage_resources'][$id]['filename'] = [
-                        '#markup' => t('!label', ['!label' => $file]),
-                    ];
+                    $options[$id]['filename'] = $file;
                 }
+
+/*                 $form['flat_bundle_manage_resources'] = [
+
+                    //'#theme' => 'flat_bundle_manage_resources',
+                    '#type' => 'table',
+                    '#header' => array('filename' => $this
+                    ->t('File name')),
+                    '#empty' => t('No files found'),
+                    '#options' => $options,
+                    // Need to set #tree to be able to differentiate
+                    // between the various delete buttons upon
+                    // submission.
+                    '#tree' => TRUE,
+                ]; */
+
+                $form['flat_bundle_manage_resources'] = [
+
+                    //'#theme' => 'flat_bundle_manage_resources',
+                    '#type' => 'table',
+                    '#header' => array(),
+                    // Need to set #tree to be able to differentiate
+                    // between the various delete buttons upon
+                    // submission.
+                    '#tree' => TRUE,
+                ];
+                
+                foreach ($files as $file) {
+
+                    // using md5 on the filename to differentiate the resources
+                    $id = md5($file);
+                    /*
+                    $form['flat_bundle_manage_resources'][$id]['encrypt'] = [
+
+                        '#type' => 'checkbox',
+                        '#default_value' => in_array($id, $marked),
+                    ]; */
+
+                    $form['flat_bundle_manage_resources'][$id]['filename']['#markup'] = 
+                    '<span>' . $file . '</span><input type="hidden" name="flat_bundle_manage_resources[' . $id . '][filename]" value="';
+                
+                }
+
+                $dirname = basename($location);
+
+                $form['flat_bundle_manage_resources']['#prefix'] = '<h2>Files in folder <i>"' . $dirname . '"</i> to be added to this bundle:</h2>';
+
+
+                // normalizing currently saved metadata, null, empty str will be marked as empty array
+/*                 $marked = $node->get('flat_encrypted_resources')->value;
+                $marked = empty($marked) ? [] : explode(',', $marked);
+ */
+
 
                 $form['buttons']['save'] = [
 
