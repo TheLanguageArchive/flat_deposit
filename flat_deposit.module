@@ -1141,28 +1141,26 @@ function flat_deposit_form_alter(&$form, FormStateInterface $form_state, $form_i
             }
         }
     }
-    
+
     // Bootstrap button classes don't seem to get added to the generated CMDI forms. Adding them here.
-    if ($form_id == 'flat_deposit_bundle_edit_cmdi_form') {
+    if (in_array($form_id, ['flat_deposit_bundle_enter_cmdi_form', 'flat_deposit_bundle_edit_cmdi_form', 'flat_deposit_bundle_update_cmdi_form'])) {
         flat_deposit_add_css_to_button_recursive($form['template_container']);
     }
-
 }
 
 /**
  * Recursive function to add Bootstrap CSS classes to input elements of type "submit".
  */
-function flat_deposit_add_css_to_button_recursive(&$element) {
+function flat_deposit_add_css_to_button_recursive(&$element)
+{
     if (isset($element['#type']) && $element['#type'] == 'button') {
         // Add CSS classes to the "attributes" array of the input element.
         $element['#attributes']['class'][] = 'btn';
         if (str_starts_with($element['#value'], 'Add')) {
             $element['#attributes']['class'][] = 'btn-success';
-
         }
         if (str_starts_with($element['#value'], 'Remove')) {
             $element['#attributes']['class'][] = 'btn-danger';
-
         }
     }
 
