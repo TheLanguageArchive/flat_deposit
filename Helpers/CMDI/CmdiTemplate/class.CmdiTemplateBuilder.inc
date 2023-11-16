@@ -15,7 +15,7 @@ class CmdiTemplateBuilder
         $fields['load_template'] = static::buildLoadTemplateElement($profile, $component_id);
         $fields['load_template']['#cmdi_tree'] = $cmdi_tree;
 
-        $fields['new_template'] = [
+/*         $fields['new_template'] = [
 
             'label' => [
 
@@ -50,7 +50,7 @@ class CmdiTemplateBuilder
                     'event' => 'saving_' . $id,
                 ],
             ],
-        ];
+        ]; */
 
         return $fields;
     }

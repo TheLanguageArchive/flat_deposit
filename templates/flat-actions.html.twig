@@ -1,4 +1,4 @@
-{% if is_iterable && count(available_templates) > 0 %}
+{% if available_templates|length > 0 %}
 <div class="dropdown">
   <button class="btn btn-secondary dropdown-toggle" type="button" title="Load preset" id="load-menu-<?php echo $component_id; ?>" data-toggle="dropdown">
     <i class="fas fa-list-alt"></i>

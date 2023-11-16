@@ -14,10 +14,10 @@ use Drupal\file\Entity\File;
 /**
  * Implements hook_theme().
  */
-function flat_deposit_theme()
+function flat_deposit_theme($existing, $type, $theme, $path)
 {
 
-    $themes = [
+    $variables = [
 
         'image_link' => [
             'variables' => [
@@ -107,7 +107,7 @@ function flat_deposit_theme()
         ],
     ];
 
-    return $themes;
+    return $variables;
 }
 
 /**
@@ -1718,4 +1718,14 @@ function flat_deposit_form_bundle_actions_block_form_alter(&$form, FormStateInte
             }
         }
     }
+}
+
+/** 
+ * Implements hook_preprocess_fieldset()
+ *
+ * Adding 'actions' to fieldset for metadata template controls
+ */
+ function flat_deposit_preprocess_fieldset (&$variables) {
+    $element = $variables['element'];
+    $variables['actions'] = $element['#actions'] ?? FALSE;
 }

@@ -27,19 +27,18 @@
    * aligning panel actions to the right, and fixing padding between the actions
    * to prevent newlines in the panel block
    */
-  .panel-actions {
-  
+  div.card-header div.actions {
     display: flex;
     float: right;
   }
   
-  .panel-actions .dropdown {
+  div.card-header div.actions .dropdown {
   
     flex: 1;
     margin-left: 5px;
   }
   
-  .panel-actions .dropdown button.dropdown-toggle {
+  div.card-header div.actions .dropdown button.dropdown-toggle {
     padding: 0;
     background: none;
   }
