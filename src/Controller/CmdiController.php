@@ -3,13 +3,15 @@
 namespace Drupal\flat_deposit\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-
+use Drupal\Component\Serialization\Json;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
-class CmdiController extends ControllerBase {
+class CmdiController extends ControllerBase
+{
 
-  public function saveAction(Request $request) {
+  public function saveAction(Request $request)
+  {
 
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiModalBuilder');
 
@@ -26,7 +28,8 @@ class CmdiController extends ControllerBase {
       ]);
     }
 
-    $data = json_decode($request->request->all(), true);
+    $data = $request->request->all();
+    $data = Json::decode(array_key_first($data));
 
     if (false === is_array($data) || !isset($data['cmdi_data'])) {
 

@@ -17,9 +17,9 @@ class CmdiTemplateManager
         return \CmdiTemplateBuilder::build($component_id, $profile, $cmdi_tree);
     }
 
-    public static function buildActions($profile, $component_id, $cmdi_tree)
+    public static function buildActions($profile, $component_id, $cmdi_tree, $description)
     {
-        return \CmdiActionsBuilder::build($profile, $component_id, $cmdi_tree);
+        return \CmdiActionsBuilder::build($profile, $component_id, $cmdi_tree, $description);
     }
 
     public static function modal()

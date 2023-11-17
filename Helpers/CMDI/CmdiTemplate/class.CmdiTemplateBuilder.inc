@@ -9,13 +9,12 @@ class CmdiTemplateBuilder
         $id = implode('_', $cmdi_tree);
         $label_field_name = 'cmdi_new_template_label_' . $id;
 
-        $fields = [
-        ];
+        $fields = [];
 
         $fields['load_template'] = static::buildLoadTemplateElement($profile, $component_id);
         $fields['load_template']['#cmdi_tree'] = $cmdi_tree;
 
-/*         $fields['new_template'] = [
+        /*         $fields['new_template'] = [
 
             'label' => [
 
@@ -65,20 +64,20 @@ class CmdiTemplateBuilder
 
         return [
 
-          '#type' => 'select',
-          '#options' => $available_templates,
-          '#attributes' => [
-              'class' => ['hide'],
-            'data-role' => 'flat-cmdi-template-loadable-' . $component_id,
-          ],
-          '#component_id' => $component_id,
-          '#ajax' => [
+            '#type' => 'select',
+            '#options' => $available_templates,
+            '#attributes' => [
+                'class' => ['hide'],
+                'data-role' => 'flat-cmdi-template-loadable-' . $component_id,
+            ],
+            '#component_id' => $component_id,
+            '#ajax' => [
 
-              'callback' => 'flat_cmdi_templates_ajax_load_callback',
-              'method' => 'replace',
-              'effect' => 'fade',
-              'wrapper' => 'template-form',
-          ],
+                'callback' => 'flat_cmdi_templates_ajax_load_callback',
+                'method' => 'replace',
+                'effect' => 'fade',
+                'wrapper' => 'template-form',
+            ],
         ];
     }
 
@@ -107,7 +106,6 @@ class CmdiTemplateBuilder
                         $block[$field]['#default_value'] = $input;
                     }
                 }
-
             } else {
                 $block[$field] = $element[$field];
             }
@@ -119,12 +117,11 @@ class CmdiTemplateBuilder
 
     private static function getElementInput($element, FormStateInterface $form_state)
     {
-        return array_reduce($element['#array_parents'], function($result, $index) {
+        return array_reduce($element['#array_parents'], function ($result, $index) {
 
             if ($result && !is_null($index)) {
-              return (array_key_exists($index, $result)) ? $result[$index] : null;
+                return (array_key_exists($index, $result)) ? $result[$index] : null;
             }
-
         }, $form_state->getUserInput());
     }
 

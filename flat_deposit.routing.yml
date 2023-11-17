@@ -34,7 +34,7 @@ flat_deposit.update_collection:
       node:
         type: 'entity:node'
 
-flat_deposit.cmdi.save:
+flat_deposit.cmdi_save:
   path: '/flat/cmdi/save'
   defaults:
     _controller: '\Drupal\flat_deposit\Controller\CmdiController::saveAction'

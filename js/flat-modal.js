@@ -23,7 +23,7 @@
         isModalOpen = false;
       });
 
-      $('body').on('keydown', '[data-cmdi-enter="true"]', function(event) {
+      $('body').on('keydown', '[data-cmdi-enter="true"]', function (event) {
 
         var keycode = (event.keyCode ? event.keyCode : event.which);
         var element = $(this);
@@ -35,13 +35,13 @@
         }
       });
 
-      $('body').on('click', '[data-role="open-flat-modal"]', function(event) {
+      $('body').on('click', '[data-role="open-flat-modal"]', function (event) {
 
         event.preventDefault();
 
         var modal = $('[data-role="flat-modal"]');
         var content = $('[data-role="flat-modal-content"]');
-        var button  = $(this);
+        var button = $(this);
         var data = button.data('cmdi-data');
         var label = $('[data-role="cmdi-label-' + data.cmdi_id + '"]').val();
 
@@ -83,14 +83,14 @@
           },
         });
 
-        jQuery.post(data.url, postData, function(result) {
+        jQuery.post(data.url, postData, function (result) {
 
           if (result && result.type === 'error') {
 
             // error
             content.html(result.modal);
 
-            window.setTimeout(function() {
+            window.setTimeout(function () {
               modal.modal('hide');
             }, 2000);
 
@@ -113,7 +113,7 @@
             // and show success modal, and fade it out
             content.html(result.modal);
 
-            window.setTimeout(function() {
+            window.setTimeout(function () {
               modal.modal('hide');
             }, 2000);
 
@@ -122,97 +122,97 @@
         });
       });
 
-      $('body').on('click', '[data-role="confirm-flat-modal"]', function(event) {
+      $('body').on('click', '[data-role="confirm-flat-modal"]', function (event) {
 
-          event.preventDefault();
+        event.preventDefault();
 
-          var modal = $('[data-role="flat-modal"]');
-          var button = $(this);
-          var cmdi_id = button.data('cmdi-id');
+        var modal = $('[data-role="flat-modal"]');
+        var button = $(this);
+        var cmdi_id = button.data('cmdi-id');
 
-          modal.modal('hide');
-          $('button[name="save_cmdi_template_' + cmdi_id + '"]').trigger('saving_' + cmdi_id);
+        modal.modal('hide');
+        $('button[name="save_cmdi_template_' + cmdi_id + '"]').trigger('saving_' + cmdi_id);
       });
 
-      $('body').on('click', '[data-role="delete-flat-cmdi-template"]', function(event) {
+      $('body').on('click', '[data-role="delete-flat-cmdi-template"]', function (event) {
 
-          event.preventDefault();
+        event.preventDefault();
 
-          var modal = $('[data-role="flat-modal"]');
-          var content = $('[data-role="flat-modal-content"]');
-          var button = $(this);
-          var id = button.data('cmdi-template-id');
+        var modal = $('[data-role="flat-modal"]');
+        var content = $('[data-role="flat-modal-content"]');
+        var button = $(this);
+        var id = button.data('cmdi-template-id');
 
-          content.html(settings.flat_modal_confirm_delete);
-          $('[data-role="confirm-delete-flat-modal"]').data('cmdi-template-id', id);
+        content.html(settings.flat_modal_confirm_delete);
+        $('[data-role="confirm-delete-flat-modal"]').data('cmdi-template-id', id);
 
-          if (false === isModalOpen) {
-            modal.modal('show');
-          }
+        if (false === isModalOpen) {
+          modal.modal('show');
+        }
       });
 
-      $('body').on('click', '[data-role="confirm-delete-flat-modal"]', function(event) {
+      $('body').on('click', '[data-role="confirm-delete-flat-modal"]', function (event) {
 
-          event.preventDefault();
+        event.preventDefault();
 
-          var modal = $('[data-role="flat-modal"]');
-          var content = $('[data-role="flat-modal-content"]');
-          var button = $(this);
-          var id = button.data('cmdi-template-id');
-          var url = button.data('cmdi-template-delete-url');
+        var modal = $('[data-role="flat-modal"]');
+        var content = $('[data-role="flat-modal-content"]');
+        var button = $(this);
+        var id = button.data('cmdi-template-id');
+        var url = button.data('cmdi-template-delete-url');
 
-          content.html(settings.flat_modal_loader);
+        content.html(settings.flat_modal_loader);
 
-          if (false === isModalOpen) {
-            modal.modal('show');
+        if (false === isModalOpen) {
+          modal.modal('show');
+        }
+
+        var postData = JSON.stringify({
+          cmdi_template: id
+        });
+
+        jQuery.post(url, postData, function (result) {
+
+          if (result && result.type === 'error') {
+
+            // error
+            content.html(result.modal);
+
+            window.setTimeout(function () {
+              modal.modal('hide');
+            }, 2000);
+
+            return;
           }
 
-          var postData = JSON.stringify({
-            cmdi_template: id
-          });
+          if (result && result.type === 'deleted') {
 
-          jQuery.post(url, postData, function(result) {
+            var element = $('[data-role="available-template-' + id + '"]');
+            var total = element.parent().children('li').length;
+            var block = element.parent().parent(); // dropdown div of load action
 
-            if (result && result.type === 'error') {
+            // remove available template
+            element.remove();
 
-              // error
-              content.html(result.modal);
+            if ((total - 1) <= 0) {
 
-              window.setTimeout(function() {
-                modal.modal('hide');
-              }, 2000);
-
-              return;
+              // no more templates available, remove block
+              block.remove();
             }
 
-            if (result && result.type === 'deleted') {
+            // show success modal, and fade it out
+            content.html(result.modal);
 
-              var element = $('[data-role="available-template-' + id + '"]');
-              var total   = element.parent().children('li').length;
-              var block   = element.parent().parent(); // dropdown div of load action
+            window.setTimeout(function () {
+              modal.modal('hide');
+            }, 2000);
 
-              // remove available template
-              element.remove();
-
-              if ((total - 1) <= 0) {
-
-                // no more templates available, remove block
-                block.remove();
-              }
-
-              // show success modal, and fade it out
-              content.html(result.modal);
-
-              window.setTimeout(function() {
-                modal.modal('hide');
-              }, 2000);
-
-              return;
-            }
-          });
+            return;
+          }
+        });
       });
 
-      $('body').on('click', '[data-role="load-flat-cmdi-template"]', function(event) {
+      $('body').on('click', '[data-role="load-flat-cmdi-template"]', function (event) {
 
         event.preventDefault();
 
@@ -225,4 +225,4 @@
     }
   };
 
-  })(jQuery, Drupal, drupalSettings);
+})(jQuery, Drupal, drupalSettings);

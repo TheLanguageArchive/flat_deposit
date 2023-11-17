@@ -103,6 +103,7 @@ function flat_deposit_theme($existing, $type, $theme, $path)
                 'component_id' => null,
                 'available_templates' => null,
                 'cmdi_data' => null,
+                'description' => null,
             ],
         ],
     ];
@@ -1725,7 +1726,8 @@ function flat_deposit_form_bundle_actions_block_form_alter(&$form, FormStateInte
  *
  * Adding 'actions' to fieldset for metadata template controls
  */
- function flat_deposit_preprocess_fieldset (&$variables) {
+function flat_deposit_preprocess_fieldset(&$variables)
+{
     $element = $variables['element'];
     $variables['actions'] = $element['#actions'] ?? FALSE;
 }
