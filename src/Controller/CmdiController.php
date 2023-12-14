@@ -13,7 +13,7 @@ class CmdiController extends ControllerBase
   public function saveAction(Request $request)
   {
 
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiModalBuilder');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiModalBuilder');
 
     $renderer = \Drupal::service('renderer');
 
@@ -50,9 +50,9 @@ class CmdiController extends ControllerBase
     $label = $data['cmdi_data']['label'];
     $component_id = $data['cmdi_data']['component_id'];
 
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateDb');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetDb');
 
-    $exists = \CmdiTemplateDb::exists($profile, $label, $component_id, $uid);
+    $exists = \CmdiPresetDb::exists($profile, $label, $component_id, $uid);
 
     if (true === $exists) {
 

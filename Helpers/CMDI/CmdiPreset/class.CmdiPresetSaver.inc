@@ -6,12 +6,11 @@ module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiC
 autoload_cmdicreator();
 
 /**
- * Saving CMDI fieldset block as a template for reuse
+ * Saving CMDI fieldset block as a preset for reuse
  *
  * @author  Ibrahim Abdullah <ibrahim.abdullah@mpi.nl>
- * @package FLAT CMDI Templates
  */
-class CmdiTemplateSaver
+class CmdiPresetSaver
 {
     /**
      * @var FormStateInterface Reference to drupal form_state
@@ -29,13 +28,13 @@ class CmdiTemplateSaver
     }
 
     /**
-     * Checking whether save cmdi template ajax action was triggered
+     * Checking whether save cmdi preset ajax action was triggered
      *
      * @return bool
      */
     public function isSubmitted()
     {
-        return $this->form_state->has(['triggering_element', '#ajax', 'callback']) && $this->form_state->get(['triggering_element', '#ajax', 'callback']) === 'flat_cmdi_templates_ajax_save_callback';
+        return $this->form_state->has(['triggering_element', '#ajax', 'callback']) && $this->form_state->get(['triggering_element', '#ajax', 'callback']) === 'flat_cmdi_presets_ajax_save_callback';
     }
 
     /**
@@ -92,13 +91,14 @@ class CmdiTemplateSaver
     public function getLabel()
     {
         $triggeringElement = $this->form_state->getTriggeringElement() ?? [];
-        return $this->form_state->getUserInput(['input',
+        return $this->form_state->getUserInput([
+            'input',
             $triggeringElement['#label_field_name']
         ]);
     }
 
     /**
-     * Generate json encoded string representation of template block to be saved to database
+     * Generate json encoded string representation of preset block to be saved to database
      *
      * @return string
      */
@@ -121,11 +121,11 @@ class CmdiTemplateSaver
         $input = $this->form_state->getUserInput() ?? [];
         $state = \Drupal\Component\Utility\NestedArray::getValue($input['template_container']['elements'], $tree);
 
-        // removing all occurences of flat_cmdi_templates from form state for tree
-        $state = drupal_array_unset_recursive($state, 'flat_cmdi_templates');
+        // removing all occurences of flat_cmdi_presets from form state for tree
+        $state = drupal_array_unset_recursive($state, 'flat_cmdi_presets');
 
         // removing the last item from tree, which is the position in the current form
-        // this is necessary so later this template can be loaded in any position
+        // this is necessary so later this preset can be loaded in any position
         array_pop($tree);
 
         return json_encode([
@@ -137,7 +137,7 @@ class CmdiTemplateSaver
     }
 
     /**
-     * Saving template block to db
+     * Saving preset block to db
      *
      * @return bool
      */
@@ -151,7 +151,7 @@ class CmdiTemplateSaver
 
         if (empty($label)) {
 
-            $this->form_state->setErrorByName('flat_cmdi_templates', t('Please provide a label for saving this block as a preset.'));
+            $this->form_state->setErrorByName('flat_cmdi_presets', t('Please provide a label for saving this block as a preset.'));
             return false;
         }
 
@@ -165,16 +165,17 @@ class CmdiTemplateSaver
 
         if (null !== $block) {
 
-            \CmdiTemplateDb::save($profile, $label, $this->getComponentId(), $block, $this->getUid());
+            \CmdiPresetDb::save($profile, $label, $this->getComponentId(), $block, $this->getUid());
             return true;
         }
 
         return false;
     }
 }
-function drupal_array_unset_recursive($haystack, $unsetKey) {
+function drupal_array_unset_recursive($haystack, $unsetKey)
+{
 
-    if(is_array($haystack)) {
+    if (is_array($haystack)) {
 
         unset($haystack[$unsetKey]);
 
@@ -187,7 +188,8 @@ function drupal_array_unset_recursive($haystack, $unsetKey) {
     return $haystack;
 }
 
-function generate_pressed_buttons_state($input, &$form_state) {
+function generate_pressed_buttons_state($input, &$form_state)
+{
 
     $pressed = [];
     foreach ($input as $key => $val) {

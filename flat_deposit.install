@@ -1,67 +1,69 @@
 <?php
+
 /**
  * Setting up/tearing down of flat_deposit module
  */
 
- function flat_deposit_schema() {
+function flat_deposit_schema()
+{
 
-  $schema = [];
-  $schema['flat_cmdi_templates'] = [
+    $schema = [];
+    $schema['flat_cmdi_presets'] = [
 
-      'description' => 'Table that stores blocks inside cmdi as templates for Flat CMDI Templates module',
-      'fields'      => [
+        'description' => 'Table that stores blocks of CMDI metadata as presets for a given user and given CMDI profile',
+        'fields'      => [
 
-          'id' => [
+            'id' => [
 
-              'type'        => 'serial',
-              'not null'    => true,
-              'unsigned'    => true,
-              'description' => 'The primary id',
-          ],
+                'type'        => 'serial',
+                'not null'    => true,
+                'unsigned'    => true,
+                'description' => 'The primary id',
+            ],
 
-          'uid' => [
+            'uid' => [
 
-              'type' => 'int',
-              'unsigned' => true,
-              'not null' => true,
-              'description' => 'Adding user_id field to templates table',
-              'default' => 0,
-          ],
+                'type' => 'int',
+                'unsigned' => true,
+                'not null' => true,
+                'description' => 'The user_id for this preset',
+                'default' => 0,
+            ],
 
-          'profile' => [
+            'profile' => [
 
-              'type'        => 'varchar',
-              'length'      => 500,
-              'not null'    => true,
-              'description' => 'Profile CMDI template',
-          ],
+                'type'        => 'varchar',
+                'length'      => 500,
+                'not null'    => true,
+                'description' => 'CMDI profile',
+            ],
 
-          'label' => [
+            'label' => [
 
-              'type'        => 'varchar',
-              'length'      => 500,
-              'not null'    => true,
-              'description' => 'Label for cmdi template block',
-          ],
+                'type'        => 'varchar',
+                'length'      => 500,
+                'not null'    => true,
+                'description' => 'Label for CMDI preset',
+            ],
 
-          'component_id' => [
+            'component_id' => [
 
-              'type'        => 'varchar',
-              'length'      => 500,
-              'not null'    => true,
-              'description' => 'Component id in form of cmdi metadata',
-          ],
+                'type'        => 'varchar',
+                'length'      => 500,
+                'not null'    => true,
+                'description' => 'Component id in form of CMDI preset',
+            ],
 
-          'block' => [
+            'block' => [
 
-              'type'        => 'blob',
-              'size'        => 'normal',
-              'not null'    => true,
-              'description' => 'Actual CMDI template block',
-          ],
-      ],
-      'primary key' => ['id'],
-  ];
+                'type'        => 'blob',
+                'size'        => 'normal',
+                'not null'    => true,
+                'description' => 'Actual CMDI block content for preset',
+            ],
+        ],
+        'primary key' => ['id'],
+    ];
 
-  return $schema;
+    return $schema;
 }

@@ -119,16 +119,16 @@ class BundleEditCmdiForm extends FormBase
       //********************************************************************
       include_once DRUPAL_ROOT . '/' . \Drupal::service('extension.path.resolver')->getPath('module', 'flat_deposit') . '/Helpers/CMDI/FormBuilder/class.FormBuilder.inc';
       //module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.CmdiTemplateManager');
-      include_once DRUPAL_ROOT . '/' . \Drupal::service('extension.path.resolver')->getPath('module', 'flat_deposit') . '/Helpers/CMDI/CmdiTemplate/class.CmdiTemplateManager.inc';
+      include_once DRUPAL_ROOT . '/' . \Drupal::service('extension.path.resolver')->getPath('module', 'flat_deposit') . '/Helpers/CMDI/CmdiPreset/class.CmdiPresetManager.inc';
 
       // load template if selected
-      \CmdiTemplateManager::load($form_state);
+      \CmdiPresetManager::load($form_state);
 
       // adding modal component to form
-      $form['flat_modal'] = \CmdiTemplateManager::modal();
+      $form['flat_modal'] = \CmdiPresetManager::modal();
 
       // adding save cmdi template feature
-      $saved = \CmdiTemplateManager::save($form_state);
+      $saved = \CmdiPresetManager::save($form_state);
 
       $availableFormTemplates = \FormBuilder::getAvailableTemplates('flat_bundle');
 
@@ -281,7 +281,7 @@ class BundleEditCmdiForm extends FormBase
         // Generate Cmdi file//
         //*******************//
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
-        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
+        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiValueExtractor');
 
         $templateName = $form_state->get(['selected']);
         $owner = $form_state->getValue(['owner']);

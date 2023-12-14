@@ -11,7 +11,6 @@ use Drupal\Core\Form\FormStateInterface;
  * so this hack is necessary
  *
  * @author  Ibrahim Abdullah <ibrahim.abdullah@mpi.nl>
- * @package FLAT CMDI Templates
  */
 class CmdiValueExtractor
 {
@@ -48,7 +47,6 @@ class CmdiValueExtractor
 
                 $innerinput = isset($input[$field]) ? $input[$field] : [];
                 $extracted[$field] = static::recursiveExtraction($innervalues, $innerinput);
-
             } else {
                 $extracted[$field] = isset($input[$field]) ? $input[$field] : $innervalues;
             }

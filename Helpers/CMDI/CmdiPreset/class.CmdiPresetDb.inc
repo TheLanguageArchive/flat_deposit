@@ -1,9 +1,9 @@
 <?php
 
-class CmdiTemplateDb
+class CmdiPresetDb
 {
     /**
-     * Fetching all templates
+     * Fetching all presets
      *
      * @param string $filename
      * @param int    $uid user id
@@ -12,16 +12,16 @@ class CmdiTemplateDb
      */
     public static function all($profile, $uid)
     {
-        return \Drupal::database()->select('flat_cmdi_templates', 'fct')
-                ->fields('fct')
-                ->condition('profile', $profile, '=')
-                ->condition('uid', $uid, '=')
-                ->execute()
-                ->fetchAllAssoc('id', PDO::FETCH_ASSOC);
+        return \Drupal::database()->select('flat_cmdi_presets', 'fct')
+            ->fields('fct')
+            ->condition('profile', $profile, '=')
+            ->condition('uid', $uid, '=')
+            ->execute()
+            ->fetchAllAssoc('id', PDO::FETCH_ASSOC);
     }
 
     /**
-     * Fetching specific template
+     * Fetching specific preset
      *
      * @param string $id
      * @param int    $uid user id
@@ -30,16 +30,16 @@ class CmdiTemplateDb
      */
     public static function fetch($id, $uid)
     {
-        return \Drupal::database()->select('flat_cmdi_templates', 'fct')
-                ->fields('fct')
-                ->condition('id', $id, '=')
-                ->condition('uid', $uid, '=')
-                ->execute()
-                ->fetchAssoc('id', PDO::FETCH_ASSOC);
+        return \Drupal::database()->select('flat_cmdi_presets', 'fct')
+            ->fields('fct')
+            ->condition('id', $id, '=')
+            ->condition('uid', $uid, '=')
+            ->execute()
+            ->fetchAssoc('id', PDO::FETCH_ASSOC);
     }
 
     /**
-     * check if label for component already exists
+     * check if label for component presetalready exists
      *
      * @param string $profile
      * @param string $label
@@ -52,7 +52,7 @@ class CmdiTemplateDb
     {
         try {
 
-            $result = \Drupal::database()->select('flat_cmdi_templates', 'fct')
+            $result = \Drupal::database()->select('flat_cmdi_presets', 'fct')
                 ->fields('fct', ['id'])
                 ->condition('profile', $profile)
                 ->condition('label', $label)
@@ -63,7 +63,6 @@ class CmdiTemplateDb
                 ->fetchField();
 
             return intval($result) > 0;
-
         } catch (Exception $e) {
 
             static::error($e);
@@ -85,15 +84,14 @@ class CmdiTemplateDb
     {
         try {
 
-            return \Drupal::database()->select('flat_cmdi_templates', 'fct')
-                    ->fields('fct')
-                    ->condition('profile', $profile)
-                    ->condition('label', $label)
-                    ->condition('component_id', $component_id)
-                    ->condition('uid', $uid)
-                    ->execute()
-                    ->fetchAssoc();
-
+            return \Drupal::database()->select('flat_cmdi_presets', 'fct')
+                ->fields('fct')
+                ->condition('profile', $profile)
+                ->condition('label', $label)
+                ->condition('component_id', $component_id)
+                ->condition('uid', $uid)
+                ->execute()
+                ->fetchAssoc();
         } catch (Exception $e) {
 
             static::error($e);
@@ -102,7 +100,7 @@ class CmdiTemplateDb
     }
 
     /**
-     * save cmdi template block to db
+     * save cmdi preset block to db
      *
      * @param string $profile
      * @param string $label
@@ -125,7 +123,6 @@ class CmdiTemplateDb
             }
 
             return true;
-
         } catch (Exception $e) {
 
             static::error($e);
@@ -134,7 +131,7 @@ class CmdiTemplateDb
     }
 
     /**
-     * Override existing template block in db
+     * Override existing preset block in db
      *
      * @param string $profile
      * @param string $label
@@ -146,17 +143,17 @@ class CmdiTemplateDb
      */
     public static function override($id, $uid, $block)
     {
-        return \Drupal::database()->update('flat_cmdi_templates')
-                ->fields([
-                    'block' => $block,
-                ])
-                ->condition('id', $id)
-                ->condition('uid', $uid)
-                ->execute();
+        return \Drupal::database()->update('flat_cmdi_presets')
+            ->fields([
+                'block' => $block,
+            ])
+            ->condition('id', $id)
+            ->condition('uid', $uid)
+            ->execute();
     }
 
     /**
-     * Insert record into db
+     * Insert preset record into db
      *
      * @param string $profile
      * @param string $label
@@ -168,19 +165,19 @@ class CmdiTemplateDb
      */
     public static function insert($profile, $label, $component_id, $block, $uid)
     {
-        return \Drupal::database()->insert('flat_cmdi_templates')
-                ->fields([
-                    'profile'      => $profile,
-                    'label'        => $label,
-                    'component_id' => $component_id,
-                    'block'        => $block,
-                    'uid'          => $uid,
-                ])
-                ->execute();
+        return \Drupal::database()->insert('flat_cmdi_presets')
+            ->fields([
+                'profile'      => $profile,
+                'label'        => $label,
+                'component_id' => $component_id,
+                'block'        => $block,
+                'uid'          => $uid,
+            ])
+            ->execute();
     }
 
     /**
-     * Delete specific template
+     * Delete specific preset
      *
      * @param string $id
      * @param int    $uid user id
@@ -189,10 +186,10 @@ class CmdiTemplateDb
      */
     public static function delete($id, $uid)
     {
-        return \Drupal::database()->delete('flat_cmdi_templates')
-                ->condition('id', $id, '=')
-                ->condition('uid', $uid, '=')
-                ->execute();
+        return \Drupal::database()->delete('flat_cmdi_presets')
+            ->condition('id', $id, '=')
+            ->condition('uid', $uid, '=')
+            ->execute();
     }
 
     /**
@@ -204,7 +201,7 @@ class CmdiTemplateDb
     public static function error(Exception $e)
     {
         if ($e->errorInfo[0] == '42P01') {
-            \Drupal::messenger()->addError(t('Flat Cmdi Templates table not found. Try running <a href="@update_url">update.php</a>.', ['@update_url' => \Drupal\Core\Url::fromRoute('system.db_update')]));
+            \Drupal::messenger()->addError(t('Flat Cmdi Presets table not found. Try running <a href="@update_url">update.php</a>.', ['@update_url' => \Drupal\Core\Url::fromRoute('system.db_update')]));
         } else {
             \Drupal::messenger()->addError($e->getMessage());
         }

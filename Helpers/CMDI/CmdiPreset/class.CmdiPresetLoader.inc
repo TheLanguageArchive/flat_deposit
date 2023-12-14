@@ -3,16 +3,16 @@
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\NestedArray;
 
-class CmdiTemplateLoader
+class CmdiPresetLoader
 {
     public static function getLoadedBlock($id)
     {
         $user = \Drupal::currentUser();
-        $row = \CmdiTemplateDb::fetch($id, $user->id());
+        $row = \CmdiPresetDb::fetch($id, $user->id());
 
         if (false === $row) {
 
-            // template not found
+            // preset not found
             return false;
         }
 
@@ -31,7 +31,7 @@ class CmdiTemplateLoader
     {
         $triggeringElement = $form_state->getTriggeringElement();
 
-        $isSubmitted = null !== $triggeringElement && $triggeringElement['#ajax']['callback'] && $triggeringElement['#ajax']['callback'] === 'flat_cmdi_templates_ajax_load_callback';
+        $isSubmitted = null !== $triggeringElement && $triggeringElement['#ajax']['callback'] && $triggeringElement['#ajax']['callback'] === 'flat_cmdi_presets_ajax_load_callback';
 
         if (false === $isSubmitted) {
             return false;

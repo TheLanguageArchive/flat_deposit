@@ -7,18 +7,18 @@ function autoload_formbuilder()
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormComposite');
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormLeaf');
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormField');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiModalBuilder');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiActionsBuilder');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateBuilder');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateRebuilder');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateSaveLoaded');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateLoader');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateSaver');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateDb');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateData');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiTemplateManager');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiModalBuilder');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetActionsBuilder');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetBuilder');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetRebuilder');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetSaveLoaded');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetLoader');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetSaver');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetDb');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetData');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetManager');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiValueExtractor');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiValueSyncer');
 }
 
 use Drupal\Core\Form\FormStateInterface;
@@ -155,8 +155,8 @@ class FormBuilder
             }
         } */
 
-        // adding this so profile can be referenced in CmdiTemplateManager
-        // for the CmdiTemplate functionality
+        // adding this so profile can be referenced in CmdiPresetManager
+        // for the CMDI Preset functionality
         $this->templateName = $templateName;
 
         $setComponets = $this->setFormComponents($template, $dataNode, $pressedButtons, $index = 0, $inheritAll);

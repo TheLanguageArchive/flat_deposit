@@ -227,14 +227,14 @@ class CollectionAddForm extends FormBase
     // Generate profile specific form render array and attach to container
     //********************************************************************
 
-    // load template if selected
-    \CmdiTemplateManager::load($form_state);
+    // load preset if selected
+    \CmdiPresetManager::load($form_state);
 
     // adding modal component to form
-    $form['flat_modal'] = \CmdiTemplateManager::modal();
+    $form['flat_modal'] = \CmdiPresetManager::modal();
 
-    // adding save cmdi template feature
-    $saved = \CmdiTemplateManager::save($form_state);
+    // adding save cmdi preset feature
+    $saved = \CmdiPresetManager::save($form_state);
 
     // \Drupal::logger('flat_deposit')->notice('<pre><code>' . var_export($form_state->get(['selected']), true) . '</code></pre>');
     // var_dump($form_state->get(['selected']));
@@ -405,7 +405,7 @@ class CollectionAddForm extends FormBase
         // Generate Cmdi file//
         //*******************//
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
-        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
+        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiValueExtractor');
 
         $templateName = $form_state->get(['selected']);
         $owner = $form_state->getValue(['owner']);
@@ -590,7 +590,7 @@ class CollectionAddForm extends FormBase
   public function submitAjaxHandler(array &$form, FormStateInterface $form_state, Request $request)
   {
 
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
+    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiValueSyncer');
     \CmdiValueSyncer::sync($form, $form_state);
 
     return $form;

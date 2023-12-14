@@ -2,17 +2,17 @@
 
 use Drupal\Core\Form\FormStateInterface;
 
-class CmdiTemplateBuilder
+class CmdiPresetBuilder
 {
     public static function build($component_id, $profile, $cmdi_tree)
     {
         $id = implode('_', $cmdi_tree);
-        $label_field_name = 'cmdi_new_template_label_' . $id;
+        $label_field_name = 'cmdi_new_preset_label_' . $id;
 
         $fields = [];
 
-        $fields['load_template'] = static::buildLoadTemplateElement($profile, $component_id);
-        $fields['load_template']['#cmdi_tree'] = $cmdi_tree;
+        $fields['load_preset'] = static::buildLoadPresetElement($profile, $component_id);
+        $fields['load_preset']['#cmdi_tree'] = $cmdi_tree;
 
         /*         $fields['new_template'] = [
 
@@ -54,49 +54,49 @@ class CmdiTemplateBuilder
         return $fields;
     }
 
-    public static function buildLoadTemplateElement($profile, $component_id)
+    public static function buildLoadPresetElement($profile, $component_id)
     {
-        $available_templates = \CmdiTemplateData::getAvailableTemplates($profile, $component_id);
+        $available_presets = \CmdiPresetData::getAvailablePresets($profile, $component_id);
 
-        if (count($available_templates) === 0) {
-            return static::noTemplatesFound();
+        if (count($available_presets) === 0) {
+            return static::noPresetsFound();
         }
 
         return [
 
             '#type' => 'select',
-            '#options' => $available_templates,
+            '#options' => $available_presets,
             '#attributes' => [
                 'class' => ['hide'],
-                'data-role' => 'flat-cmdi-template-loadable-' . $component_id,
+                'data-role' => 'flat-cmdi-presets-loadable-' . $component_id,
             ],
             '#component_id' => $component_id,
             '#ajax' => [
 
-                'callback' => 'flat_cmdi_templates_ajax_load_callback',
+                'callback' => 'flat_cmdi_presets_ajax_load_callback',
                 'method' => 'replace',
                 'effect' => 'fade',
-                'wrapper' => 'template-form',
+                'wrapper' => 'template-form', // check if name is correct
             ],
         ];
     }
 
-    public static function buildTemplateBlock($element, FormStateInterface $form_state)
+    public static function buildPresetBlock($element, FormStateInterface $form_state)
     {
-        if (!isset($element['#cmdi_template_fields']) || count($element['#cmdi_template_fields']) === 0) {
+        if (!isset($element['#cmdi_preset_fields']) || count($element['#cmdi_preset_fields']) === 0) {
             return null;
         }
 
-        $fields = $element['#cmdi_template_fields'];
+        $fields = $element['#cmdi_preset_fields'];
         $block = [];
 
         foreach ($fields as $field) {
 
-            if (isset($element[$field]['#cmdi_template_fields'])) {
+            if (isset($element[$field]['#cmdi_preset_fields'])) {
 
-                if (count($element[$field]['#cmdi_template_fields']) > 0) {
+                if (count($element[$field]['#cmdi_preset_fields']) > 0) {
 
-                    $block[$field] = static::buildTemplateBlock($element[$field], $form_state);
+                    $block[$field] = static::buildPresetBlock($element[$field], $form_state);
                     $input = static::getElementInput($element[$field], $form_state);
 
                     if (false === is_array($input)) {
@@ -111,7 +111,7 @@ class CmdiTemplateBuilder
             }
         }
 
-        $block['#cmdi_template_fields'] = $fields;
+        $block['#cmdi_preset_fields'] = $fields;
         return $block;
     }
 
@@ -125,10 +125,10 @@ class CmdiTemplateBuilder
         }, $form_state->getUserInput());
     }
 
-    private static function noTemplatesFound()
+    private static function noPresetsFound()
     {
         return [
-            # no templates found
+            # no presets found
         ];
     }
 }

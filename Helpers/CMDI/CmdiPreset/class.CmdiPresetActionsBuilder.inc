@@ -2,12 +2,12 @@
 
 use Drupal\Core\Url;
 
-class CmdiActionsBuilder
+class CmdiPresetActionsBuilder
 {
   public static function build($profile, $component_id, $cmdi_tree, $description)
   {
     $cmdi_id = implode('_', $cmdi_tree);
-    $available_templates = \CmdiTemplateData::getAvailableTemplates($profile, $component_id);
+    $available_templates = \CmdiPresetData::getAvailablePresets($profile, $component_id);
 
     $url = Url::fromRoute('flat_deposit.cmdi_save');
     $path = $url->toString();
@@ -25,8 +25,8 @@ class CmdiActionsBuilder
         'profile' => $profile,
         'component_id' => $component_id,
         'url' => $path,
-        'label_name' => 'cmdi_new_template_label_' . $cmdi_id,
-        'save_name' => 'save_cmdi_template_' . $cmdi_id,
+        'label_name' => 'cmdi_new_preset_label_' . $cmdi_id,
+        'save_name' => 'save_cmdi_preset_' . $cmdi_id,
       ]),
     ];
     // @FIXME

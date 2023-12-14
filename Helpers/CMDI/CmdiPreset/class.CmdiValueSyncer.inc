@@ -10,7 +10,6 @@ use Drupal\Core\Form\FormStateInterface;
  * but ajax_handler *is* called, so we can sync the form data
  *
  * @author  Ibrahim Abdullah <ibrahim.abdullah@mpi.nl>
- * @package FLAT CMDI Templates
  */
 class CmdiValueSyncer
 {
@@ -48,7 +47,6 @@ class CmdiValueSyncer
 
                 $innerelements = &$elements[$field];
                 static::recursiveExtraction($innerinput, $innerelements);
-
             } else {
 
                 // found value of field

@@ -56,7 +56,7 @@ class BundleManageResourcesBlockForm extends FormBase
                     $options[$id]['filename'] = $file;
                 }
 
-/*                 $form['flat_bundle_manage_resources'] = [
+                /*                 $form['flat_bundle_manage_resources'] = [
 
                     //'#theme' => 'flat_bundle_manage_resources',
                     '#type' => 'table',
@@ -80,7 +80,7 @@ class BundleManageResourcesBlockForm extends FormBase
                     // submission.
                     '#tree' => TRUE,
                 ];
-                
+
                 foreach ($files as $file) {
 
                     // using md5 on the filename to differentiate the resources
@@ -92,18 +92,17 @@ class BundleManageResourcesBlockForm extends FormBase
                         '#default_value' => in_array($id, $marked),
                     ]; */
 
-                    $form['flat_bundle_manage_resources'][$id]['filename']['#markup'] = 
-                    '<span>' . $file . '</span><input type="hidden" name="flat_bundle_manage_resources[' . $id . '][filename]" value="';
-                
+                    $form['flat_bundle_manage_resources'][$id]['filename']['#markup'] =
+                        '<span>' . $file . '</span><input type="hidden" name="flat_bundle_manage_resources[' . $id . '][filename]" value="';
                 }
 
-                $dirname = basename($location);
+                $dirname = basename($location, $suffix ?? '');
 
                 $form['flat_bundle_manage_resources']['#prefix'] = '<h2>Files in folder <i>"' . $dirname . '"</i> to be added to this bundle:</h2>';
 
 
                 // normalizing currently saved metadata, null, empty str will be marked as empty array
-/*                 $marked = $node->get('flat_encrypted_resources')->value;
+                /*                 $marked = $node->get('flat_encrypted_resources')->value;
                 $marked = empty($marked) ? [] : explode(',', $marked);
  */
 

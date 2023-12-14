@@ -1,6 +1,6 @@
 <?php
 
-class CmdiTemplateData
+class CmdiPresetData
 {
     /**
      * @var $data cache of data
@@ -12,12 +12,12 @@ class CmdiTemplateData
         static::$data = null;
     }
 
-    public static function getAvailableTemplates($profile, $component_id)
+    public static function getAvailablePresets($profile, $component_id)
     {
         if (null === static::$data) {
 
             $user = \Drupal::currentUser();
-            static::$data = \CmdiTemplateDb::all($profile, $user->id());
+            static::$data = \CmdiPresetDb::all($profile, $user->id());
         }
 
         $options = [];

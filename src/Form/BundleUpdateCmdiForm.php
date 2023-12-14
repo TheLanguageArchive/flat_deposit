@@ -116,14 +116,14 @@ class BundleUpdateCmdiForm extends FormBase
     //********************************************************************
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
 
-    // load template if selected
-    CmdiTemplateManager::load($form_state);
+    // load preset if selected
+    CmdiPresetManager::load($form_state);
 
     // adding modal component to form
-    $form['flat_modal'] = CmdiTemplateManager::modal();
+    $form['flat_modal'] = CmdiPresetManager::modal();
 
-    // adding save cmdi template feature
-    $saved = CmdiTemplateManager::save($form_state);
+    // adding save cmdi preset feature
+    $saved = CmdiPresetManager::save($form_state);
 
     $availableFormTemplates = FormBuilder::getAvailableTemplates('flat_bundle');
 
