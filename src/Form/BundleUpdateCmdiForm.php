@@ -117,19 +117,19 @@ class BundleUpdateCmdiForm extends FormBase
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
 
     // load preset if selected
-    CmdiPresetManager::load($form_state);
+    \CmdiPresetManager::load($form_state);
 
     // adding modal component to form
-    $form['flat_modal'] = CmdiPresetManager::modal();
+    $form['flat_modal'] = \CmdiPresetManager::modal();
 
     // adding save cmdi preset feature
-    $saved = CmdiPresetManager::save($form_state);
+    $saved = \CmdiPresetManager::save($form_state);
 
-    $availableFormTemplates = FormBuilder::getAvailableTemplates('flat_bundle');
+    $availableFormTemplates = \FormBuilder::getAvailableTemplates('flat_bundle');
 
     if (array_key_exists($profile, $availableFormTemplates)) {
       // Load form builder app
-      $formBuilder = new FormBuilder($form_state->getBuildInfo());
+      $formBuilder = new \FormBuilder($form_state->getBuildInfo());
 
       // count button presses per field
       $formBuilder->aggregatePressedButtons($form_state);

@@ -60,3 +60,8 @@ div.card-header div.actions .dropdown .dropdown-menu {
   left: auto;
   padding: 0;
 }
+
+/* drupal bootstrap barrio does not have this class, we need it to hide certain form elements */
+.hide {
+  display: none !important;
+}

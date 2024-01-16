@@ -172,10 +172,9 @@ class FormField
 
                 $actions_description = "Save as preset";
 
-                // $formField['#flat_cmdi_metadata'] = ['component_id' => $component_id, 'profile' => $this->cmdiProfile, 'tree' => $this->cmdiTree];
-                $formField['#presets'] = CmdiPresetManager::build($component_id, $this->cmdiProfile, $this->cmdiTree);
-                //$formField['#panel_actions'] = CmdiTemplateManager::buildActions($this->cmdiProfile, $component_id, $this->cmdiTree);
+                $formField['flat_cmdi_presets'] = CmdiPresetManager::build($component_id, $this->cmdiProfile, $this->cmdiTree);
                 $formField['#actions'] = CmdiPresetManager::buildActions($this->cmdiProfile, $component_id, $this->cmdiTree, $actions_description);
+
                 break;
 
             case 'container':

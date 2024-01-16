@@ -131,20 +131,20 @@
         var cmdi_id = button.data('cmdi-id');
 
         modal.modal('hide');
-        $('button[name="save_cmdi_template_' + cmdi_id + '"]').trigger('saving_' + cmdi_id);
+        $('button[name="save_cmdi_preset_' + cmdi_id + '"]').trigger('saving_' + cmdi_id);
       });
 
-      $('body').on('click', '[data-role="delete-flat-cmdi-template"]', function (event) {
+      $('body').on('click', '[data-role="delete-flat-cmdi-preset"]', function (event) {
 
         event.preventDefault();
 
         var modal = $('[data-role="flat-modal"]');
         var content = $('[data-role="flat-modal-content"]');
         var button = $(this);
-        var id = button.data('cmdi-template-id');
+        var id = button.data('cmdi-preset-id');
 
         content.html(settings.flat_modal_confirm_delete);
-        $('[data-role="confirm-delete-flat-modal"]').data('cmdi-template-id', id);
+        $('[data-role="confirm-delete-flat-modal"]').data('cmdi-preset-id', id);
 
         if (false === isModalOpen) {
           modal.modal('show');
@@ -158,8 +158,8 @@
         var modal = $('[data-role="flat-modal"]');
         var content = $('[data-role="flat-modal-content"]');
         var button = $(this);
-        var id = button.data('cmdi-template-id');
-        var url = button.data('cmdi-template-delete-url');
+        var id = button.data('cmdi-preset-id');
+        var url = button.data('cmdi-preset-delete-url');
 
         content.html(settings.flat_modal_loader);
 
@@ -187,7 +187,7 @@
 
           if (result && result.type === 'deleted') {
 
-            var element = $('[data-role="available-template-' + id + '"]');
+            var element = $('[data-role="available-preset-' + id + '"]');
             var total = element.parent().children('li').length;
             var block = element.parent().parent(); // dropdown div of load action
 
@@ -212,15 +212,15 @@
         });
       });
 
-      $('body').on('click', '[data-role="load-flat-cmdi-template"]', function (event) {
+      $('body').on('click', '[data-role="load-flat-cmdi-preset"]', function (event) {
 
         event.preventDefault();
 
         var el = $(this);
         var component_id = el.data('component-id');
-        var cmdi_template_id = el.data('cmdi-template-id');
+        var cmdi_preset_id = el.data('cmdi-preset-id');
 
-        $('[data-role="flat-cmdi-template-loadable-' + component_id + '"]').val(cmdi_template_id).change();
+        $('[data-role="flat-cmdi-preset-loadable-' + component_id + '"]').val(cmdi_preset_id).change();
       });
     }
   };

@@ -34,7 +34,10 @@ class CmdiPresetSaver
      */
     public function isSubmitted()
     {
-        return $this->form_state->has(['triggering_element', '#ajax', 'callback']) && $this->form_state->get(['triggering_element', '#ajax', 'callback']) === 'flat_cmdi_presets_ajax_save_callback';
+        $triggeringElement = $this->form_state->getTriggeringElement() ?? [];
+        $ajaxCallback = $triggeringElement['#ajax']['callback'] ?? '';
+
+        return isset($triggeringElement['#ajax']) && $ajaxCallback === 'flat_cmdi_presets_ajax_save_callback';
     }
 
     /**
@@ -44,20 +47,22 @@ class CmdiPresetSaver
      */
     public function getProfile()
     {
-        if ($this->form_state->has(['complete form', 'select_profile_name', '#value'])) {
+        $complete_form = $this->form_state->getCompleteForm() ?? [];
+
+        if (isset($complete_form['select_profile_name'])) {
 
             // update_collection.inc does not have the trigger field
             // using this
-            return $this->form_state->get(['complete form', 'select_profile_name', '#value']);
+            return $complete_form['select_profile_name']['#value'];
         }
 
-        if (!$this->form_state->has(['complete form', 'trigger', 'select_profile_name', '#value'])) {
+        if (isset($complete_form['trigger']['select_profile_name'])) {
 
-            // trigger was not found
-            return null;
+            return $complete_form['trigger']['select_profile_name']['#value'];
         }
 
-        return $this->form_state->get(['complete form', 'trigger', 'select_profile_name', '#value']);
+        // no profile found
+        return null;
     }
 
     /**
@@ -91,10 +96,9 @@ class CmdiPresetSaver
     public function getLabel()
     {
         $triggeringElement = $this->form_state->getTriggeringElement() ?? [];
-        return $this->form_state->getUserInput([
-            'input',
-            $triggeringElement['#label_field_name']
-        ]);
+        $userInput = $this->form_state->getUserInput();
+        $label = $userInput[$triggeringElement['#label_field_name']] ?? '';
+        return $label;
     }
 
     /**
@@ -119,10 +123,17 @@ class CmdiPresetSaver
 
         // getting form state for tree
         $input = $this->form_state->getUserInput() ?? [];
-        $state = \Drupal\Component\Utility\NestedArray::getValue($input['template_container']['elements'], $tree);
+        if (isset($input['template_container']['elements'])) {
+            $state = \Drupal\Component\Utility\NestedArray::getValue($input['template_container']['elements'], $tree);
+            // removing all occurences of flat_cmdi_presets from form state for tree
+            $state = drupal_array_unset_recursive($state, 'flat_cmdi_presets');
+        } else {
+            $state = [];
+        }
+        //$state = \Drupal\Component\Utility\NestedArray::getValue($input['template_container']['elements'], $tree);
 
         // removing all occurences of flat_cmdi_presets from form state for tree
-        $state = drupal_array_unset_recursive($state, 'flat_cmdi_presets');
+        //$state = drupal_array_unset_recursive($state, 'flat_cmdi_presets');
 
         // removing the last item from tree, which is the position in the current form
         // this is necessary so later this preset can be loaded in any position
@@ -143,11 +154,15 @@ class CmdiPresetSaver
      */
     public function save()
     {
+
+
         if (false === $this->isSubmitted()) {
             return false;
         }
 
         $label = $this->getLabel();
+
+        ddm($label);
 
         if (empty($label)) {
 

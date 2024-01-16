@@ -101,7 +101,7 @@ function flat_deposit_theme($existing, $type, $theme, $path)
             'variables' => [
                 'cmdi_id' => null,
                 'component_id' => null,
-                'available_templates' => null,
+                'available_presets' => null,
                 'cmdi_data' => null,
                 'description' => null,
             ],

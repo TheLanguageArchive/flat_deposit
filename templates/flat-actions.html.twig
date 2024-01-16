@@ -1,29 +1,31 @@
 {% if available_presets|length > 0 %}
-<div class="dropdown">
-  <button class="btn btn-secondary dropdown-toggle" type="button" title="Load preset" id="load-menu-<?php echo $component_id; ?>" data-toggle="dropdown">
-    <i class="fas fa-list-alt"></i>
-  </button>
-  <ul class="dropdown-menu pull-right" aria-labelledby="load-menu-{{ component_id }}">
-    {% for cmdi_preset_id, available_preset in available_presets %}
-    <li data-role="available-preset-{{ cmdi_preset_id }}">
-      <a class="flat-cmdi-preset-select" data-role="load-flat-cmdi-preset" data-component-id="{{ component_id }}" data-cmdi-preset-id="{{ cmdi_preset_id }}" href="#">{{ available_presets }}</a>
-      <a class="flat-cmdi-preset-delete" title="Delete preset" data-role="delete-flat-cmdi-preset" data-cmdi-preset-id="{{ cmdi_preset_id }}" href="#"><i class="fas fa-trash-alt"></i></a>
-    </li>
-    {% endfor %}
-  </ul>
-</div>
+	<div class="dropdown">
+		<button class="btn btn-secondary dropdown-toggle" type="button" title="Load preset" id="load-menu-<?php echo $component_id; ?>" data-bs-toggle="dropdown">
+			<i class="fas fa-list-alt"></i>
+		</button>
+		<ul class="dropdown-menu pull-right" aria-labelledby="load-menu-{{ component_id }}">
+			{% for cmdi_preset_id, available_preset in available_presets %}
+				<li data-role="available-preset-{{ cmdi_preset_id }}">
+					<a class="flat-cmdi-preset-select" data-role="load-flat-cmdi-preset" data-component-id="{{ component_id }}" data-cmdi-preset-id="{{ cmdi_preset_id }}" href="#">{{ available_presets }}</a>
+					<a class="flat-cmdi-preset-delete" title="Delete preset" data-role="delete-flat-cmdi-preset" data-cmdi-preset-id="{{ cmdi_preset_id }}" href="#">
+						<i class="fas fa-trash-alt"></i>
+					</a>
+				</li>
+			{% endfor %}
+		</ul>
+	</div>
 {% endif %}
 <div class="dropdown">
-  <button class="btn btn-secondary dropdown-toggle" type="button" title="Save preset" id="save-menu-{{ component_id }}" data-toggle="dropdown">
-    <i class="fas fa-save"></i>
-  </button>
-  <div class="dropdown-menu pull-right" aria-labelledby="save-menu-{{ component_id }}">
-    <div class="flat-dropdown-save">
-      <div class="description card-header">{{ description }}</div>
-      <div class="fieldset-wrapper">
-        <input type="text" class="form-control" placeholder="Label" data-role="cmdi-label-{{ cmdi_id }}" data-cmdi-enter="true" />
-        <button type="button" class="btn btn-success" data-role="open-flat-modal" data-cmdi-data='{{ cmdi_data }}'>Save</button>
-      </div>
-    </div>
-  </div>
+	<button class="btn btn-secondary dropdown-toggle" type="button" title="Save preset" id="save-menu-{{ component_id }}" data-bs-toggle="dropdown">
+		<i class="fas fa-save"></i>
+	</button>
+	<div class="dropdown-menu pull-right" aria-labelledby="save-menu-{{ component_id }}">
+		<div class="flat-dropdown-save">
+			<div class="description card-header">{{ description }}</div>
+			<div class="fieldset-wrapper">
+				<input type="text" class="form-control" placeholder="Label" data-role="cmdi-label-{{ cmdi_id }}" data-cmdi-enter="true"/>
+				<button type="button" class="btn btn-success" data-role="open-flat-modal" data-cmdi-data='{{ cmdi_data }}'>Save</button>
+			</div>
+		</div>
+	</div>
 </div>

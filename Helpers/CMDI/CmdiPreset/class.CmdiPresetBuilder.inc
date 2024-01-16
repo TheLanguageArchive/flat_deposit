@@ -14,7 +14,11 @@ class CmdiPresetBuilder
         $fields['load_preset'] = static::buildLoadPresetElement($profile, $component_id);
         $fields['load_preset']['#cmdi_tree'] = $cmdi_tree;
 
-        /*         $fields['new_template'] = [
+        $fields['save_preset'] = [
+
+            // these hidden fields are the target of the jQuery post request in flat-modal.js
+            // that request is triggered by a different "save" button that is created in flat-actions.html.twig
+            // the label field gets its value from a different label field in flat-modal.html.twig
 
             'label' => [
 
@@ -30,7 +34,7 @@ class CmdiPresetBuilder
             'save' => [
 
                 '#type' => 'button',
-                '#name' => 'save_cmdi_template_' . $id,
+                '#name' => 'save_cmdi_preset_' . $id,
                 '#value' => 'Save as preset',
                 '#flat_ignore_button' => true,
                 '#cmdi_tree' => $cmdi_tree,
@@ -42,14 +46,14 @@ class CmdiPresetBuilder
                 ],
                 '#ajax' => [
 
-                    'callback' => 'flat_cmdi_templates_ajax_save_callback',
+                    'callback' => 'flat_cmdi_presets_ajax_save_callback',
                     'method' => 'replace',
                     'effect' => 'fade',
                     'wrapper' => 'template-form',
                     'event' => 'saving_' . $id,
                 ],
             ],
-        ]; */
+        ];
 
         return $fields;
     }
@@ -76,7 +80,7 @@ class CmdiPresetBuilder
                 'callback' => 'flat_cmdi_presets_ajax_load_callback',
                 'method' => 'replace',
                 'effect' => 'fade',
-                'wrapper' => 'template-form', // check if name is correct
+                'wrapper' => 'template-form',
             ],
         ];
     }

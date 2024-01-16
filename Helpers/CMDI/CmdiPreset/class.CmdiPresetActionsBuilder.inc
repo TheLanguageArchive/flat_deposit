@@ -7,7 +7,7 @@ class CmdiPresetActionsBuilder
   public static function build($profile, $component_id, $cmdi_tree, $description)
   {
     $cmdi_id = implode('_', $cmdi_tree);
-    $available_templates = \CmdiPresetData::getAvailablePresets($profile, $component_id);
+    $available_presets = \CmdiPresetData::getAvailablePresets($profile, $component_id);
 
     $url = Url::fromRoute('flat_deposit.cmdi_save');
     $path = $url->toString();
@@ -17,7 +17,7 @@ class CmdiPresetActionsBuilder
       '#theme' => 'flat_actions',
       '#cmdi_id' => $cmdi_id,
       '#component_id' => $component_id,
-      '#available_templates' => $available_templates,
+      '#available_presets' => $available_presets,
       '#description' => $description,
       '#cmdi_data' => json_encode([
 

@@ -39,7 +39,7 @@ class CmdiPresetDb
     }
 
     /**
-     * check if label for component presetalready exists
+     * check if label for component preset already exists
      *
      * @param string $profile
      * @param string $label
@@ -200,10 +200,11 @@ class CmdiPresetDb
      */
     public static function error(Exception $e)
     {
-        if ($e->errorInfo[0] == '42P01') {
+        \Drupal::messenger()->addError($e->getMessage());
+        /*         if ($e->errorInfo[0] == '42P01') {
             \Drupal::messenger()->addError(t('Flat Cmdi Presets table not found. Try running <a href="@update_url">update.php</a>.', ['@update_url' => \Drupal\Core\Url::fromRoute('system.db_update')]));
         } else {
             \Drupal::messenger()->addError($e->getMessage());
-        }
+        } */
     }
 }
