@@ -8,6 +8,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\node\Entity\Node;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\Core\File\FileSystemInterface;
 
 /**
  * Created by PhpStorm.
@@ -144,7 +145,7 @@ function flat_workspaces_field_create_definitions_alter(array &$definitions)
  * create form elements for selecting a workspace folder as the source of the files to be added to the bundle
  *
  */
-function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInterface $form_state)
+function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInterface &$form_state)
 {
     // hide flat_nc_path, in case the nextcloud module was installed but is not active
     if (isset($form['flat_nc_path'])) {
@@ -152,8 +153,6 @@ function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInter
     }
 
     //$form['flat_ws_path']['widget'][0]['#access'] = true;
-
-    $form['#validate'][] = 'flat_workspaces_flat_bundle_node_form_validate';
 
     ///////////
     // Add local project directory selection form container element
@@ -185,7 +184,8 @@ function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInter
         // }
 
         // add original path to values if node is edited and thus original path is already set.
-        $flat_original_path = $node->flat_original_path->value;
+        $flat_original_path = $node->get('flat_original_path')->value;
+
         if ($flat_original_path) {
             $is_local_original_path = (strpos($flat_original_path, 'local://') === 0);
         }
@@ -265,11 +265,7 @@ function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInter
         }
 
         // alter default value of the flat_ws_path field to attach value of current directory to flat_bundle node
-        // TODO: check which one of these is really necessary
-        $form['flat_ws_path']['widget'][0]['value']['#type'] = 'hidden';
-        $form['flat_ws_path']['widget'][0]['value']['#default_value'] = $current;
-        $form_state->setValue(['flat_ws_path', 0, 'value'], $current);
-
+        $form_state->set(['flat_ws_path', 'widget', 0, 'value', '#default_value'], $current);
 
         // print result to screen
         $form['workspace_navigation']['field']['current_directory']['#markup'] = 'Currently selected folder: <strong><br/>' .
@@ -310,26 +306,36 @@ function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInter
             }
         }
 
+
         // add custom submit handler and place it first
         $form['actions']['submit']['#submit'][] = 'flat_workspaces_form_node_flat_bundle_form_submit';
         array_unshift($form['actions']['submit']['#submit'], 'flat_workspaces_form_node_flat_bundle_form_submit');
+
+        // add custom validation
+        $form['#validate'][] = 'flat_workspaces_flat_bundle_node_form_validate';
     }
 }
 
 
-function flat_workspaces_flat_bundle_node_form_validate($form, FormStateInterface $form_state)
+function flat_workspaces_flat_bundle_node_form_validate(&$form, FormStateInterface &$form_state)
 {
 
     // Validate that currently selected folder has no subfolders, contains no more than configured maximum files, contains no files that are larger than configured maximum size, contains files with valid names and allowed extensions.
-    if ($form_state->getValues(['flat_source', 0, 'value']) == 'local') {
-        $dir = $form_state->hasValue(['flat_ws_path', 0, 'value']) ? $form_state->getValues(['flat_ws_path', 0, 'value']) : FALSE;
-        if (!$dir or !file_exists(\Drupal::service('file_system')->realpath($dir))) {
-            $form_state->setErrorByName('next_directories', 'Please select a valid workspace folder.');
-            return $form;
-        }
+    if ($form_state->getValue(['flat_source', 0, 'value']) == 'local') {
+        // Get ws path value.
+        $dir = $form_state->hasValue(['flat_ws_path', 0, 'value']) ? $form_state->getValue(['flat_ws_path', 0, 'value']) : FALSE;
+        $path = $form['flat_ws_path']['widget'][0]['value']['#default_value'];
+        //if (!$dir or !file_exists(\Drupal::service('file_system')->realpath($dir))) {
+        //    $form_state->setErrorByName('next_directories', 'Please select a valid workspace folder.');
+        //    return $form;
+        //}
         if ($dir) {
             $errors = array();
-            $files = file_scan_directory($dir, '/.*/', array('min_depth' => 0));
+            $files = [];
+
+            if (is_dir($dir)) {
+                $files = \Drupal::service('file_system')->scanDirectory($dir, '/.*/', array('min_depth' => 0));
+            }
             $ingest_service_variables = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service');
             $max_files = $ingest_service_variables['max_ingest_files'];
             $max_size = $ingest_service_variables['max_file_size'];
@@ -339,7 +345,7 @@ function flat_workspaces_flat_bundle_node_form_validate($form, FormStateInterfac
             $max_path_length = 4000; // db entries can be 5000 chars but there seems to be some overhead
             if (strlen($dir) > $max_path_length) {
 
-                $form_state->setErrorByName('next_directories', 'The path to reach the specified workspace folder is too long. Move the folder up in the hierearchy to reduce the total path length.');
+                $form_state->setErrorByName('next_directories', 'The path to reach the specified workspace folder is too long. Move the folder up in the hierarchy to reduce the total path length.');
             }
             if (file_exists(\Drupal::service('file_system')->realpath($dir)) and !empty(glob(\Drupal::service('file_system')->realpath($dir) . '/*', GLOB_ONLYDIR))) {
                 $form_state->setErrorByName('next_directories', 'The selected workspace folder contains subfolders.');
@@ -368,15 +374,15 @@ function flat_workspaces_flat_bundle_node_form_validate($form, FormStateInterfac
             }
             if (!empty($max_file_size_exceeded)) {
                 $max_file_size_exceeded_list = implode(", ", $max_file_size_exceeded);
-                $errors[] = t('The selected workspace folder contains files that are larger than the maximum allowed file size of !max_size GB: !max_file_size_exceeded_list.', ['!max_size' => $max_size, '!max_file_size_exceeded_list' => $max_file_size_exceeded_list]);
+                $errors[] = t('The selected workspace folder contains files that are larger than the maximum allowed file size of @max_size GB: @max_file_size_exceeded_list.', ['@max_size' => $max_size, '@max_file_size_exceeded_list' => $max_file_size_exceeded_list]);
             }
             if (!empty($invalid_file_names)) {
                 $invalid_file_names_list = implode(", ", $invalid_file_names);
-                $errors[] = t('The selected workspace folder contains files that have disallowed characters in their name: !invalid_file_names_list.', ['!invalid_file_names_list' => $invalid_file_names_list]);
+                $errors[] = t('The selected workspace folder contains files that have disallowed characters in their name: @invalid_file_names_list.', ['@invalid_file_names_list' => $invalid_file_names_list]);
             }
             if (!empty($invalid_file_extensions)) {
                 $invalid_file_extensions_list = implode(", ", $invalid_file_extensions);
-                $errors[] = t('The selected workspace folder contains files that have a disallowed file extension: !invalid_file_extensions_list. See the deposit manual for allowed file types and extensions.', ['!invalid_file_extensions_list' => $invalid_file_extensions_list]);
+                $errors[] = t('The selected workspace folder contains files that have a disallowed file extension: @invalid_file_extensions_list. See the deposit manual for allowed file types and extensions.', ['@invalid_file_extensions_list' => $invalid_file_extensions_list]);
             }
             if (!empty($errors)) {
                 $form_state->setErrorByName('next_directories', implode('<br>', $errors));
@@ -384,27 +390,21 @@ function flat_workspaces_flat_bundle_node_form_validate($form, FormStateInterfac
             }
         }
 
+        // check if selected directory is already in use for another bundle
         $query = \Drupal::entityQuery('node')
             ->accessCheck(TRUE)
             ->condition('type', 'flat_bundle')
-            //->condition('uid', $this->info['loggedin_user'])
             ->condition("flat_original_path.value", $dir, "=");
-
-        // $query = new EntityFieldQuery();
-        // $query->entityCondition('entity_type', 'node')
-        //     ->entityCondition('bundle', 'flat_bundle')
-        //     ->fieldCondition('flat_original_path', 'value', $dir, '=')
-        // ;
 
         $result = $query->execute();
 
-        if (empty(!$result)) {
-            // if result is current node itself (when modifying it), that is fine
-            $nid = array_keys($result['node']);
-            $nid = (string)$nid[0];
+        if (!empty($result)) {
+            $result = array_values($result);
 
-            if ($nid !== $form_state->getValues(['nid'])) {
+            $nid = $form_state->getValue(['nid']);
 
+            // if result is current node itself (when modifying it), that is fine, otherwise return error
+            if (!empty($result[0]) and (string)$result[0] != $nid) {
                 $form_state->setErrorByName('next_directories', 'The selected workspace folder is already in use for a different bundle.');
             }
         }
@@ -441,6 +441,7 @@ function flat_workspaces_flat_bundle_node_form_validate($form, FormStateInterfac
 function flat_workspaces_node_presave(EntityInterface $node)
 {
     if ($node instanceof \Drupal\node\NodeInterface) {
+
         if ($node->bundle() === 'flat_bundle') {
             $flat_source = $node->get('flat_source')->value;
             if ($flat_source == 'local') {
@@ -452,9 +453,9 @@ function flat_workspaces_node_presave(EntityInterface $node)
     }
 }
 
+
 function flat_workspaces_form_node_flat_bundle_form_submit(array $form, \Drupal\Core\Form\FormStateInterface $form_state)
 {
     $ws_path = $form_state->getValue(['chosen_ws']);
-    $form['flat_ws_path']['widget'][0]['value']['#default_value'] = $ws_path;
     $form_state->setValue('flat_ws_path', [['value' => $ws_path]]);
 }

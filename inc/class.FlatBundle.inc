@@ -81,7 +81,7 @@ class FlatBundle
     }
 
     /**
-     * Validates if new collection already has a bundle or collection with the same name (i.e. fedora object label).
+     * Validates if bundle or collection with the same name already exists for the parent
      *
      * @param $node
      */
@@ -101,8 +101,8 @@ class FlatBundle
         // $parent_wrapper = entity_metadata_wrapper('node', $parent_node);
         $parent_fid = $parent_node->flat_fid->value;
 
-        module_load_include('inc', 'flat_deposit', '/inc/class.FlatTuque');
-        $values = \FlatTuque::getChildrenLabels($parent_fid);
+        module_load_include('inc', 'flat_deposit', '/inc/class.FlatUtils');
+        $values = \FlatUtils::getChildrenTitles($parent_fid);
 
         if (in_array(strtoupper($title), array_unique(array_map('strtoupper', $values)))) {
             throw new \FlatBundleException("A collection or bundle with almost identical name already exists in archive");
@@ -153,7 +153,7 @@ class FlatBundle
 
         if ($data_type == 'metadata') {
             $base = ($move_direction == 'freeze') ? 'freeze://metadata' : "metadata://";
-/*
+            /*
             $new_location = "$base/$tail/";
 
             $new_location .= 'record.cmdi';
@@ -170,7 +170,6 @@ class FlatBundle
                 $new_location = "$base/$tail/";
                 */
                 $new_location = $base . '/' . $node->id();
-
             } else {
 
                 $source = $node->flat_source->value;
@@ -179,7 +178,6 @@ class FlatBundle
 
                     $original_location = $node->flat_original_path->value;
                     $new_location = $original_location;
-
                 } else {
 
                     // if unfrozen flat_bundle with local MPI_workspace resources is frozen move to freeze location
@@ -234,7 +232,7 @@ class FlatBundle
 
             if (!file_exists($collection_dir)) {
 
-                $check = drupal_mkdir($collection_dir, NULL, TRUE);
+                $check = \FileSystemInterface::mkdir($collection_dir, NULL, TRUE);
 
                 if (!$check) {
                     throw new \FlatBundleException("Unable to create folder at target original_location");
@@ -292,7 +290,6 @@ class FlatBundle
             if (self::is_dir_empty($original_metadata_uri)) {
                 \Drupal::service('file_system')->rmdir($original_metadata_uri);
             }
-
         } else {
 
             $moved = \Drupal::service('file_system')
@@ -310,7 +307,7 @@ class FlatBundle
             $node->flat_location->value = $target_location;
             $node->save();
         }
-            return $target_location;
+        return $target_location;
     }
 
 

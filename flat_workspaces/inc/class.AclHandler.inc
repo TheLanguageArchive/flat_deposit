@@ -246,8 +246,6 @@ class AclHandler
 
     public function checkReadAccess($id)
     {
-        $ddumper = \Drupal::service('devel.dumper');
-        $ddumper->debug($id, NULL, 'default');
         // Check if id is owner
         if (is_numeric(array_search($id, $this->info['read']['owner']))) {
             return 'ID is owner of file or directory';

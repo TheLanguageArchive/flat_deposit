@@ -11,6 +11,7 @@ namespace Drupal\flat_deposit\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\File\FileSystem;
 
 class BundleManageResourcesBlockForm extends FormBase
 {
@@ -96,7 +97,7 @@ class BundleManageResourcesBlockForm extends FormBase
                         '<span>' . $file . '</span><input type="hidden" name="flat_bundle_manage_resources[' . $id . '][filename]" value="';
                 }
 
-                $dirname = basename($location, $suffix ?? '');
+                $dirname = \Drupal::service('file_system')->basename($location, $suffix ?? '');
 
                 $form['flat_bundle_manage_resources']['#prefix'] = '<h2>Files in folder <i>"' . $dirname . '"</i> to be added to this bundle:</h2>';
 

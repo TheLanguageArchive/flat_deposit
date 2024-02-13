@@ -63,7 +63,7 @@ function flat_bundle_action_form($form, &$form_state)
     $form['actions']['archive_bundle'] = array(
         '#type' => 'submit',
         '#value' => t('Archive bundle'),
-	    '#description' => t('Submit the bundle to be stored in the archive.'),
+        '#description' => t('Submit the bundle to be stored in the archive.'),
         '#disabled' => TRUE,
     );
 
@@ -80,9 +80,9 @@ function flat_bundle_action_form($form, &$form_state)
     );
 
     $form['actions']['note'] = array(
-	'#prefix' => '<div id="form-actions-note">',
-	'#markup' => t('Note: Deleting a bundle will only delete it from your active bundles. In case you are modifying an existing bundle in the archive, clicking "Delete bundle" will leave the original in the archive untouched.'),
-	'#suffix' => '</div><div><br/></div>',
+        '#prefix' => '<div id="form-actions-note">',
+        '#markup' => t('Note: Deleting a bundle will only delete it from your active bundles. In case you are modifying an existing bundle in the archive, clicking "Delete bundle" will leave the original in the archive untouched.'),
+        '#suffix' => '</div><div><br/></div>',
     );
 
     $node = \Drupal::routeMatch()->getParameter();
@@ -94,7 +94,8 @@ function flat_bundle_action_form($form, &$form_state)
 
     $form['values']['origin_url'] = array(
         '#type' => 'value',
-        '#value' => 'node/' . $node->nid);
+        '#value' => 'node/' . $node->nid
+    );
 
     if (user_role_load_by_name('developer')) {
         $form['options']['serial'] = array(
@@ -111,7 +112,8 @@ function flat_bundle_action_form($form, &$form_state)
 
 
 
-function flat_deposit_form_flat_bundle_action_form_alter(&$form, \Drupal\Core\Form\FormStateInterface &$form_state, $form_id){
+function flat_deposit_form_flat_bundle_action_form_alter(&$form, \Drupal\Core\Form\FormStateInterface &$form_state, $form_id)
+{
 
     $node = \Drupal::routeMatch()->getParameter();
     // @FIXME entity_metadata_wrapper fix for drupal 9
@@ -128,65 +130,62 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, \Drupal\Core\Fo
     switch ($status) {
         case 'open': {
 
-            $form['actions']['upload_data']['#access'] = $enable_file_browser;
-            $form['actions']['bundle_image']['#disabled'] = !$enable_file_browser;
-            if (empty($node->flat_cmdi_file)) {
-                $form['actions']['validate_bundle']['#disabled'] = TRUE;
+                $form['actions']['upload_data']['#access'] = $enable_file_browser;
+                $form['actions']['bundle_image']['#disabled'] = !$enable_file_browser;
+                if (empty($node->flat_cmdi_file)) {
+                    $form['actions']['validate_bundle']['#disabled'] = TRUE;
+                } else {
+                    $form['actions']['validate_bundle']['#disabled'] = FALSE;
+                    $form['actions']['validate_bundle']['#attributes']['class'][] = 'btn-success';
+                }
+                $form['actions']['edit_bundle']['#disabled'] = FALSE;
+                $name = 'open_bundle';
+                break;
             }
-            else {
-                $form['actions']['validate_bundle']['#disabled'] = FALSE;
-                $form['actions']['validate_bundle']['#attributes']['class'][] = 'btn-success';
-            }
-            $form['actions']['edit_bundle']['#disabled'] = FALSE;
-            $name = 'open_bundle';
-            break;
-        }
 
         case 'validating': {
-            $name = 'process_bundle';
-            $form['actions']['reopen_bundle']['#disabled'] = FALSE;
-            $form['actions']['edit_metadata']['#disabled'] = TRUE;
-            break;
-        }
+                $name = 'process_bundle';
+                $form['actions']['reopen_bundle']['#disabled'] = FALSE;
+                $form['actions']['edit_metadata']['#disabled'] = TRUE;
+                break;
+            }
 
         case 'failed': {
-            $form['actions']['upload_data']['#access'] = $enable_file_browser;
-            $form['actions']['bundle_image']['#disabled'] = !$enable_file_browser;
-            $form['actions']['validate_bundle']['#disabled'] = FALSE;
-            $form['actions']['edit_bundle']['#disabled'] = FALSE;
-            $form['actions']['edit_metadata']['#disabled'] = FALSE;
-            $name = 'closed_bundle_failed';
-            break;
-        }
+                $form['actions']['upload_data']['#access'] = $enable_file_browser;
+                $form['actions']['bundle_image']['#disabled'] = !$enable_file_browser;
+                $form['actions']['validate_bundle']['#disabled'] = FALSE;
+                $form['actions']['edit_bundle']['#disabled'] = FALSE;
+                $form['actions']['edit_metadata']['#disabled'] = FALSE;
+                $name = 'closed_bundle_failed';
+                break;
+            }
 
         case 'valid': {
-            $form['actions']['archive_bundle']['#disabled'] = FALSE;
-            $form['actions']['reopen_bundle']['#disabled'] = FALSE;
-            $form['actions']['archive_bundle']['#attributes']['class'][] = 'btn-success';
-            $form['actions']['edit_metadata']['#disabled'] = TRUE;
-            $name = 'closed_bundle';
-            break;
-        }
+                $form['actions']['archive_bundle']['#disabled'] = FALSE;
+                $form['actions']['reopen_bundle']['#disabled'] = FALSE;
+                $form['actions']['archive_bundle']['#attributes']['class'][] = 'btn-success';
+                $form['actions']['edit_metadata']['#disabled'] = TRUE;
+                $name = 'closed_bundle';
+                break;
+            }
         case 'processing': {
-            $name = 'process_bundle';
+                $name = 'process_bundle';
 
-            break;
-        }
+                break;
+            }
     }
 
     $form['actions']['bundle_image']['#src'] = drupal_get_path('module', 'flat_deposit') . '/assets/images/' . $name . '.png';
 
     // Activate metadata creation button only if 1) cmdi option is 'new' 2) status is either open or failed and 3) no cmdi has been created
     // If metadata creation button is active (.e.g. if metadata file has been removed), validate button should be disabled.
-    if ($node->flat_cmdi_option->value == 'new' AND ($status == 'open' OR $status == 'failed') AND (empty($node->flat_cmdi_file))) {
+    if ($node->flat_cmdi_option->value == 'new' and ($status == 'open' or $status == 'failed') and (empty($node->flat_cmdi_file))) {
 
         $form['actions']['describe_bundle']['#access'] = TRUE;
         $form['actions']['describe_bundle']['#attributes']['class'][] = 'btn-success';
         $form['actions']['edit_metadata']['#access'] = FALSE;
         $form['actions']['validate_bundle']['#disabled'] = TRUE;
-
     }
-
 }
 
 
@@ -196,19 +195,18 @@ function flat_deposit_form_flat_bundle_action_form_alter(&$form, \Drupal\Core\Fo
  * Validation of opening the bundle data browser
  *
  */
-function flat_bundle_action_form_describe_validate($form, &$form_state){
+function flat_bundle_action_form_describe_validate($form, &$form_state)
+{
 
     $node = $form_state['values']['node'];
     // @FIXME entity_metadata_wrapper fix for drupal 9
     // $wrapper = entity_metadata_wrapper('node', $node);
 
     $parent_nid = $node->flat_parent_nid->value;
-    if ($parent_nid === '0'){
+    if ($parent_nid === '0') {
         $form_state->setErrorByName('describe_bundle', "You need to assign this bundle to a parent collection first before editing the metadata. Go to \"Edit Bundle Properties\" to select a parent collection.");
         return $form;
-
     }
-
 }
 
 /**
@@ -217,16 +215,15 @@ function flat_bundle_action_form_describe_validate($form, &$form_state){
  * Validation of opening the bundle data browser
  *
  */
-function flat_bundle_action_form_reopen_validate($form, &$form_state){
+function flat_bundle_action_form_reopen_validate($form, &$form_state)
+{
 
     $node = $form_state['values']['node'];
     $error = move_node_data($node->nid);
-    if (!empty($error)){
+    if (!empty($error)) {
 
-        $form_state->setErrorByName('reopen', t('Unable to move bundle !what to unfreeze', array('!what'=>$node->nid)));
-
+        $form_state->setErrorByName('reopen', t('Unable to move bundle !what to unfreeze', array('!what' => $node->nid)));
     }
-
 }
 
 
@@ -234,7 +231,8 @@ function flat_bundle_action_form_reopen_validate($form, &$form_state){
 
 
 
-function flat_bundle_action_form_validate_validate($form, &$form_state){
+function flat_bundle_action_form_validate_validate($form, &$form_state)
+{
 
     $node = $form_state['values']['node'];
     $nid = $node->nid;
@@ -252,33 +250,33 @@ function flat_bundle_action_form_validate_validate($form, &$form_state){
     $max_file_size_exceeded = bundle_max_file_size_exceeded($nid);
     $invalid_file_names = bundle_invalid_file_names($nid);
     $invalid_file_extensions = bundle_invalid_file_extensions($nid);
-    $has_new_or_deleted_files = (bundle_new_files($nid) OR bundle_deleted_files($nid));
+    $has_new_or_deleted_files = (bundle_new_files($nid) or bundle_deleted_files($nid));
 
     // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
-$max_number_files = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['max_ingest_files'];
+    // Could not extract the default value because it is either indeterminate, or
+    // not scalar. You'll need to provide a default value in
+    // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+    $max_number_files = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['max_ingest_files'];
     // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
-$max_size = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['max_file_size'];
+    // Could not extract the default value because it is either indeterminate, or
+    // not scalar. You'll need to provide a default value in
+    // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+    $max_size = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['max_file_size'];
 
     // validate that a collection has been selected
-    if ($parent_is_known === false){
+    if ($parent_is_known === false) {
         $form_state->setErrorByName('error', "The bundle has not been assigned to a collection");
         return $form;
     }
 
     // In case no cmdi file exists
-    if ($has_cmdi === false){
+    if ($has_cmdi === false) {
         $form_state->setErrorByName('error', "No metadata file has been specified");
         return $form;
     }
 
     // Quick and dirty Check cmdi valid xml
-    if ($valid_xml === false){
+    if ($valid_xml === false) {
         $form_state->setErrorByName('validate_bundle', t("The CMDI metadata file is not a valid xml file"));
         return $form;
     }
@@ -291,15 +289,14 @@ $max_size = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_s
     */
 
     // Check existence external location
-    if ($file_exists === false){
+    if ($file_exists === false) {
 
-        $form_state->setErrorByName('validate_bundle',t('Location does not exist (:path) ' , array(':path' => $path)));
+        $form_state->setErrorByName('validate_bundle', t('Location does not exist (:path) ', array(':path' => $path)));
         return $form;
-
     }
 
     // Check user permissions
-    if ($user_has_permissions === false){
+    if ($user_has_permissions === false) {
         $form_state->setErrorByName('validate_bundle', t('You do not have the permission to perform this action. Please contact the archive manager.'));
         return $form;
     }
@@ -312,10 +309,9 @@ $max_size = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_s
     }
     if ($md_type == 'import') {
         $has_flat_uri = has_flat_uri($nid);
-        if(!$has_flat_uri) {
+        if (!$has_flat_uri) {
             $files_mismatch = bundle_files_mismatch($nid);
-        }
-        else {
+        } else {
             $files_mismatch = FALSE;
         }
     }
@@ -323,29 +319,29 @@ $max_size = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_s
     $errors = [];
 
     if (!$has_new_or_deleted_files) {
-            $errors[] = t('No new files added and no exising files selected for removal.');
+        $errors[] = t('No new files added and no exising files selected for removal.');
     }
 
-    if ($max_files_exceeded){
-        $errors[] = t('The bundle contains too many files, the maximum is !limit.', array('!limit'=> $max_number_files));
+    if ($max_files_exceeded) {
+        $errors[] = t('The bundle contains too many files, the maximum is !limit.', array('!limit' => $max_number_files));
     }
 
     if ($max_file_size_exceeded) {
-        $max_file_size_exceeded_list = implode (", ", $max_file_size_exceeded);
+        $max_file_size_exceeded_list = implode(", ", $max_file_size_exceeded);
         $errors[] = t('The selected folder contains files that are larger than the maximum allowed file size of !max_size GB: !max_file_size_exceeded_list.', ['!max_size' => $max_size, '!max_file_size_exceeded_list' => $max_file_size_exceeded_list]);
     }
 
     if ($invalid_file_names) {
-        $invalid_filenames_list = implode (", ", $invalid_file_names);
+        $invalid_filenames_list = implode(", ", $invalid_file_names);
         $errors[] = t('The selected folder contains files that have disallowed characters in their name: !invalid_filenames_list.', ['!invalid_filenames_list' => $invalid_filenames_list]);
     }
 
     if ($invalid_file_extensions) {
-        $invalid_file_extensions_list = implode (", ", $invalid_file_extensions);
+        $invalid_file_extensions_list = implode(", ", $invalid_file_extensions);
         $errors[] = t('The selected folder contains files that have a disallowed file extension: !invalid_file_extensions_list. See the deposit manual for allowed file types and extensions.', ['!invalid_file_extensions_list' => $invalid_file_extensions_list]);
     }
 
-    if (isset($has_flat_uri) && $has_flat_uri){
+    if (isset($has_flat_uri) && $has_flat_uri) {
         $errors[] = t('Your uploaded CMDI file contains references to files that are already in the archive. To use this CMDI file for a different set of files, use the "upload CMDI file as template" option, see deposit manual.');
     }
 
@@ -358,7 +354,6 @@ $max_size = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_s
         $form_state->setErrorByName('validate_bundle', implode('<br>', $errors));
         return $form;
     }
-
 }
 
 
@@ -425,9 +420,5 @@ function flat_bundle_action_form_submit($form, &$form_state)
             \Drupal::messenger()->addMessage('Bundle is open and can be modified again');
 
             break;
-
-
     }
-
-
 }

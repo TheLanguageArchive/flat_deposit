@@ -1,6 +1,6 @@
 <?php
 
-module_load_include('php','flat_deposit','Helpers/IngestService/SIP');
+module_load_include('php', 'flat_deposit', 'Helpers/IngestService/SIP');
 
 class IngestFactory
 {
@@ -40,7 +40,7 @@ class IngestFactory
             $this->processLog['generatePolicy'] = $this->factorySIP->generatePolicy();
             $this->processLog['createBag'] = $this->factorySIP->createBag();
             $this->processLog['doSword'] = $this->factorySIP->doSword();
-            $this->processLog['doDoorkeeper'] = $this->factorySIP->doDoorkeeper();
+            //$this->processLog['doDoorkeeper'] = $this->factorySIP->doDoorkeeper();
             $this->processLog['finish'] = $this->factorySIP->finish();
 
             return $this->factorySIP->getFid();

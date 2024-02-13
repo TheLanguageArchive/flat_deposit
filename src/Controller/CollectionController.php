@@ -3,10 +3,13 @@
 namespace Drupal\flat_deposit\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Core\Access\AccessResult;
-use Drupal\node\Entity\Node;
 use Drupal\Core\Session\AccountInterface;
+use Symfony\Component\HttpFoundation\Response;
+use Drupal\search_api\Entity\Index;
+
 
 class CollectionController extends ControllerBase
 {
@@ -60,6 +63,14 @@ class CollectionController extends ControllerBase
         return $form;
     }
 
+    public function getFedoraId()
+    {
+        $mapper = \Drupal::service('islandora.entity_mapper');
+        $path = $mapper->getFedoraPath($entity->uuid());
+
+        return $path;
+    }
+
     public function addCollectionCheckAccess(Node $node, AccountInterface $account)
     {
         $node = \Drupal::routeMatch()->getParameter('node');
@@ -73,6 +84,19 @@ class CollectionController extends ControllerBase
 
     public function activateCollection()
     {
+
+        // Get the current node from the route.
+        $node = \Drupal::routeMatch()->getParameter('node');
+
+        if ($node instanceof Node) {
+            // Get the field values.
+            $parents = $this->getFedoraId();
+
+            return new Response(
+                var_dump($parents),
+                Response::HTTP_OK
+            );
+        }
     }
 
     public function activateCollectionCheckAccess(Node $node, AccountInterface $account)

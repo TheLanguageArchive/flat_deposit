@@ -218,9 +218,6 @@ class Workspaces
 
     static function userHasReadPermissions($directory)
     {
-        $ddumper = \Drupal::service('devel.dumper');
-        $ddumper->debug($directory, NULL, 'default');
-
         module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
         $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
         if (empty($acl->getInfo())) {
