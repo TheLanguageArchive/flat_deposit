@@ -251,6 +251,7 @@ class BundleActionsBlockForm extends FormBase
                 $errors = [
                     '#theme' => 'item_list',
                     '#type' => 'ul',
+                    '#attributes' => ['class' => 'mylist'],
                     '#items' => $errors,
                 ];
             } else {
@@ -288,14 +289,15 @@ class BundleActionsBlockForm extends FormBase
             case 'Validate bundle':
             case 'Archive bundle':
 
-                $debug = isset($form_state['values']['serial']) ? $form_state['values']['serial'] : false;
+                //$debug = isset($form_state['values']['serial']) ? $form_state['values']['serial'] : false;
+                $debug = false;
 
-                send_request($node->nid, $action, $debug);
+                send_request($nid, $action, $debug);
 
                 $processed = ($node->flat_bundle_status->value == 'valid') ? 'archived' : 'validated';
 
                 $user = \Drupal::currentUser();
-                $form_state['redirect'] = 'dashboard';
+                $form_state->setRedirect('view.flat_dashboard.page_1');
                 \Drupal::messenger()->addMessage("Bundle is being $processed");
                 break;
 

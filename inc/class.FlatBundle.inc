@@ -1,6 +1,8 @@
 <?php
 
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\file\Entity\File;
+use Drupal\node\Entity\Node;
 
 /**
  *
@@ -76,7 +78,6 @@ class FlatBundle
             trigger_error($exception->getMessage(), E_USER_WARNING);
             return FALSE;
         }
-
         return $new_location;
     }
 
@@ -87,25 +88,21 @@ class FlatBundle
      */
     public static function validate_naming($node)
     {
-        $title = $node->title;
-        // @FIXME entity_metadata_wrapper fix for drupal 9
-        // $wrapper = entity_metadata_wrapper('node', $node);
-        $fid = $node->flat_fid->value;
-        if (!$fid) {
+        $title = $node->getTitle();
+
+        $parent_nid = $node->get('flat_parent_nid_bundle')->value;
+        $parent_node = \Drupal::entityTypeManager()->getStorage('node')->load($parent_nid);
+        if ($parent_node->hasField('flat_fid')) {
+            $parent_fid = $parent_node->get('flat_fid')->value;
+        } else {
             return;
         }
-
-        $parent_nid = $node->flat_parent_nid->value;
-        $parent_node = \Drupal::entityTypeManager()->getStorage('node')->load($parent_nid);
-        // @FIXME entity_metadata_wrapper fix for drupal 9
-        // $parent_wrapper = entity_metadata_wrapper('node', $parent_node);
-        $parent_fid = $parent_node->flat_fid->value;
 
         module_load_include('inc', 'flat_deposit', '/inc/class.FlatUtils');
         $values = \FlatUtils::getChildrenTitles($parent_fid);
 
         if (in_array(strtoupper($title), array_unique(array_map('strtoupper', $values)))) {
-            throw new \FlatBundleException("A collection or bundle with almost identical name already exists in archive");
+            throw new \FlatBundleException("A collection or bundle with the same or very similar name already exists at this location in the archive. Please use a different name.");
         }
     }
 
@@ -125,7 +122,7 @@ class FlatBundle
 
     public static function validate_node($node)
     {
-        if ($node->type != 'flat_bundle') {
+        if ($node->getType() != 'flat_bundle') {
             throw new \FlatBundleException("Wrong node type for data move");
         }
     }
@@ -133,10 +130,13 @@ class FlatBundle
     public static function set_original_location($node, $data_type)
     {
         if ($data_type == 'metadata') {
-            $metadata_file_info = $node->flat_cmdi_file->value;
-            $original_location = $metadata_file_info['uri'];
+            $cmdi = $node->get('flat_cmdi_file')->target_id;
+            if ($cmdi) {
+                $cmdi_file = File::load($cmdi);
+                $original_location = $cmdi_file->getFileUri();
+            }
         } else {
-            $original_location = $node->flat_location->value;
+            $original_location = $node->get('flat_location')->value;
         }
         return $original_location;
     }
@@ -144,12 +144,6 @@ class FlatBundle
     // generate new target path
     public static function set_target_location($node, $data_type, $move_direction)
     {
-        $bundle = $node->title;
-        $collection_name = $node->flat_parent_title->value;
-
-        $usr = \Drupal::entityTypeManager()->getStorage('user')->load($node->getOwnerId());
-        $tail = str_replace('@', '_at_', $usr->getAccountName()) . "/$collection_name/$bundle";
-
 
         if ($data_type == 'metadata') {
             $base = ($move_direction == 'freeze') ? 'freeze://metadata' : "metadata://";
@@ -172,11 +166,11 @@ class FlatBundle
                 $new_location = $base . '/' . $node->id();
             } else {
 
-                $source = $node->flat_source->value;
+                $source = $node->get('flat_source')->value;
                 // flat_bundle nodes will be put back to original_path location
                 if (($source == 'local') || ($source == 'cloud')) {
 
-                    $original_location = $node->flat_original_path->value;
+                    $original_location = $node->get('flat_original_path')->value;
                     $new_location = $original_location;
                 } else {
 
@@ -195,7 +189,7 @@ class FlatBundle
 
     public static function validate_source($node, $dir, $data_type)
     {
-        $source = $node->flat_source->value;
+        $source = $node->get('flat_source')->value;
 
         if ($source == 'local' && $data_type == 'data') {
 
@@ -232,14 +226,14 @@ class FlatBundle
 
             if (!file_exists($collection_dir)) {
 
-                $check = \FileSystemInterface::mkdir($collection_dir, NULL, TRUE);
+                $check = \Drupal::service("file_system")->mkdir($collection_dir, NULL, TRUE);
 
                 if (!$check) {
                     throw new \FlatBundleException("Unable to create folder at target original_location");
                 }
             }
 
-            if ($node->flat_source->value != 'local') {
+            if ($node->get('flat_source')->value != 'local') {
 
                 if (!is_writable($collection_dir)) {
                     throw new \FlatBundleException("Unable to write at target location");
@@ -261,31 +255,36 @@ class FlatBundle
 
         if ($data_type == 'metadata') {
 
-            $metadata_file_info    = $node->flat_cmdi_file->value;
-            $original_metadata_uri = $metadata_file_info['uri'];
+            $cmdi = $node->get('flat_cmdi_file')->target_id;
+            if ($cmdi) {
+                $cmdi_file = File::load($cmdi);
+                $original_metadata_uri = $cmdi_file->getFileUri();
+            }
 
-            $file = file_load($metadata_file_info['fid']);
+            //$metadata_file_info    = $node->flat_cmdi_file->value;
+            //$original_metadata_uri = $metadata_file_info['uri'];
 
-            $new_file = file_move($file, $target_location, FILE_EXISTS_REPLACE);
+            //$file = file_load($metadata_file_info['fid']);
+
+            //$new_file = file_move($cmdi_file, $target_location, FILE_EXISTS_REPLACE);
+            $new_file = \Drupal::service('file_system')->move($original_metadata_uri, $target_location, FileSystemInterface::EXISTS_REPLACE);
 
             if (!$new_file) {
                 throw new \FlatBundleException("Unable to move metadata to new target original_location");
             }
 
             // for some unknown reason flat_location and flat_original_path are messed up by attaching the newly created cmdi file, so we need to restore it
-            $flat_location_original = $node->flat_location->value;
-            $flat_original_path_original = $node->flat_original_path->value;
-
+            $flat_location_original = $node->get('flat_location')->value; //$node->flat_location->value;
+            $flat_original_path_original = $node->get('flat_original_path')->value; //$node->flat_original_path->value;
 
             // Change node information
-            $metadata_file_info['uri'] = $target_location;
-            $node->flat_cmdi_file->value = $metadata_file_info;
-            $node->save();
+            $cmdi_file->setFileuri($target_location);
+            $cmdi_file->save();
 
-            $node = \Drupal::entityTypeManager()->getStorage('node')->load($node->id());
-            $node->flat_location->value = $flat_location_original;
-            $node->flat_original_path->value = $flat_original_path_original;
-            $node->save();
+            //$node = \Drupal::entityTypeManager()->getStorage('node')->load($node->id());
+            //$node->set('flat_location', $flat_location_original);
+            //$node->set('flat_original_path', $flat_original_path_original);
+            //$node->save();
 
             if (self::is_dir_empty($original_metadata_uri)) {
                 \Drupal::service('file_system')->rmdir($original_metadata_uri);
@@ -304,9 +303,16 @@ class FlatBundle
             }
 
             // Change node information
-            $node->flat_location->value = $target_location;
-            $node->save();
+            //ddm('target: ' . $target_location);
+            //$node = \Drupal::entityTypeManager()->getStorage('node')->load($node->id());
+            //$node = Node::load($node->id());
+            //$node->set('flat_location', $target_location); //$node->flat_location->value = $target_location;
+            //$node->save();
+
+            //$saved_location = $node->get('flat_location')->value;
+            //ddm('saved location: ' . $saved_location);
         }
+
         return $target_location;
     }
 

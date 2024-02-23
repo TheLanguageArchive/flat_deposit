@@ -55,7 +55,7 @@ class FlatUtils
         $return_value = false;
 
         $mapper = \Drupal::service('islandora.entity_mapper');
-        $path = $mapper->getFedoraPath($fid);
+        $path = $mapper->getFedoraPath($entity->uuid());
         if ($path) {
             $return_value = trim($path, '/');
         }

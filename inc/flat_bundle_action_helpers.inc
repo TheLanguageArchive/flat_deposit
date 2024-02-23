@@ -325,14 +325,12 @@ function has_flat_uri($nid)
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
 
     $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
-    // @FIXME entity_metadata_wrapper fix for drupal 9
-    // $wrapper = entity_metadata_wrapper('node', $node);
-    $location = $node->get('flat_location')->value;
 
-    $fedora_id = $node->flat_fid->value;
-
-    $cmdi_file = $node->flat_cmdi_file->value;
-    $cmdi_file_uri = $cmdi_file['uri'];
+    $cmdi = $node->get('flat_cmdi_file')->target_id;
+    if ($cmdi) {
+        $cmdi_file = File::load($cmdi);
+        $cmdi_file_uri = $cmdi_file->getFileUri();
+    }
 
     if (file_exists(\Drupal::service("file_system")->realpath($cmdi_file_uri))) {
         $cmd = @CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($cmdi_file_uri));
@@ -365,14 +363,14 @@ function bundle_files_mismatch($nid)
     module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
 
     $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
-    // @FIXME entity_metadata_wrapper fix for drupal 9
-    // $wrapper = entity_metadata_wrapper('node', $node);
+
     $location = $node->get('flat_location')->value;
 
-    $fedora_id = $node->flat_fid->value;
-
-    $cmdi_file = $node->flat_cmdi_file->value;
-    $cmdi_file_uri = $cmdi_file['uri'];
+    $cmdi = $node->get('flat_cmdi_file')->target_id;
+    if ($cmdi) {
+        $cmdi_file = File::load($cmdi);
+        $cmdi_file_uri = $cmdi_file->getFileUri();
+    }
 
     if (file_exists(\Drupal::service("file_system")->realpath($cmdi_file_uri))) {
         $cmd = @CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($cmdi_file_uri));
@@ -396,7 +394,6 @@ function bundle_files_mismatch($nid)
                 continue;
             } else {
 
-                $resource_id = (string)$resource->attributes()->id;
                 $resourceref_attributes = $resource->children('cmd', true)->ResourceRef->attributes('lat', TRUE);
                 $localURI = $resourceref_attributes['localURI'];
                 if ($localURI) {
@@ -486,7 +483,7 @@ function check_permissions($nid)
     $user = \Drupal::currentUser();
     $user_id = $user->uid;
 
-    $bundle_id = $node->uid;
+    $bundle_id = $node->id();
 
     if (($user_id === $bundle_id and \Drupal::currentUser()->hasPermission('certified user')) or \Drupal::currentUser()->hasPermission('ingest bundles')) {
 
@@ -522,7 +519,7 @@ function send_request($nid, $action, $debug = FALSE)
     $data_to_post = array();
     $data_to_post['drupal_path'] = \Drupal::root();
     $data_to_post['nid'] = $nid;
-    $data_to_post['loggedin_user'] = $user->uid;
+    $data_to_post['loggedin_user'] = $user->id();
     $data_to_post['test'] = $action;
 
     $options = array(
@@ -535,7 +532,17 @@ function send_request($nid, $action, $debug = FALSE)
         ),
     );
 
-    $url = $scheme . '://' . $host . $base . drupal_get_path('module', 'flat_deposit') . '/Helpers/IngestService/IngestService.php'; #?user='.$user->name. '&pass='.$user->pass
+    //$url = $scheme . '://' . $host . $base . 'api/flat_deposit/ingest'; #?user='.$user->name. '&pass='.$user->pass
+    $url = 'http://' . $host . $base . 'api/flat_deposit/ingest'; #?user='.$user->name. '&pass='.$user->pass
+
+    $options = [
+        'method' => 'POST',
+        'uri' => $url,
+        'headers' => [
+            'Content-Type' => 'application/json',
+        ],
+        'body' => json_encode($data_to_post),
+    ];
 
     if ($debug) {
 
@@ -559,11 +566,22 @@ function send_request($nid, $action, $debug = FALSE)
         curl_close($ch);
     } else {
 
-        // normal background mode
-        $request = httprl_request($url, $options);
+        $client = \Drupal::httpClient();
 
-        // Execute request.
-        $response = httprl_send_request();
+        try {
+            $response = $client->request($options['method'], $options['uri'], $options);
+            // Handle the response
+            if ($response->getStatusCode() === 200) {
+                $body = $response->getBody()->getContents();
+                // Do something with the response body
+            } else {
+                $body = $response->getBody()->getContents();
+                \Drupal::messenger()->addMessage($body);
+            }
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            \Drupal::messenger()->addMessage($e);
+            \Drupal::messenger()->addMessage("Unable to send request to Ingest service");
+        }
     }
 }
 

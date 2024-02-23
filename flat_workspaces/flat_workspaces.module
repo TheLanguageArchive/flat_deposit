@@ -441,13 +441,16 @@ function flat_workspaces_flat_bundle_node_form_validate(&$form, FormStateInterfa
 function flat_workspaces_node_presave(EntityInterface $node)
 {
     if ($node instanceof \Drupal\node\NodeInterface) {
-
-        if ($node->bundle() === 'flat_bundle') {
-            $flat_source = $node->get('flat_source')->value;
-            if ($flat_source == 'local') {
-                $flat_ws_path = $node->get('flat_ws_path')->value;
-                $node->set('flat_original_path', $flat_ws_path);
-                $node->set('flat_location', $flat_ws_path);
+        if (isset($node->form_id)) {
+            if ($node->form_id == 'flat_bundle_node_form') {
+                if ($node->bundle() === 'flat_bundle') {
+                    $flat_source = $node->get('flat_source')->value;
+                    if ($flat_source == 'local') {
+                        $flat_ws_path = $node->get('flat_ws_path')->value;
+                        $node->set('flat_original_path', $flat_ws_path);
+                        $node->set('flat_location', $flat_ws_path);
+                    }
+                }
             }
         }
     }

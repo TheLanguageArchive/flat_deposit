@@ -44,6 +44,9 @@ abstract class SIP
     // configuration parameters necessary for successful processing of a bundle
     protected $info;
 
+    protected $logProcess;
+    protected $logFile;
+
 
     // Custom ingest set up of a SIP child (Collection, bundle)
     abstract function init($info);
@@ -68,7 +71,7 @@ abstract class SIP
 
         $this->namespace = $namespace;
 
-        $this->sipId = get_class($this) . '_'. $uuid;
+        $this->sipId = get_class($this) . '_' . $uuid;
 
         // @FIXME
         // Could not extract the default value because it is either indeterminate, or
@@ -90,13 +93,13 @@ abstract class SIP
         $this->logFile = $base_name . "/" . $this->sipId . '_' . $owner . '_' . date("Y-m-d\TH-i-s") . '.log';
 
         $this->logging(t("Starting SIP constructor with following parameters: \nowner: :owner\ncmdi file: :cmdiFileName\nparent Fid: :parentFid\ntest: :test\n", [
-            ':owner'=> $owner,
+            ':owner' => $owner,
             ':cmdiFileName' => $cmdiFileName,
             ':parentFid' => $parentFid,
             ':test' => ($test ? 'TRUE' : 'FALSE'),
         ]));
 
-        $this->cmdiRecord =$cmdiFileName;
+        $this->cmdiRecord = $cmdiFileName;
 
         $this->parentFid = $parentFid;
 
@@ -104,10 +107,9 @@ abstract class SIP
 
         $this->frozenSipDir = \Drupal::service("file_system")->realpath('freeze://') . '/SIPS/' .  str_replace('@', '_at_', $this->owner) . '/' . $this->sipId . '/';
 
-        $this->cmdiTarget = $this->frozenSipDir .  'data/metadata/record.cmdi';
+        $this->cmdiTarget = $this->frozenSipDir .  'metadata/record.cmdi';
 
         $this->logging('Finishing SIP constructor');
-
     }
 
     /**
@@ -200,10 +202,11 @@ abstract class SIP
 
         if ($policy != "inherited") {
 
-            $fname = drupal_get_path('module', 'flat_deposit') . '/Helpers/IngestService/Policies/' . $policy . '.n3';
+            //$fname = drupal_get_path('module', 'flat_deposit') . '/Helpers/IngestService/Policies/' . $policy . '.n3';
+            $fname = \Drupal::service('extension.list.module')->getPath('flat_deposit') . '/Helpers/IngestService/Policies/' . $policy . '.n3';
 
             $string = file_get_contents($fname);
-            $new_string = preg_replace('/ACCOUNT_NAME/', $this->owner , $string);
+            $new_string = preg_replace('/ACCOUNT_NAME/', $this->owner, $string);
 
             if (($visibility == 'hide') && ($policy == 'private')) {
 
@@ -225,23 +228,20 @@ abstract class SIP
     }
 
 
+    /**
+     * A function to create a bag for the SIP, using Python bagit implementation https://pypi.org/project/bagit.py
+     *
+     * @throws IngestServiceException Error making bag
+     * @throws IngestServiceException Error creating zip file
+     * @return boolean
+     */
     function createBag()
     {
         $this->logging('Starting createBag');
 
-        // @FIXME
-        // Could not extract the default value because it is either indeterminate, or
-        // not scalar. You'll need to provide a default value in
-        // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
         $bagit_executable = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['bag_exe'];
 
-        // @FIXME
-        // Could not extract the default value because it is either indeterminate, or
-        // not scalar. You'll need to provide a default value in
-        // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
-        $java_home = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['java_home'];
-
-        $command = 'JAVA_HOME=' . $java_home . ' ' . $bagit_executable . ' baginplace ' . '"' . $this->frozenSipDir .  '"';
+        $command = $bagit_executable . ' --md5 --quiet ' . '"' . $this->frozenSipDir .  '"';
 
         exec($command, $output, $return);
 
@@ -251,16 +251,8 @@ abstract class SIP
             throw new \IngestServiceException($message);
         }
 
-        $command = 'JAVA_HOME=' . $java_home . ' ' . $bagit_executable . ' update ' . '"' . $this->frozenSipDir .  '"';
-
-        exec($command, $output, $return);
-
-        if ($return) {
-            $message = 'Error updating bag info';
-            throw new \IngestServiceException($message);
-        }
-
-        $command = \Drupal::root() . '/'. drupal_get_path('module', 'flat_deposit') . '/Helpers/scripts/zip_sip.sh "' . $this->frozenSipDir .'" "' . $this->sipId .'"';
+        // create zip file from the bag directory
+        $command = \Drupal::service('extension.list.module')->getPath('flat_deposit') . '/Helpers/scripts/zip_sip.sh "' . $this->frozenSipDir . '" "' . $this->sipId . '"';
 
         exec($command, $output_prep, $return);
 
@@ -287,7 +279,7 @@ abstract class SIP
         $upload = $sword->postSip($path, $zipName, $sipId);
         $check = $sword->checkStatus($sipId);
 
-        if (!$upload OR !$check) {
+        if (!$upload or !$check) {
             $message = 'Error Doing sword';
             throw new \IngestServiceException($message);
         } else {
@@ -331,7 +323,7 @@ abstract class SIP
         $dk->triggerServlet($this->sipId, $query, $namespace, $parentFid);
         $fid = $dk->checkStatus($this->sipId, 1800);
 
-        $this->fid =$fid ;
+        $this->fid = $fid;
 
         $this->logging('Finishing doDoorkeeper');
 
@@ -349,11 +341,11 @@ abstract class SIP
         $this->logging('Starting rollback');
 
         if (file_exists($this->frozenSipDir)) {
-         #   $this->removeFrozenZipDir();
+            #   $this->removeFrozenZipDir();
         }
 
         if (file_exists(dirname($this->frozenSipDir) . '/' . $this->sipId . '.zip')) {
-        #    $this->removeFrozenZipDir();
+            #    $this->removeFrozenZipDir();
         }
         /*if ($processes['doSword']){
             $this->removeSwordBag();
@@ -372,7 +364,8 @@ abstract class SIP
     }
 
 
-    protected function removeFrozenZipDir() {
+    protected function removeFrozenZipDir()
+    {
         // remove directory with SIP data
         $sip_dir = $this->frozenSipDir;
         module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
@@ -394,10 +387,10 @@ abstract class SIP
     protected function removeSwordBag()
     {
         // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
-$basePath = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['bag_dir'];
+        // Could not extract the default value because it is either indeterminate, or
+        // not scalar. You'll need to provide a default value in
+        // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+        $basePath = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['bag_dir'];
         $bagDir = $basePath . $this->sipId;
         module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
         \FlatBundle::recursiveRmDir($bagDir);
@@ -408,8 +401,7 @@ $basePath = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_s
     public function logging($message)
     {
         if ($this->logProcess) {
-            error_log(date(DATE_ATOM) . "\t" . $message ."\n", $message_type = 3, $this->logFile);
+            error_log(date(DATE_ATOM) . "\t" . $message . "\n", $message_type = 3, $this->logFile);
         }
     }
 }
-

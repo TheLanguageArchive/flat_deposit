@@ -549,7 +549,7 @@ class CollectionAddForm extends FormBase
     /**
      * @FIXME implement fetching object from islandora after sip works
      */
-    $fObject = null;
+    $fObject = 'lat:123456';
     // $fObject = islandora_object_load($fid);
 
     if (!$fObject) {

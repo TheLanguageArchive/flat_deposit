@@ -39,15 +39,15 @@ class IngestFactory
             //throw new IngestServiceException('Debug');
             $this->processLog['generatePolicy'] = $this->factorySIP->generatePolicy();
             $this->processLog['createBag'] = $this->factorySIP->createBag();
-            $this->processLog['doSword'] = $this->factorySIP->doSword();
+            //$this->processLog['doSword'] = $this->factorySIP->doSword();
             //$this->processLog['doDoorkeeper'] = $this->factorySIP->doDoorkeeper();
-            $this->processLog['finish'] = $this->factorySIP->finish();
+            //$this->processLog['finish'] = $this->factorySIP->finish();
 
             return $this->factorySIP->getFid();
         } catch (IngestServiceException $exception) {
             $this->factorySIP->logging('IngestServiceException for SIP ' . $SIP->getSipId() . ' : ' . $exception->getMessage());
-            $this->factorySIP->checkSwordRejected();
-            $this->factorySIP->rollback($exception->getMessage());
+            //$this->factorySIP->checkSwordRejected();
+            //$this->factorySIP->rollback($exception->getMessage());
 
             return ($SIP->getSipId() . ' : ' . $exception->getMessage());
         }

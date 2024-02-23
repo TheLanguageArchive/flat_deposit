@@ -7,7 +7,7 @@ dependencies:
       - node.type.flat_bundle
 id: node.flat_bundle.flat_original_path
 field_name: flat_original_path
-field_type: text
+field_type: string
 entity_type: node
 bundle: flat_bundle
 label: Original Path of locally stored data

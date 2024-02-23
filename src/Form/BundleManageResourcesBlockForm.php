@@ -97,9 +97,15 @@ class BundleManageResourcesBlockForm extends FormBase
                         '<span>' . $file . '</span><input type="hidden" name="flat_bundle_manage_resources[' . $id . '][filename]" value="';
                 }
 
-                $dirname = \Drupal::service('file_system')->basename($location, $suffix ?? '');
+                if ($location) {
 
-                $form['flat_bundle_manage_resources']['#prefix'] = '<h2>Files in folder <i>"' . $dirname . '"</i> to be added to this bundle:</h2>';
+                    $dirname = \Drupal::service('file_system')->basename($location);
+                    $form['flat_bundle_manage_resources']['#prefix'] = '<h2>Files in folder <i>"' . $dirname . '"</i> to be added to this bundle:</h2>';
+                } else {
+
+                    $form['flat_bundle_manage_resources']['#prefix'] = '<h2>No folder specified</h2>';
+                }
+
 
 
                 // normalizing currently saved metadata, null, empty str will be marked as empty array

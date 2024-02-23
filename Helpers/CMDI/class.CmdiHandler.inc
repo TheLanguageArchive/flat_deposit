@@ -13,7 +13,6 @@ class RecursiveDotFilterIterator extends RecursiveFilterIterator
 
 class CmdiHandlerException extends Exception
 {
-
 }
 /**
  * CmdiHandler class. Processes cmdi profiles
@@ -123,7 +122,7 @@ class CmdiHandler extends SimpleXMLElement
             $node = $this->xpath('Header/MdProfile')[0];
         }
 
-        if (!isset($node) OR empty((string)$node)) {
+        if (!isset($node) or empty((string)$node)) {
             return FALSE;
         }
 
@@ -159,7 +158,8 @@ class CmdiHandler extends SimpleXMLElement
                     CURLOPT_RETURNTRANSFER => 1,
                     CURLOPT_CONNECTTIMEOUT => 5,
                     CURLOPT_TIMEOUT => 60,
-                    CURLOPT_URL => $url));
+                    CURLOPT_URL => $url
+                ));
 
                 $result = curl_exec($ch);
                 $xml = simplexml_load_string($result);
@@ -184,7 +184,7 @@ class CmdiHandler extends SimpleXMLElement
     {
         $cmdi_str = CmdiHandler::getCmdiFromDatastream($fid);
         $cmdi = CmdiHandler::loadCleanedCmdi($cmdi_str);
-        if (!$cmdi AND isset($cmdi->Header->MdProfile)) {
+        if (!$cmdi and isset($cmdi->Header->MdProfile)) {
             return (string)$cmdi->Header->MdProfile;
         }
 
@@ -202,16 +202,16 @@ class CmdiHandler extends SimpleXMLElement
             $profile_id = $this->xpath('//cmd:MdProfile')[0];
         }
         // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
-$collection_profiles = \Drupal::config('flat_deposit.settings')->get('flat_deposit_cmdi_profiles')['collection_profile_ids'];
+        // Could not extract the default value because it is either indeterminate, or
+        // not scalar. You'll need to provide a default value in
+        // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+        $collection_profiles = \Drupal::config('flat_deposit.settings')->get('flat_deposit_cmdi_profiles')['collection_profile_ids'];
         $collection_profile_values = explode(',', $collection_profiles);
         // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
-$bundle_profiles = \Drupal::config('flat_deposit.settings')->get('flat_deposit_cmdi_profiles')['bundle_profile_ids'];
+        // Could not extract the default value because it is either indeterminate, or
+        // not scalar. You'll need to provide a default value in
+        // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+        $bundle_profiles = \Drupal::config('flat_deposit.settings')->get('flat_deposit_cmdi_profiles')['bundle_profile_ids'];
         $bundle_profile_values = explode(',', $bundle_profiles);
         if (in_array($profile_id, $collection_profile_values)) {
             return "collection";
@@ -240,7 +240,6 @@ $bundle_profiles = \Drupal::config('flat_deposit.settings')->get('flat_deposit_c
         }
 
         $this->children('cmd', TRUE)->Resources->IsPartOfList->addChild('IsPartOf', $parent_pid);
-
     }
 
     /**
@@ -258,7 +257,7 @@ $bundle_profiles = \Drupal::config('flat_deposit.settings')->get('flat_deposit_c
         $pattern1 = '/^hdl/';
         $pattern2 = '/^handle/';
         $pattern3 = '/^https\:\/\/hdl\.handle\.net/';
-        $hasHandle = (preg_match($pattern1, $value) OR preg_match($pattern2, $value) OR preg_match($pattern3, $value));
+        $hasHandle = (preg_match($pattern1, $value) or preg_match($pattern2, $value) or preg_match($pattern3, $value));
 
         if (!$hasHandle) {
             unset($res[0][0]);
@@ -286,11 +285,11 @@ $bundle_profiles = \Drupal::config('flat_deposit.settings')->get('flat_deposit_c
         $pattern1 = '/^hdl/';
         $pattern2 = '/^handle/';
         $pattern3 = '/^https\:\/\/hdl\.handle\.net/';
-        $hasHandle = (preg_match($pattern1, $value) OR preg_match($pattern2, $value) OR preg_match($pattern3, $value));
+        $hasHandle = (preg_match($pattern1, $value) or preg_match($pattern2, $value) or preg_match($pattern3, $value));
 
-        if ($hasHandle AND !$flatURI) {
+        if ($hasHandle and !$flatURI) {
             return "Invalid combination of MdSelfLink value and attributes. Cmdi files providing a handle at CMD->Header->MdSelfLink " .
-            "also need to provide a flatURI attribute.";
+                "also need to provide a flatURI attribute.";
         }
 
         return TRUE;
@@ -433,27 +432,28 @@ $bundle_profiles = \Drupal::config('flat_deposit.settings')->get('flat_deposit_c
     {
 
         // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
-$config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
+        // Could not extract the default value because it is either indeterminate, or
+        // not scalar. You'll need to provide a default value in
+        // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
+        $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
         $url = $config['url'] . '/examine?file=';
         $query = rawurlencode($filename);
         $port = $config['port'];
 
         $ch = curl_init();
         curl_setopt_array($ch, array(
-                CURLOPT_URL => $url . $query,
-                CURLOPT_PORT => $port,
-                CURLOPT_RETURNTRANSFER => 1,
-                CURLOPT_CONNECTTIMEOUT => 5,
-                CURLOPT_TIMEOUT => 300,));
+            CURLOPT_URL => $url . $query,
+            CURLOPT_PORT => $port,
+            CURLOPT_RETURNTRANSFER => 1,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT => 300,
+        ));
 
         $result = curl_exec($ch);
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($httpcode < 200 OR $httpcode >= 300) {
+        if ($httpcode < 200 or $httpcode >= 300) {
             return FALSE;
         }
 
@@ -506,7 +506,7 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
         foreach ($data as $key => $value) {
             if (is_array($value)) {
                 if (is_numeric($key)) {
-                    $key = 'item'. $key; //dealing with <0/>..<n/> issues
+                    $key = 'item' . $key; //dealing with <0/>..<n/> issues
                 }
                 $subnode = $xml_data->addChild($key);
                 $this->array_to_xml($value, $subnode);
@@ -522,7 +522,7 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
         foreach ($data as $key => $value) {
             if (is_array($value)) {
                 if (is_numeric($key)) {
-                    $key = 'item'. $key; //dealing with <0/>..<n/> issues
+                    $key = 'item' . $key; //dealing with <0/>..<n/> issues
                 }
                 $subnode = $xml_data->addChild($key);
                 array_to_xml($value, $subnode);
@@ -578,7 +578,7 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
         }
 
         foreach ($tags as $tag) {
-            $entries = $node->xpath('cmd:' . (String)$tag['id']);
+            $entries = $node->xpath('cmd:' . (string)$tag['id']);
             foreach ($entries as $entry) {
                 unset($entry[0]);
             }
@@ -629,9 +629,13 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
             return FALSE;
         }
 
+        ddm('targetNode: ' . print_r($targetNode, TRUE));
+
         // Add new resources to ResourceProxyList
         $new_resources = array_diff_key($directory_resources, $cmdi_resources);
         $resourceProxyList = $this->xpath('cmd:Resources/cmd:ResourceProxyList')[0];
+
+        ddm('new_resources: ' . print_r($new_resources, TRUE));
 
         foreach ($new_resources as $rid => $file_name) {
 
@@ -654,16 +658,16 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
                 return FALSE;
             }
 
-            $id = (String) $tag['id'];
+            $id = (string) $tag['id'];
             $sourceResource = simplexml_load_string("<cmd:$id xmlns:cmd=\"http://www.clarin.eu/cmd/\"></cmd:$id>");
 
             $sourceResource->addAttribute('ref', $rid);
 
             foreach ($tag->updated_values as $value) {
-                $child_id = (String) $value->attributes();
+                $child_id = (string) $value->attributes();
 
-                if ((String) $value[0] != '') {
-                    $sourceResource->addChild('cmd:' . $child_id, (String) $value[0]);
+                if ((string) $value[0] != '') {
+                    $sourceResource->addChild('cmd:' . $child_id, (string) $value[0]);
                     continue;
                 }
 
@@ -691,9 +695,9 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
             $existingChildren = $targetNode->children('cmd', TRUE)->xpath('child::node()');
 
             switch (TRUE) {
-                //Case: Resource section has no children
+                    //Case: Resource section has no children
                 case empty($existingChildren):
-                //Case: Resource section has no other resources to care about
+                    //Case: Resource section has no other resources to care about
                 case empty($insertBefores):
                     $parent = $targetNode;
                     $domxml = dom_import_simplexml($parent);
@@ -729,7 +733,8 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
 
 
 
-    private function getTag($profile, $file_mime) {
+    private function getTag($profile, $file_mime)
+    {
 
         $tags = $profile->xpath('/profileToDrupal/resources/allowed_tags/tag');
         foreach ($tags as $tag) {
@@ -747,14 +752,14 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
 
         $root = $cmdi->getNodeForAddingResources($cmdi);
 
-        if ($root === FALSE){
+        if ($root === FALSE) {
             return FALSE;
         }
 
         $tags = $profile->xpath('/profileToDrupal/resources/allowed_tags/tag');
 
         foreach ($tags as $tag) {
-            $query = 'cmd:' . (String)$tag[0]['id'] . '[@ref=\'' .$resource_id . '\']';
+            $query = 'cmd:' . (string)$tag[0]['id'] . '[@ref=\'' . $resource_id . '\']';
             $results = $root[0]->xpath($query);
 
             if (!empty($results)) {
@@ -775,7 +780,7 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
         $fObjectCmdi = \CmdiHandler::loadCleanedCmdi($cmdi_str);
         $resourceProxyList = $fObjectCmdi->Resources->ResourceProxyList;
 
-        if (!empty($resourceProxyList->children()) OR !empty($resourceProxyList->children('cmd', TRUE))) {
+        if (!empty($resourceProxyList->children()) or !empty($resourceProxyList->children('cmd', TRUE))) {
 
             // Create new DOMElements from the two SimpleXMLElements
             $domxml = dom_import_simplexml($this->Resources->ResourceProxyList);
@@ -825,7 +830,7 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
         $tags = $xml->xpath('/profileToDrupal/resources/allowed_tags/tag');
 
         foreach ($tags as $tag) {
-            $entries = $searchNode->xpath((String)$tag['id']);
+            $entries = $searchNode->xpath((string)$tag['id']);
             foreach ($entries as $entry) {
                 $targetNode = $this->getNodeForAddingResources($this);
                 // Create new DOMElements from the two SimpleXMLElements
@@ -837,7 +842,7 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
                 $domxml->appendChild($domDsResource);
             }
 
-            $entries = $searchNode->xpath('cmd:' . (String)$tag['id']);
+            $entries = $searchNode->xpath('cmd:' . (string)$tag['id']);
             foreach ($entries as $entry) {
                 $targetNode = $this->getNodeForAddingResources($this);
                 // Create new DOMElements from the two SimpleXMLElements
@@ -870,7 +875,7 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
             $pid = (string)$lat_attributes->flatURI;
         } else {
             // SPARQL query with hdl
-            $handle = (String)$resource->ResourceRef[0];
+            $handle = (string)$resource->ResourceRef[0];
             $query = "SELECT ?fid WHERE { ?fid <http://purl.org/dc/elements/1.1/identifier> \"" .
                 str_replace("hdl:", "https://hdl.handle.net/", $handle) . "\" }";
 
@@ -921,7 +926,7 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
     private function getDirectoryResources($directory, $existing_resources = array())
     {
         $resources = array();
-        $c=10000; # counter for resource ID (each resource within an CMDI-object needs an unique identifier)
+        $c = 10000; # counter for resource ID (each resource within an CMDI-object needs an unique identifier)
 
         //$rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory,RecursiveDirectoryIterator::FOLLOW_SYMLINKS));
 
@@ -971,7 +976,7 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
             $fName = str_replace("\\\\", "\\", $file_name);
 
             if (!is_readable($fName)) {
-                $inaccesible_files [] = basename($fName);
+                $inaccesible_files[] = basename($fName);
             }
         }
         return $inaccesible_files;
@@ -990,7 +995,7 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
                 return FALSE;
             }
 
-            $proxy = $resourceProxyList->xpath('cmd:ResourceProxy[@id="'. $rid .'"]');
+            $proxy = $resourceProxyList->xpath('cmd:ResourceProxy[@id="' . $rid . '"]');
             if (empty($proxy)) {
                 return FALSE;
             }
@@ -1004,10 +1009,10 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
             }
 
             // delete value of the resourceproxy "ResourceRef" in case it is not a handle
-            $value = (String)$proxy[0]->children('cmd',TRUE)->ResourceRef;
-            if(!empty($value)){
-                if (strpos($value,'http://hdl') !== 0 && strpos($value,'https://hdl') !== 0 && strpos($value,'hdl:') !== 0) {
-                    $proxy[0]->children('cmd',TRUE)->ResourceRef = '';
+            $value = (string)$proxy[0]->children('cmd', TRUE)->ResourceRef;
+            if (!empty($value)) {
+                if (strpos($value, 'http://hdl') !== 0 && strpos($value, 'https://hdl') !== 0 && strpos($value, 'hdl:') !== 0) {
+                    $proxy[0]->children('cmd', TRUE)->ResourceRef = '';
                 }
             }
 
@@ -1027,12 +1032,12 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
             );
 
             $id = $resource->getName();
-            $tag = $xml->resources->allowed_tags->xpath('tag[@id=\''. $id .'\']');
+            $tag = $xml->resources->allowed_tags->xpath('tag[@id=\'' . $id . '\']');
             foreach ($tag->updated_values as $value) {
-                $id = (String)$value->attributes();
+                $id = (string)$value->attributes();
 
                 if ($id == 'type') {
-                    $values['type'] = (String)$value;
+                    $values['type'] = (string)$value;
                 }
                 $value->{$id} = $values[$id];
             }
@@ -1046,7 +1051,7 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
         $profile = $cmdi->getNameById();
         $xml = simplexml_load_file(CmdiHandler::FORM_TEMPLATES_PATH . "/$profile.xml");
 
-        $resources_root_path = (!empty($xml->xpath('/profileToDrupal/resources/root_path'))) ? (String)$xml->xpath('/profileToDrupal/resources/root_path')[0] : FALSE;
+        $resources_root_path = (!empty($xml->xpath('/profileToDrupal/resources/root_path'))) ? (string)$xml->xpath('/profileToDrupal/resources/root_path')[0] : FALSE;
         $resources_root_node = $cmdi->children('cmd', TRUE)->Components->{$resources_root_path};
 
         if (empty($resources_root_node)) {
@@ -1054,29 +1059,29 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
         }
 
         // Return subNode if this is set for the specific profile
-        $subnodes = (!empty($xml->xpath('/profileToDrupal/resources/subnodes'))) ? (String)$xml->xpath('/profileToDrupal/resources/subnodes')[0] : FALSE;
+        $subnodes = (!empty($xml->xpath('/profileToDrupal/resources/subnodes'))) ? (string)$xml->xpath('/profileToDrupal/resources/subnodes')[0] : FALSE;
 
         if (!empty($subnodes)) {
             // add subnode if this node does not exist and return FALSE if this is not possible
-            if (empty($resources_root_node[0]->xpath('cmd:' .$subnodes))) {
+            if (empty($resources_root_node[0]->xpath('cmd:' . $subnodes))) {
                 $resources_root_node[0]->addChild('cmd:' . $subnodes, '', 'http://www.clarin.eu/cmd/');
             }
 
-            if (empty($resources_root_node[0]->xpath('cmd:' .$subnodes))) {
+            if (empty($resources_root_node[0]->xpath('cmd:' . $subnodes))) {
                 return FALSE;
             }
 
-            return $resources_root_node[0]->xpath('cmd:' .$subnodes)[0];
+            return $resources_root_node[0]->xpath('cmd:' . $subnodes)[0];
         }
 
         return $resources_root_node[0];
     }
 
     /**
-    * Set the title of a CMDI XML object. Title field is retrieved from form templates
-    * @param string $title New title for the CMDI object
-    *
-    */
+     * Set the title of a CMDI XML object. Title field is retrieved from form templates
+     * @param string $title New title for the CMDI object
+     *
+     */
     public function setTitle($title)
     {
         $profile = $this->getNameById();
@@ -1089,6 +1094,6 @@ $config = \Drupal::config('flat_deposit.settings')->get('flat_deposit_fits');
 
     public function logging($message)
     {
-            error_log(date(DATE_ATOM) . "\t" . $message ."\n", $message_type = 3 , '/easylat/www/htdocs/cmdi_handler.log');
+        error_log(date(DATE_ATOM) . "\t" . $message . "\n", $message_type = 3, '/easylat/www/htdocs/cmdi_handler.log');
     }
 }

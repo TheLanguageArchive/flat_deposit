@@ -1050,21 +1050,24 @@ function flat_deposit_preprocess_node(&$variables)
 }
 
 /**
- * Implements hook_preprocess_page().
+ * Implements hook_preprocess_block().
  *
- * Modify bundle title in page view depending on whether it is new or an update.
+ * Modify bundle title depending on whether it is new or an update.
  */
-function flat_deposit_preprocess_page(&$variables)
+
+function flat_deposit_preprocess_block(&$variables)
 {
-    $node = isset($variables['node']) ? $variables['node'] : null;
-    if (isset($node) && $node->type == "flat_bundle") {
-        // $wrapper = entity_metadata_wrapper('node', $node);
-        if (isset($node) && $node->type == "flat_bundle") {
-            if ($node->flat_type->value == "new") {
-                drupal_set_title(t('New bundle %title', array('%title' => $node->title)), PASS_THROUGH);
+    if ($variables['plugin_id'] == 'page_title_block') {
+        $node = \Drupal::request()->attributes->get('node');
+        if (isset($node) && $node->bundle() == "flat_bundle") {
+            $title = $node->getTitle();
+            if ($node->get('flat_type')->value == "new") {
+                $new_title = 'New bundle <i>' . $title . '</i>';
+                $variables['content']['#title'] = Drupal\Core\Render\Markup::create($new_title);
             }
-            if ($node->flat_type->value == "update") {
-                drupal_set_title(t('Update bundle %title', array('%title' => $node->title)), PASS_THROUGH);
+            if ($node->get('flat_type')->value == "update") {
+                $new_title = 'Update bundle ' . $title;
+                $variables['content']['#title'] = Drupal\Core\Render\Markup::create($new_title);
             }
         }
     }
@@ -1658,6 +1661,8 @@ function flat_deposit_form_bundle_actions_block_form_alter(&$form, FormStateInte
             if (empty($flat_bundle_status)) {
                 $flat_bundle_status = 'failed';
             }
+
+            $name = '';
 
             switch ($flat_bundle_status) {
                 case 'open': {

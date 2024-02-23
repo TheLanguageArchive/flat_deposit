@@ -1,6 +1,7 @@
 <?php
 
-include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/IngestService/SIP.php';
+//include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/IngestService/SIP.php';
+module_load_include('php', 'flat_deposit', 'Helpers/IngestService/SIP');
 
 /**
  * Collection is responsible to ingest new/updated MPI_collections and updated MPI_BUndles into the fedora commons repository.
@@ -32,7 +33,8 @@ class Collection extends SIP
      *
      * @throws IngestServiceException
      */
-    public function init($info) {
+    public function init($info)
+    {
 
         $this->logging('Starting init');
 
@@ -44,7 +46,7 @@ class Collection extends SIP
         );
 
         if (!isset($info['fid'])) {
-            $info['fid'] ='';
+            $info['fid'] = '';
         }
 
         $diff = array_diff($required, array_keys($info));
@@ -65,7 +67,8 @@ class Collection extends SIP
      *
      * @return bool
      */
-    public function authenticateUser() {
+    public function authenticateUser()
+    {
         return TRUE;
     }
 
@@ -74,7 +77,8 @@ class Collection extends SIP
      *
      * @return mixed
      */
-    function prepareSipData() {
+    function prepareSipData()
+    {
         return TRUE;
     }
 
@@ -83,7 +87,8 @@ class Collection extends SIP
      *
      * @return true
      */
-    function validateResources() {
+    function validateResources()
+    {
         return TRUE;
     }
 
@@ -91,8 +96,9 @@ class Collection extends SIP
      *
      * @return mixed
      */
-    function addResourcesToCmdi() {
-
+    function addResourcesToCmdi()
+    {
+        /*
         $this->logging('Starting addResourcesToCmdi');
 
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
@@ -102,13 +108,13 @@ class Collection extends SIP
         $cmdi = \CmdiHandler::simplexml_load_cmdi_file($file_name);
 
 
-        if (!$cmdi || !$cmdi->canBeValidated()){
+        if (!$cmdi || !$cmdi->canBeValidated()) {
             throw new \IngestServiceException('Unable to load record.cmdi file');
         }
 
-        try{
+        try {
 
-            $md_type = isset($this->node->flat_cmdi_option) ? $this->node->flat_cmdi_option->value : NULL;
+            $md_type = $this->node->hasField('flat_cmdi_option') ? $this->node->get('flat_cmdi_option')->value : NULL;
 
             switch ($md_type) {
                 case 'new':
@@ -119,12 +125,11 @@ class Collection extends SIP
                     $cmdi->removeMdSelfLink();
                     break;
             }
-
-        } catch (\CmdiHandlerException $exception){
+        } catch (\CmdiHandlerException $exception) {
             throw new \IngestServiceException($exception->getMessage());
         }
 
-        /*
+        //
         $file_name = $this->cmdiTarget;
         module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
         $cmdi = simplexml_load_file($file_name, 'CmdiHandler');
@@ -150,12 +155,15 @@ class Collection extends SIP
         }
         #$check = $xml->asXML('/lat/test.xml');
 
-*/
+
         $this->logging('Finishing addResourcesToCmdi');
+
+        */
         return TRUE;
     }
 
-    function finish() {
+    function finish()
+    {
 
         $this->logging('Starting finish');
         $this->removeFrozenZipDir();
@@ -169,5 +177,7 @@ class Collection extends SIP
         return TRUE;
     }
 
-    function customRollback($message) {}
+    function customRollback($message)
+    {
+    }
 }
