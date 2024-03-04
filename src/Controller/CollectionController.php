@@ -63,6 +63,13 @@ class CollectionController extends ControllerBase
         return $form;
     }
 
+    public function updateCollection()
+    {
+
+        $form = \Drupal::formBuilder()->getForm('Drupal\flat_deposit\Form\CollectionUpdateForm');
+        return $form;
+    }
+
     public function getFedoraId()
     {
         $mapper = \Drupal::service('islandora.entity_mapper');
@@ -72,6 +79,17 @@ class CollectionController extends ControllerBase
     }
 
     public function addCollectionCheckAccess(Node $node, AccountInterface $account)
+    {
+        $node = \Drupal::routeMatch()->getParameter('node');
+        $content_type = $node->bundle();
+        $model = NULL;
+        if ($content_type === 'islandora_object') {
+            $model = $node->get('field_model')->referencedEntities()[0]->getName();
+        }
+        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $model == "Collection" && $account->hasPermission('use deposit module'));
+    }
+
+    public function updateCollectionCheckAccess(Node $node, AccountInterface $account)
     {
         $node = \Drupal::routeMatch()->getParameter('node');
         $content_type = $node->bundle();
@@ -92,29 +110,14 @@ class CollectionController extends ControllerBase
             // Get the field values.
             $parents = $this->getFedoraId();
 
-            return new Response(
+            /*             return new Response(
                 var_dump($parents),
                 Response::HTTP_OK
-            );
+            ); */
         }
     }
 
     public function activateCollectionCheckAccess(Node $node, AccountInterface $account)
-    {
-        $node = \Drupal::routeMatch()->getParameter('node');
-        $content_type = $node->bundle();
-        $model = NULL;
-        if ($content_type === 'islandora_object') {
-            $model = $node->get('field_model')->referencedEntities()[0]->getName();
-        }
-        return AccessResult::allowedif($node->bundle() === 'islandora_object' && $model == "Collection" && $account->hasPermission('use deposit module'));
-    }
-
-    public function updateCollection()
-    {
-    }
-
-    public function updateCollectionCheckAccess(Node $node, AccountInterface $account)
     {
         $node = \Drupal::routeMatch()->getParameter('node');
         $content_type = $node->bundle();

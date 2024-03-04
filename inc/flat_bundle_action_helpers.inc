@@ -1,6 +1,7 @@
 <?php
 
 use Drupal\file\Entity\File;
+use Drupal\Core\File\FileSystemInterface;
 
 
 function get_nids($form_state)
@@ -94,11 +95,13 @@ function has_correct_filename($nid)
 function bundle_file_exists($nid)
 {
     $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
-    // @FIXME entity_metadata_wrapper fix for drupal 9
-    // $wrapper = entity_metadata_wrapper('node', $node);
-    $location = $node->get('flat_location')->value;
+    $location = $node->hasField('flat_location') ? $node->get('flat_location')->value : NULL;
 
-    $exists = file_exists($location);
+    $exists = FALSE;
+
+    if ($location) {
+        $exists = file_exists($location);
+    }
 
     return $exists;
 }
@@ -108,12 +111,14 @@ function bundle_new_files($nid)
 
     $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
 
-    $location = $node->get('flat_location')->value;
+    $location = $node->hasField('flat_location') ? $node->get('flat_location')->value : NULL;
 
     $files = [];
 
-    if (is_dir($location)) {
-        $files = \Drupal::service('file_system')->scanDirectory($location, '/.*/', array('min_depth' => 0));
+    if ($location) {
+        if (is_dir($location)) {
+            $files = \Drupal::service('file_system')->scanDirectory($location, '/.*/', array('min_depth' => 0));
+        }
     }
 
     $nFiles = count($files);
@@ -134,7 +139,7 @@ function bundle_deleted_files($nid)
     // @FIXME entity_metadata_wrapper fix for drupal 9
     // $wrapper = entity_metadata_wrapper('node', $node);
 
-    $deletedFiles = isset($node->flat_deleted_resources) ? $node->flat_deleted_resources->value : NULL;
+    $deletedFiles = $node->hasField('flat_deleted_resources') ? $node->get('flat_deleted_resources')->value : NULL;
 
     if (!isset($deletedFiles) or ($deletedFiles == '')) {
 
@@ -152,12 +157,15 @@ function bundle_max_files_exceeded($nid)
 
     $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
 
-    $location = $node->get('flat_location')->value;
+    $location = $node->hasField('flat_location') ? $node->get('flat_location')->value : NULL;
 
     $new_files = [];
-    if (file_exists($location)) {
 
-        $new_files = array_diff(preg_grep('/^([^.])/', scandir($location)), array('..', '.'));
+    if ($location) {
+        if (file_exists($location)) {
+
+            $new_files = array_diff(preg_grep('/^([^.])/', scandir($location)), array('..', '.'));
+        }
     }
 
     $new_files_count = count($new_files);
@@ -219,18 +227,21 @@ function bundle_max_file_size_exceeded($nid)
 
     $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
 
-    $location = $node->get('flat_location')->value;
+    $location = $node->hasField('flat_location') ? $node->get('flat_location')->value : NULL;
 
     $max_size = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['max_file_size'];
     $max_size_bytes = ($max_size * 1073741824);
 
     $files = [];
 
-    if (is_dir($location)) {
-        $files = \Drupal::service('file_system')->scanDirectory($location, '/.*/', array('min_depth' => 0));
+    if ($location) {
+
+        if (is_dir($location)) {
+            $files = \Drupal::service('file_system')->scanDirectory($location, '/.*/', array('min_depth' => 0));
+        }
     }
 
-    $max_file_size_exceeded = array();
+    $max_file_size_exceeded = [];
     foreach ($files as $file) {
         $path = $file->uri;
         $name = basename($path);
@@ -253,14 +264,17 @@ function bundle_invalid_file_names($nid)
 
     $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
 
-    $location = $node->get('flat_location')->value;
+    $location = $node->hasField('flat_location') ? $node->get('flat_location')->value : NULL;
 
     $filename_pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+$/';
 
     $files = [];
 
-    if (is_dir($location)) {
-        $files = \Drupal::service('file_system')->scanDirectory($location, '/.*/', array('min_depth' => 0));
+    if ($location) {
+
+        if (is_dir($location)) {
+            $files = \Drupal::service('file_system')->scanDirectory($location, '/.*/', array('min_depth' => 0));
+        }
     }
 
     $invalid_file_names = array();
@@ -285,17 +299,20 @@ function bundle_invalid_file_extensions($nid)
 
     $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
 
-    $location = $node->get('flat_location')->value;
+    $location = $node->hasField('flat_location') ? $node->get('flat_location')->value : NULL;
 
     $allowed_extensions = explode(', ', \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['allowed_extensions']);
 
     $files = [];
 
-    if (is_dir($location)) {
-        $files = \Drupal::service('file_system')->scanDirectory($location, '/.*/', array('min_depth' => 0));
+    if ($location) {
+
+        if (is_dir($location)) {
+            $files = \Drupal::service('file_system')->scanDirectory($location, '/.*/', array('min_depth' => 0));
+        }
     }
 
-    $invalid_file_extensions = array();
+    $invalid_file_extensions = [];
     foreach ($files as $file) {
         $path = $file->uri;
         $name = basename($path);
@@ -313,6 +330,30 @@ function bundle_invalid_file_extensions($nid)
     }
 }
 
+function bundle_has_subfolders($nid)
+{
+
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+
+    $location = $node->hasField('flat_location') ? $node->get('flat_location')->value : NULL;
+
+    if ($location) {
+
+        if (is_dir($location)) {
+            $content = \Drupal::service('file_system')->scanDirectory($location, '/.*/', ['recurse' => FALSE]);
+            if (!empty($content)) {
+                foreach ($content as $item) {
+                    ddm($item);
+                    if (is_dir($item->uri)) {
+                        return TRUE;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 /**
  *
  * Function to check whether any resourceproxy has a flatURI attribute, which means it is referring to a file that is already archived
@@ -326,23 +367,25 @@ function has_flat_uri($nid)
 
     $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
 
-    $cmdi = $node->get('flat_cmdi_file')->target_id;
+    $cmdi = $node->hasField('flat_cmdi_file') ? $node->get('flat_cmdi_file')->target_id : NULL;
     if ($cmdi) {
         $cmdi_file = File::load($cmdi);
         $cmdi_file_uri = $cmdi_file->getFileUri();
-    }
 
-    if (file_exists(\Drupal::service("file_system")->realpath($cmdi_file_uri))) {
-        $cmd = @CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($cmdi_file_uri));
-    }
+        if (file_exists(\Drupal::service("file_system")->realpath($cmdi_file_uri))) {
+            $cmd = @CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($cmdi_file_uri));
+        } else {
+            return FALSE;
+        }
 
-    if ($cmd) {
+        if ($cmd) {
 
-        foreach ($cmd->children('cmd', true)->Resources->ResourceProxyList->ResourceProxy as $resource) {
-            $resourceref_attributes = $resource->children('cmd', true)->ResourceRef->attributes('lat', TRUE);
-            $fid = $resourceref_attributes['flatURI'];
-            if ($fid) {
-                return TRUE;
+            foreach ($cmd->children('cmd', true)->Resources->ResourceProxyList->ResourceProxy as $resource) {
+                $resourceref_attributes = $resource->children('cmd', true)->ResourceRef->attributes('lat', TRUE);
+                $fid = $resourceref_attributes['flatURI'];
+                if ($fid) {
+                    return TRUE;
+                }
             }
         }
     }
@@ -364,16 +407,18 @@ function bundle_files_mismatch($nid)
 
     $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
 
-    $location = $node->get('flat_location')->value;
+    $location = $node->hasField('flat_location') ? $node->get('flat_location')->value : NULL;
 
     $cmdi = $node->get('flat_cmdi_file')->target_id;
     if ($cmdi) {
         $cmdi_file = File::load($cmdi);
         $cmdi_file_uri = $cmdi_file->getFileUri();
-    }
 
-    if (file_exists(\Drupal::service("file_system")->realpath($cmdi_file_uri))) {
-        $cmd = @CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($cmdi_file_uri));
+        if (file_exists(\Drupal::service("file_system")->realpath($cmdi_file_uri))) {
+            $cmd = @CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($cmdi_file_uri));
+        } else {
+            $cmd = FALSE;
+        }
     }
 
     $new_files = [];
@@ -402,6 +447,7 @@ function bundle_files_mismatch($nid)
                 } else {
                     $fid = $resourceref_attributes['flatURI'];
                     if ($fid) {
+                        // @TODO reimplement below
                         $fObj = islandora_object_load($fid);
                         $label = $fObj->label;
                         $existing_files[] = $label;

@@ -46,7 +46,7 @@ class BundleUpdateCmdiForm extends FormBase
       $profile = NULL;
     }
 
-    $form['#prefix'] = "<div id='flat_bundle_update_form_wrapper'>";
+    $form['#prefix'] = "<div id='flat_cmdi_form_wrapper'>";
     $form['#suffix'] = "</div>";
 
     $user = \Drupal::currentUser();
@@ -103,7 +103,7 @@ class BundleUpdateCmdiForm extends FormBase
       '#value' => t('Submit'),
       '#ajax' => [
         'callback' => 'flat_bundle_update_form_ajax_handler',
-        'wrapper' => 'flat_bundle_update_form_wrapper',
+        'wrapper' => 'flat_cmdi_form_wrapper',
         'effect' => 'fade',
       ],
       '#validate' => ['flat_bundle_update_form_final_validate'],

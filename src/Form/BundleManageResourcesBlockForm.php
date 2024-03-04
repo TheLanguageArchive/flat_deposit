@@ -31,14 +31,28 @@ class BundleManageResourcesBlockForm extends FormBase
         if ($node instanceof \Drupal\node\NodeInterface) {
             if ($node->bundle() === 'flat_bundle') {
 
-                $location = $node->get('flat_location')->value;
+                $location = $node->hasField('flat_location') ? $node->get('flat_location')->value : NULL;
 
                 $files = [];
-                if ($location && file_exists($location)) {
 
-                    // We ignore hidden files (starting with a dot). These will not be added
-                    // to the bundle later on either.
-                    $files = array_diff(preg_grep('/^([^.])/', scandir($location)), ['..', '.']);
+                if ($location) {
+                    if (file_exists($location)) {
+
+                        // We ignore hidden files (starting with a dot). These will not be added
+                        // to the bundle later on either.
+                        $files = array_diff(preg_grep('/^([^.])/', scandir($location)), ['..', '.']);
+                    } else {
+                        $form['flat_bundle_manage_resources']['#prefix'] = '<i>The selected folder for files to be added to this bundle cannot be found! Go to "Edit bundle properties" to choose a different one.</i>';
+                        return $form;
+                    }
+                } else {
+                    $form['flat_bundle_manage_resources']['#prefix'] = '<i>No folder selected for files to be added to this bundle! Go to "Edit bundle properties" to choose one.</i>';
+                    return $form;
+                }
+
+                if (empty($files)) {
+                    $form['flat_bundle_manage_resources']['#prefix'] = '<i>The selected folder is empty!</i>';
+                    return $form;
                 }
 
                 $options = [];
@@ -101,12 +115,7 @@ class BundleManageResourcesBlockForm extends FormBase
 
                     $dirname = \Drupal::service('file_system')->basename($location);
                     $form['flat_bundle_manage_resources']['#prefix'] = '<h2>Files in folder <i>"' . $dirname . '"</i> to be added to this bundle:</h2>';
-                } else {
-
-                    $form['flat_bundle_manage_resources']['#prefix'] = '<h2>No folder specified</h2>';
                 }
-
-
 
                 // normalizing currently saved metadata, null, empty str will be marked as empty array
                 /*                 $marked = $node->get('flat_encrypted_resources')->value;

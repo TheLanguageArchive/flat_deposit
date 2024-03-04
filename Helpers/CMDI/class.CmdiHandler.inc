@@ -1,5 +1,7 @@
 <?php
 
+use \Drupal\Core\File\StreamWrapperManager;
+
 module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/Template2FormParser');
 module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/Form2CmdiParser');
 
@@ -27,18 +29,23 @@ class CmdiHandler extends SimpleXMLElement
 
     const CMDI_XSLTS = __DIR__ . '/XSLT/';
 
-    public static function simplexml_load_cmdi_file($file_name)
+    public static function simplexml_load_cmdi_file($uri)
     {
+
+        $content = file_get_contents($uri);
+
+        $string = mb_convert_encoding($content, 'UTF-8');
+
         $xml = new DOMDocument;
-        $xml->load($file_name);
+        $xml->loadXML($string);
         $xsl = new DOMDocument;
         $xsl->load(CmdiHandler::CMDI_XSLTS . '/ApplyCmdiPrefix.xsl');
-
 
         $proc = new XSLTProcessor;
         $proc->importStyleSheet($xsl);
 
         $result = $proc->transformToXML($xml);
+
         return simplexml_load_string($result, 'CmdiHandler');
     }
 
@@ -116,6 +123,7 @@ class CmdiHandler extends SimpleXMLElement
      */
     public function getNameById()
     {
+        ddm($this);
         $node = $this->xpath('cmd:Header/cmd:MdProfile')[0];
         if (!$node) {
             // possibly non-namespaced CMDI
@@ -137,7 +145,7 @@ class CmdiHandler extends SimpleXMLElement
                 $name = 'MPI_Collection';
                 break;
 
-            case 'clarin.eu:cr1:p_1407745712035':
+            case 'clarin.eu:cr1:p_1644311493069':
                 $name = 'lat-session';
                 break;
 
@@ -629,13 +637,9 @@ class CmdiHandler extends SimpleXMLElement
             return FALSE;
         }
 
-        ddm('targetNode: ' . print_r($targetNode, TRUE));
-
         // Add new resources to ResourceProxyList
         $new_resources = array_diff_key($directory_resources, $cmdi_resources);
         $resourceProxyList = $this->xpath('cmd:Resources/cmd:ResourceProxyList')[0];
-
-        ddm('new_resources: ' . print_r($new_resources, TRUE));
 
         foreach ($new_resources as $rid => $file_name) {
 

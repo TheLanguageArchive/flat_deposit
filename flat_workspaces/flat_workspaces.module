@@ -313,6 +313,7 @@ function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInter
 
         // add custom validation
         $form['#validate'][] = 'flat_workspaces_flat_bundle_node_form_validate';
+        array_unshift($form['#validate'], 'flat_workspaces_form_node_flat_bundle_form_submit');
     }
 }
 
@@ -354,6 +355,12 @@ function flat_workspaces_flat_bundle_node_form_validate(&$form, FormStateInterfa
                 //$form_state->setErrorByName('next_directories', t('The selected workspace folder contains more than !max_files files', ['!max_files' => $max_files]));
                 $errors[] = t('The selected workspace folder contains too many files, the maximum is !max_files.', ['!max_files' => $max_files]);
             }
+            $archive_folder = \Drupal::config('flat_workspaces.settings')->get('archive_folder');
+            $is_not_archive_folder = \Workspaces::isNotArchiveFolder($dir);
+            if (!$is_not_archive_folder) {
+                $errors[] = t('You have selected the entire !archive_folder. Please select a subfolder.', ['!archive_folder' => $archive_folder]);
+            }
+
             $max_file_size_exceeded = array();
             $invalid_file_names = array();
             $invalid_file_extensions = array();

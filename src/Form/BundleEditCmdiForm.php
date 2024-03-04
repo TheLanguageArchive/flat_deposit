@@ -78,7 +78,7 @@ class BundleEditCmdiForm extends FormBase
         $profile = NULL;
       }
 
-      $form['#prefix'] = "<div id='flat_bundle_edit_cmdi_form_wrapper'>";
+      $form['#prefix'] = "<div id='flat_cmdi_form_wrapper'>";
       $form['#suffix'] = "</div>";
 
       $user = \Drupal::currentUser();

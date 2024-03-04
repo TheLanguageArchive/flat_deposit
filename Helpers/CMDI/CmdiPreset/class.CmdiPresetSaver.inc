@@ -162,8 +162,6 @@ class CmdiPresetSaver
 
         $label = $this->getLabel();
 
-        ddm($label);
-
         if (empty($label)) {
 
             $this->form_state->setErrorByName('flat_cmdi_presets', t('Please provide a label for saving this block as a preset.'));

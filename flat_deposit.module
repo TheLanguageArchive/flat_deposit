@@ -204,7 +204,7 @@ function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterfac
         $form['revision_information']['#access'] = false;
     }
 
-    $form['#prefix'] = '<div class="flat-bundle-form">';
+    $form['#prefix'] = '<div class="flat_bundle_form_wrapper">';
     $form['#suffix'] = '</div>';
 
     // Remove after next install.
@@ -607,12 +607,12 @@ function flat_bundle_node_form_add_validate($form, FormStateInterface $form_stat
     $filesystem = \Drupal::service("file_system");
 
     // Validate that currently selected folder has no subfolders.
-    /*     $dirs = array_filter(glob($original_path . '/*'), 'is_dir');
+    //$dirs = array_filter(glob($original_path . '/*'), 'is_dir');
     if (file_exists($filesystem->realpath($original_path)) and !empty(glob($filesystem->realpath($original_path) . '/*', GLOB_ONLYDIR))) {
         //dd(glob($filesystem->realpath($original_path) . '/*', GLOB_ONLYDIR));
-        $form_state->setErrorByName('department', t('Chosen directory contains subfolders'));
+        $form_state->setErrorByName('department', t('The chosen folder contains subfolders'));
         return $form;
-    } */
+    }
 
     // Validate that no other bundle is using same folder.
     /*     $query = \Drupal::entityQuery('node')
@@ -683,7 +683,7 @@ function flat_bundle_node_form_add_submit($form, &$form_state)
     $form_state->getValue(['flat_cmdi_file', 0, 'fid']);
     if (isset($file_id) and $file_id != 0) {
 
-        \Drupal::messenger()->addMessage($file_id);
+        //\Drupal::messenger()->addMessage($file_id);
         $file = File::load($file_id);
         $file->filename = $mDataName;
         $file->status = FILE_STATUS_PERMANENT;
@@ -865,7 +865,7 @@ function flat_bundle_validate($node, $form, &$form_state)
     $node_wrapper = entity_metadata_wrapper('node', $node);
     $source = $node_wrapper->flat_source->value();
     $original_path = $node_wrapper->flat_original_path->value();
-    echo($original_path);
+
     if ($source == 'local') {
 
         if (!file_exists($original_path)) {

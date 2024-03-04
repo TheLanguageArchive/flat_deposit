@@ -57,7 +57,7 @@ class BundleEnterCmdiForm extends FormBase
     // Add option to import a external file
     $available_profiles['Import'] = 'I want to upload a CMDI metadata file';
 
-    $form['#prefix'] = "<div id='flat_collection_add_form_wrapper'>";
+    $form['#prefix'] = "<div id='flat_cmdi_form_wrapper'>";
     $form['#suffix'] = "</div>";
 
     $user = \Drupal::currentUser();

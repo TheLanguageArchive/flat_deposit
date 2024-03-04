@@ -7,6 +7,9 @@
  * Needs field_member_of and title_aggregated fields to be indexed, using the default_solr_index
  * 
  */
+
+use Drupal\Core\File\FileSystemInterface;
+
 class FlatUtils
 {
     /**
@@ -93,5 +96,30 @@ class FlatUtils
             $model_array[] = $cmodel['object']['value'];
         }
         return $model_array;
+    }
+
+    public static function getCmdiFile($nid)
+    {
+        //@TODO modify mime once we can use the custom cmdi mime type
+        $cmdi_mime = 'application/xml';
+
+        $query = \Drupal::entityQuery('media')
+            ->accessCheck(TRUE)
+            ->condition('field_media_of', $nid);
+
+        $media_ids = $query->execute();
+
+        // Load the media entities based on the retrieved IDs.
+        $media_entities = \Drupal::entityTypeManager()->getStorage('media')->loadMultiple($media_ids);
+
+        // Loop through the media entities and perform necessary actions.
+        foreach ($media_entities as $media_entity) {
+            if ($media_entity->field_mime_type->value == $cmdi_mime) {
+                $file_id = $media_entity->field_media_file->target_id;
+                $file = \Drupal\file\Entity\File::load($file_id);
+                $file_uri = $file->getFileUri();
+                return $file_uri;
+            }
+        }
     }
 }

@@ -56,7 +56,7 @@ class CollectionAddForm extends FormBase
     // Add option to import a external file
     $available_profiles['Import'] = 'I want to upload a CMDI metadata file';
 
-    $form['#prefix'] = "<div id='flat_collection_add_form_wrapper'>";
+    $form['#prefix'] = "<div id='flat_cmdi_form_wrapper'>";
     $form['#suffix'] = "</div>";
 
     $user = \Drupal::currentUser();
@@ -330,7 +330,9 @@ class CollectionAddForm extends FormBase
     $cmdiFile = $export_dir . '/' . $profile . '_' . uniqid() . '.cmdi';
     $form_state->setValue(['cmdiFile'], $cmdiFile);
 
-    $fid = $form_state->getValue(['data', 'fid']);
+    // @TODO get fid from node once it's added as a property
+    //$fid = $form_state->getValue(['data', 'fid']);
+    $fid = 'lat:12345678';
     // stop validation if errors have previously occurred
     if ($form_state->getErrors()) {
       return $form;
@@ -549,7 +551,7 @@ class CollectionAddForm extends FormBase
     /**
      * @FIXME implement fetching object from islandora after sip works
      */
-    $fObject = 'lat:123456';
+    $fObject = ['label' => 'testCollection', 'owner' => 'admin', 'fid' => 'lat:12345678'];
     // $fObject = islandora_object_load($fid);
 
     if (!$fObject) {
@@ -557,9 +559,9 @@ class CollectionAddForm extends FormBase
       return $form;
     }
 
-    $form_state->setValue(['data', 'fid'], (string)$fid);
-    $form_state->setValue(['data', 'label'], $fObject->label);
-    $form_state->setValue(['data', 'owner'], $fObject->owner);
+    $form_state->setValue(['data', 'fid'], $fObject['fid']);
+    $form_state->setValue(['data', 'label'], $fObject['label']);
+    $form_state->setValue(['data', 'owner'], $fObject['owner']);
 
     return $form;
   }
@@ -571,13 +573,13 @@ class CollectionAddForm extends FormBase
     $uid = $owner->uid;
     $label = $form_state->getValue(['data', 'label']);
     $fid = $form_state->getValue(['data', 'fid']);
-    $target = 'islandora/object/' . $form_state->getValue(['data', 'fid']);
-    create_collection_node($label, $uid, $fid);
+    //$target = 'islandora/object/' . $form_state->getValue(['data', 'fid']);
+    //create_collection_node($label, $uid, $fid);
 
     \Drupal::messenger()->addMessage(t('New collection item has been created'));
 
     $response = new AjaxResponse();
-    $response->addCommand(new RedirectCommand($target));
+    //$response->addCommand(new RedirectCommand($target));
 
     return $response;
   }

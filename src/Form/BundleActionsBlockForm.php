@@ -64,7 +64,7 @@ class BundleActionsBlockForm extends FormBase
                 );
 
                 $form['actions']['markup_1'] = array(
-                    '#markup' => '<div><br></div>'
+                    '#markup' => '<br>'
                 );
 
                 $form['actions']['validate_bundle'] = array(
@@ -93,13 +93,13 @@ class BundleActionsBlockForm extends FormBase
                 $form['actions']['edit_bundle'] = array(
                     '#type' => 'submit',
                     '#value' => t('Edit bundle properties'),
-                    '#prefix' => '<div><br/></div>',
+                    '#prefix' => '<br/>',
                 );
 
                 $form['actions']['delete_bundle'] = array(
                     '#type' => 'submit',
                     '#value' => t('Delete bundle'),
-                    '#suffix' => '<div><br/></div>',
+                    '#suffix' => '<br/>',
                 );
 
                 $form['actions']['note'] = array(
@@ -155,6 +155,7 @@ class BundleActionsBlockForm extends FormBase
         $invalid_file_names = bundle_invalid_file_names($nid);
         $invalid_file_extensions = bundle_invalid_file_extensions($nid);
         $has_new_or_deleted_files = (bundle_new_files($nid) or bundle_deleted_files($nid));
+        $has_subfolders = bundle_has_subfolders($nid);
 
         $max_number_files = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['max_ingest_files'];
         $max_size = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['max_file_size'];
@@ -187,7 +188,7 @@ class BundleActionsBlockForm extends FormBase
         // Check existence external location
         if ($file_exists === false) {
 
-            $form_state->setErrorByName('validate_bundle', t('Location does not exist (:path) ', array(':path' => $path)));
+            $form_state->setErrorByName('validate_bundle', t('The selected folder no longer exist (:path) ', array(':path' => $path)));
             return $form;
         }
 
@@ -244,6 +245,10 @@ class BundleActionsBlockForm extends FormBase
         if (isset($files_mismatch) && $files_mismatch) {
             $files_mismatch_list = implode(", ", $files_mismatch);
             $errors[] = t('There is a mismatch between the files listed in your uploaded CMDI file and the files you provided in the selected folder. Missing file(s): !files_mismatch_list. In case you wish to use this CMDI file for a different set of files, use the "upload CMDI file as template" option, see deposit manual.', ['!files_mismatch_list' => $files_mismatch_list]);
+        }
+
+        if ($has_subfolders) {
+            $errors[] = t('The selected folder contains subfolders.');
         }
 
         if (!empty($errors)) {
