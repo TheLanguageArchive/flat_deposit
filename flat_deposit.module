@@ -291,7 +291,7 @@ function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterfac
                         $options[$nid] = $fObject->label;
                     }
                 }
-             
+
         }
     }
     */
@@ -604,15 +604,15 @@ function flat_bundle_node_form_add_validate($form, FormStateInterface $form_stat
         $form_state->setErrorByName('title', t('Bundle with same or very similar bundle name exists'));
     }
 
-    $filesystem = \Drupal::service("file_system");
+    //$filesystem = \Drupal::service("file_system");
 
     // Validate that currently selected folder has no subfolders.
     //$dirs = array_filter(glob($original_path . '/*'), 'is_dir');
-    if (file_exists($filesystem->realpath($original_path)) and !empty(glob($filesystem->realpath($original_path) . '/*', GLOB_ONLYDIR))) {
-        //dd(glob($filesystem->realpath($original_path) . '/*', GLOB_ONLYDIR));
-        $form_state->setErrorByName('department', t('The chosen folder contains subfolders'));
-        return $form;
-    }
+    //if (file_exists($filesystem->realpath($original_path)) and !empty(glob($filesystem->realpath($original_path) . '/*', GLOB_ONLYDIR))) {
+    //    //dd(glob($filesystem->realpath($original_path) . '/*', GLOB_ONLYDIR));
+    //    $form_state->setErrorByName('department', t('The chosen folder contains subfolders'));
+    //    return $form;
+    //}
 
     // Validate that no other bundle is using same folder.
     /*     $query = \Drupal::entityQuery('node')
@@ -895,7 +895,7 @@ function flat_bundle_validate($node, $form, &$form_state)
         // $wrapper = entity_metadata_wrapper('node', $node);
         $val = $node->flat_fid->value;
 
-        
+
         $node->content['flat_fid'] = array(
         '#weight' => 10,
         '#theme' => 'link',
@@ -908,7 +908,7 @@ function flat_bundle_validate($node, $form, &$form_state)
         'html' => FALSE,
         ),
         );
-        
+
 
         $node->content['add_bundle'] = array(
             '#weight' => 10,
@@ -1020,10 +1020,10 @@ function flat_deposit_node_view(array &$build, Node $node, EntityViewDisplay $di
             l(t('My Dashboard'), 'dashboard/' . $user->id() . '/notifications'),
         ));
     }
-    
+
 $node->content['link_dashboard']['#title'] = 'Return to dashboard';
 $node->content['link_dashboard']['#markup'] = l('Shortcut to dashboard' , 'dashboard') ;
- 
+
 }
 */
 
@@ -1157,6 +1157,10 @@ function flat_deposit_form_alter(&$form, FormStateInterface $form_state, $form_i
  */
 function flat_deposit_add_css_to_button_recursive(&$element)
 {
+    if (!is_array($element)) {
+        return;
+    }
+
     if (isset($element['#type']) && $element['#type'] == 'button') {
         // Add CSS classes to the "attributes" array of the input element.
         $element['#attributes']['class'][] = 'btn';
@@ -1594,7 +1598,7 @@ function flat_deposit_menu_alter(&$items)
 
 /**
  * Implements hook_menu_local_tasks_alter
- * 
+ *
  * Get rid of edit/delete/revision tabs ("local tasks") on nodes
  */
 function flat_deposit_menu_local_tasks_alter(&$data, $route_name, \Drupal\Core\Cache\RefinableCacheableDependencyInterface &$cacheability)
@@ -1617,6 +1621,8 @@ function flat_deposit_form_node_form_alter(&$form, \Drupal\Core\Form\FormStateIn
     $form['path']['#access'] = FALSE;
     $form['author']['#access'] = FALSE;
     $form['options']['#access'] = FALSE;
+    $form['#theme'] = 'tla_bootstrap_sass';
+
 }
 
 /*
@@ -1636,9 +1642,9 @@ return true;
 
 /**
  * Implements hook_form_alter
- * 
+ *
  * Enable/disable action buttons and change bundle_image depending on bundle status
- * 
+ *
  */
 
 function flat_deposit_form_bundle_actions_block_form_alter(&$form, FormStateInterface $form_state, $form_id)
@@ -1726,7 +1732,7 @@ function flat_deposit_form_bundle_actions_block_form_alter(&$form, FormStateInte
     }
 }
 
-/** 
+/**
  * Implements hook_preprocess_fieldset()
  *
  * Adding 'actions' to fieldset for metadata template controls

@@ -293,7 +293,7 @@ class FlatBundle
 
             $moved = \Drupal::service('file_system')
                 ->move($source_location, $target_location, FileSystemInterface::EXISTS_REPLACE);
-            #$moved = rename(drupal_realpath($source_location), drupal_realpath($target_location)); // Unfortunately, rename does not return true on success
+            //$moved = rename(drupal_realpath($source_location), drupal_realpath($target_location)); // Unfortunately, rename does not return true on success
 
             // hook for additional actions after move
             $actions = \Drupal::moduleHandler()->invokeAll('data_move_actions', [$source_location, $target_location]);

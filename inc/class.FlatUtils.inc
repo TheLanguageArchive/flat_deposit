@@ -3,9 +3,9 @@
 /**
  * Helper functions for flat deposit as a replacement for FlatTuque, as it is no longer needed
  * to look things up in Fedora.
- * 
+ *
  * Needs field_member_of and title_aggregated fields to be indexed, using the default_solr_index
- * 
+ *
  */
 
 use Drupal\Core\File\FileSystemInterface;
@@ -110,15 +110,20 @@ class FlatUtils
         $media_ids = $query->execute();
 
         // Load the media entities based on the retrieved IDs.
-        $media_entities = \Drupal::entityTypeManager()->getStorage('media')->loadMultiple($media_ids);
+        if (empty($media_ids)) {
+            return false;
+        }
+        else {
+            $media_entities = \Drupal::entityTypeManager()->getStorage('media')->loadMultiple($media_ids);
 
-        // Loop through the media entities and perform necessary actions.
-        foreach ($media_entities as $media_entity) {
-            if ($media_entity->field_mime_type->value == $cmdi_mime) {
-                $file_id = $media_entity->field_media_file->target_id;
-                $file = \Drupal\file\Entity\File::load($file_id);
-                $file_uri = $file->getFileUri();
-                return $file_uri;
+            // Loop through the media entities and perform necessary actions.
+            foreach ($media_entities as $media_entity) {
+                if ($media_entity->field_mime_type->value == $cmdi_mime) {
+                    $file_id = $media_entity->field_media_file->target_id;
+                    $file = \Drupal\file\Entity\File::load($file_id);
+                    $file_uri = $file->getFileUri();
+                    return $file_uri;
+                }
             }
         }
     }

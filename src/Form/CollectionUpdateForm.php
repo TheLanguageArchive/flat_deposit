@@ -48,6 +48,11 @@ class CollectionUpdateForm extends FormBase
 
         $cmdi_path = \FlatUtils::getCmdiFile($nid);
 
+        if (!$cmdi_path) {
+            \Drupal::messenger()->addMessage(t('No CMDI file found for this collection'), 'error');
+            return $form;
+        }
+
         $inheritedData = \CmdiHandler::simplexml_load_cmdi_file($cmdi_path);
 
         if ($inheritedData) {

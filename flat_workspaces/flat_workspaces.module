@@ -215,11 +215,15 @@ function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInter
 
         //Scan workspace directory; non-existing directories will return false, existing dirs will populate the
         // workspace field options
+
         $workspaces = \Workspaces::listAccessibleFolderContent($workspaces_directory, ['isDir', 'userHasReadPermissions', 'webUserHasReadPermissions', 'isNotCurrentDir']);
 
         if (!empty($workspaces)) {
-            $form['workspace_navigation']['field']['workspace']['#options'] = array_combine($workspaces, $workspaces);
+            $options = array_combine($workspaces, $workspaces);
+            $form['workspace_navigation']['field']['workspace']['#options'] = $options;
             $form['workspace_navigation']['field']['workspace']['#access'] = true;
+            $form['workspace_navigation']['field']['workspace']['#disabled'] = false;
+
         } else {
             $form['workspace_navigation']['field']['workspace']['#access'] = true;
             $form['workspace_navigation']['field']['workspace']['#disabled'] = true;
@@ -313,7 +317,7 @@ function flat_workspaces_form_node_flat_bundle_form_alter(&$form, FormStateInter
 
         // add custom validation
         $form['#validate'][] = 'flat_workspaces_flat_bundle_node_form_validate';
-        array_unshift($form['#validate'], 'flat_workspaces_form_node_flat_bundle_form_submit');
+        array_unshift($form['#validate'], 'flat_workspaces_flat_bundle_node_form_validate');
     }
 }
 
@@ -333,7 +337,6 @@ function flat_workspaces_flat_bundle_node_form_validate(&$form, FormStateInterfa
         if ($dir) {
             $errors = array();
             $files = [];
-
             if (is_dir($dir)) {
                 $files = \Drupal::service('file_system')->scanDirectory($dir, '/.*/', array('min_depth' => 0));
             }
@@ -345,22 +348,24 @@ function flat_workspaces_flat_bundle_node_form_validate(&$form, FormStateInterfa
             $filename_pattern = '/^[\da-zA-Z][\da-zA-Z\._\-]+$/';
             $max_path_length = 4000; // db entries can be 5000 chars but there seems to be some overhead
             if (strlen($dir) > $max_path_length) {
-
                 $form_state->setErrorByName('next_directories', 'The path to reach the specified workspace folder is too long. Move the folder up in the hierarchy to reduce the total path length.');
-            }
-            if (file_exists(\Drupal::service('file_system')->realpath($dir)) and !empty(glob(\Drupal::service('file_system')->realpath($dir) . '/*', GLOB_ONLYDIR))) {
-                $form_state->setErrorByName('next_directories', 'The selected workspace folder contains subfolders.');
                 return $form;
-            } elseif (count($files) > $max_files) {
-                //$form_state->setErrorByName('next_directories', t('The selected workspace folder contains more than !max_files files', ['!max_files' => $max_files]));
-                $errors[] = t('The selected workspace folder contains too many files, the maximum is !max_files.', ['!max_files' => $max_files]);
             }
             $archive_folder = \Drupal::config('flat_workspaces.settings')->get('archive_folder');
-            $is_not_archive_folder = \Workspaces::isNotArchiveFolder($dir);
-            if (!$is_not_archive_folder) {
-                $errors[] = t('You have selected the entire !archive_folder. Please select a subfolder.', ['!archive_folder' => $archive_folder]);
+            $is_archive_folder = \Workspaces::isArchiveFolder($dir);
+            if ($is_archive_folder) {
+                $form_state->setErrorByName('next_directories', t('You have selected the entire @archive_folder folder. Please select a subfolder.', ['@archive_folder' => $archive_folder]));
+                return $form;
             }
-
+            $has_subfolders = \Workspaces::hasSubfolders($dir);
+            if ($has_subfolders) {
+                $form_state->setErrorByName('next_directories', 'The selected workspace folder contains subfolders.');
+                return $form;
+            }
+            if (count($files) > $max_files) {
+                //$form_state->setErrorByName('next_directories', t('The selected workspace folder contains more than !max_files files', ['!max_files' => $max_files]));
+                $errors[] = t('The selected workspace folder contains too many files, the maximum is @max_files.', ['@max_files' => $max_files]);
+            }
             $max_file_size_exceeded = array();
             $invalid_file_names = array();
             $invalid_file_extensions = array();

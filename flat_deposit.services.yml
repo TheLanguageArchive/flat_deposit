@@ -18,3 +18,7 @@ services:
     class: Drupal\flat_deposit\StreamWrapper\LocalStreamWrapper
     tags:
       - { name: stream_wrapper, scheme: local }
+  theme.negotiator.flat_deposit:
+    class: Drupal\flat_deposit\Theme\ThemeNegotiator
+    tags:
+      - { name: theme_negotiator, priority: 1000 }

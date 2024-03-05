@@ -357,7 +357,7 @@ function bundle_has_subfolders($nid)
 /**
  *
  * Function to check whether any resourceproxy has a flatURI attribute, which means it is referring to a file that is already archived
- * 
+ *
  * @TODO implement once we know how to get the CMDI file from Fedora 6
  *
  */
@@ -396,7 +396,7 @@ function has_flat_uri($nid)
 /**
  *
  * Function to check whether there is a matching file in the selected bundle directory for each of the resourceproxies in the CMDI
- * 
+ *
  *  * @TODO implement once we know how to get the CMDI file from Fedora 6
  *
  */

@@ -156,7 +156,6 @@ class Workspaces
 
     static function passedAllChecks($directory, $filters = [])
     {
-
         foreach ($filters as $filter) {
             if (!self::$filter($directory)) {
                 return false;
@@ -204,75 +203,111 @@ class Workspaces
         return basename($directory) != '..';
     }
 
-    static function isNotArchiveFolder($directory)
+    static function isArchiveFolder($directory)
     {
-        \Drupal::messenger()->addError('dirname: ' . basename(dirname($directory)));
-        $archive_folder = \Drupal::config('flat_workspaces.settings')->get('archive_folder');
-        \Drupal::messenger()->addError('archive_folder: ' . $archive_folder);
-        if (basename(dirname($directory)) == $archive_folder) {
-            return false;
-        } else {
-            return true;
+        if (is_dir($directory)) {
+
+            $archive_folder = \Drupal::config('flat_workspaces.settings')->get('archive_folder');
+            if (basename(dirname($directory)) == $archive_folder) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    static function hasSubfolders($directory)
+    {
+        if (is_dir($directory)) {
+
+            $content = \Drupal::service('file_system')->scanDirectory($directory, '/.*/', ['recurse' => FALSE]);
+            if (!empty($content)) {
+                foreach ($content as $item) {
+                    if (is_dir($item->uri)) {
+                        return TRUE;
+                    }
+                }
+            }
         }
     }
 
     static function userHasReadPermissions($directory)
     {
-        module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
-        $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
-        if (empty($acl->getInfo())) {
-            return false;
+        if (is_dir($directory)) {
+
+            module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
+            $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
+            if (empty($acl->getInfo())) {
+                return false;
+            }
+
+            $username = \Drupal::currentUser()->getAccountName();
+            $id = $username == 'admin' ? exec('whoami') : $username;
+            $id = str_replace('@mpi.nl', '', $id);
+
+            return $acl->checkReadAccess($id);
         }
 
-        $username = \Drupal::currentUser()->getAccountName();
-        $id = $username == 'admin' ? exec('whoami') : $username;
-        $id = str_replace('@mpi.nl', '', $id);
-
-        return $acl->checkReadAccess($id);
+        return false;
     }
 
     static function webUserHasReadPermissions($directory)
     {
-        module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
-        $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
+        if (is_dir($directory)) {
 
-        if (empty($acl->getInfo())) {
-            return false;
+            module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
+            $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
+
+            if (empty($acl->getInfo())) {
+                return false;
+            }
+
+            $id = exec('whoami');
+
+            return $acl->checkReadAccess($id);
         }
 
-        $id = exec('whoami');
-
-        return $acl->checkReadAccess($id);
+        return false;
     }
 
     static function userHasWritePermissions($directory)
     {
-        module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
-        $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
+        if (is_dir($directory)) {
 
-        if (empty($acl->getInfo())) {
-            return false;
+            module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
+            $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
+
+            if (empty($acl->getInfo())) {
+                return false;
+            }
+
+            $username = \Drupal::currentUser()->getAccountName();
+            $id = $username == 'admin' ? exec('whoami') : $username;
+            $id = str_replace('@mpi.nl', '', $id);
+
+            return $acl->checkWriteAccess($id);
         }
 
-        $username = \Drupal::currentUser()->getAccountName();
-        $id = $username == 'admin' ? exec('whoami') : $username;
-        $id = str_replace('@mpi.nl', '', $id);
-
-        return $acl->checkWriteAccess($id);
+        return false;
     }
 
     static function webUserHasWritePermissions($directory)
     {
-        module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
-        $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
+        if (is_dir($directory)) {
 
-        if (empty($acl->getInfo())) {
-            return false;
+            module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
+            $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
+
+            if (empty($acl->getInfo())) {
+                return false;
+            }
+
+            $id = exec('whoami');
+
+            return $acl->checkWriteAccess($id);
         }
 
-        $id = exec('whoami');
-
-        return $acl->checkWriteAccess($id);
+        return false;
     }
 }
 
