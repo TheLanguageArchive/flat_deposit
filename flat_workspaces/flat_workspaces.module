@@ -283,7 +283,7 @@ function flat_workspaces_form_node_form_alter(&$form, FormStateInterface $form_s
 }
 
 
-function flat_workspaces_flat_bundle_node_form_validate(&$form, FormStateInterface &$form_state)
+function flat_workspaces_flat_bundle_node_form_validate(&$form, FormStateInterface $form_state)
 {
 
     // Validate that currently selected folder has no subfolders, contains no more than configured maximum files, contains no files that are larger than configured maximum size, contains files with valid names and allowed extensions.
@@ -294,12 +294,18 @@ function flat_workspaces_flat_bundle_node_form_validate(&$form, FormStateInterfa
         if (!empty($next_dirs)) {
             if ($next_dirs == '..') {
                 $dir = dirname($flat_ws_path);
+                $subDirs = \Workspaces::listAccessibleFolderContent($dir, ['hasValidDirectoryName', 'isDir', 'userHasWritePermissions', 'webUserHasWritePermissions', 'isNotCurrentDir']);
+                if (!empty($subDirs)) {
+                    $form['workspace_navigation']['field']['next_directories']['#options'] = array_combine($subDirs, $subDirs);
+                    $form['workspace_navigation']['field']['next_directories']['#value'] = '';
+                }
             } else {
                 $dir = $flat_ws_path . '/' . $next_dirs;
             }
         } else {
             $dir = $flat_ws_path;
         }
+
         if (!$dir or !file_exists(\Drupal::service('file_system')->realpath($dir))) {
             $form_state->setErrorByName('next_directories', 'Please select a valid workspace folder.');
             return $form;

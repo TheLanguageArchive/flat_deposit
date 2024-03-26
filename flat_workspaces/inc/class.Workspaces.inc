@@ -73,7 +73,7 @@ class Workspaces
 
                 ),
                 'next_directories' => array(
-                    '#title' => 'Navigate to',
+                    '#title' => 'Subfolder',
                     '#type' => 'select',
                     '#empty_option' => '-- Select Subfolder --',
                     '#empty_value' => '',
@@ -208,7 +208,7 @@ class Workspaces
         if (is_dir($directory)) {
 
             $archive_folder = \Drupal::config('flat_workspaces.settings')->get('archive_folder');
-            if (basename(dirname($directory)) == $archive_folder) {
+            if (basename($directory) == $archive_folder) {
                 return true;
             } else {
                 return false;
@@ -312,7 +312,7 @@ class Workspaces
 }
 
 
-function reload_workspace_navigation_container_ajax_callback($form, FormStateInterface $form_state)
+function reload_workspace_navigation_container_ajax_callback(&$form, FormStateInterface $form_state)
 {
     return $form['workspace_navigation'];
 }
