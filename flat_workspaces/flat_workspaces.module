@@ -277,7 +277,7 @@ function flat_workspaces_form_node_form_alter(&$form, FormStateInterface $form_s
 
             // add custom validation
             $form['#validate'][] = 'flat_workspaces_flat_bundle_node_form_validate';
-            array_unshift($form['#validate'], 'flat_workspaces_flat_bundle_node_form_validate');
+            //array_unshift($form['#validate'], 'flat_workspaces_flat_bundle_node_form_validate');
         }
     }
 }
@@ -296,8 +296,15 @@ function flat_workspaces_flat_bundle_node_form_validate(&$form, FormStateInterfa
                 $dir = dirname($flat_ws_path);
                 $subDirs = \Workspaces::listAccessibleFolderContent($dir, ['hasValidDirectoryName', 'isDir', 'userHasWritePermissions', 'webUserHasWritePermissions', 'isNotCurrentDir']);
                 if (!empty($subDirs)) {
+                    ddm('unsetting next_directories');
                     $form['workspace_navigation']['field']['next_directories']['#options'] = array_combine($subDirs, $subDirs);
                     $form['workspace_navigation']['field']['next_directories']['#value'] = '';
+                    $form['workspace_navigation']['field']['next_directories']['value']['#default_value'] = '';
+                    //$form['workspace_navigation']['field']['next_directories']['#value']['#default_value'] = '';
+
+
+                    $form_state->setRebuild();
+                    return ($form);
                 }
             } else {
                 $dir = $flat_ws_path . '/' . $next_dirs;
