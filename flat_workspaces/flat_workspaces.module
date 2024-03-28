@@ -215,7 +215,7 @@ function flat_workspaces_form_node_form_alter(&$form, FormStateInterface $form_s
             //Scan workspace directory; non-existing directories will return false, existing dirs will populate the
             // workspace field options
 
-            $workspaces = \Workspaces::listAccessibleFolderContent($workspaces_directory, ['isDir', 'userHasReadPermissions', 'webUserHasReadPermissions', 'isNotCurrentDir']);
+            $workspaces = \Workspaces::listAccessibleFolderContent($workspaces_directory, ['isDir', 'userHasReadPermissions', 'webUserHasReadPermissions', 'isNotDot', 'isNotDoubleDot']);
 
             if (!empty($workspaces)) {
                 $options = array_combine($workspaces, $workspaces);
@@ -264,7 +264,7 @@ function flat_workspaces_form_node_form_alter(&$form, FormStateInterface $form_s
             $form['workspace_navigation']['field']['chosen_ws']['#value'] = $current;
 
             // Add dropdown menu with lower level directories to go into
-            $subDirs = \Workspaces::listAccessibleFolderContent($current, ['hasValidDirectoryName', 'isDir', 'userHasWritePermissions', 'webUserHasWritePermissions', 'isNotCurrentDir']);
+            $subDirs = \Workspaces::listAccessibleFolderContent($current, ['hasValidDirectoryName', 'isDir', 'userHasWritePermissions', 'webUserHasWritePermissions', 'isNotDot']);
             if (!empty($subDirs)) {
                 $form['workspace_navigation']['field']['next_directories']['#options'] = array_combine($subDirs, $subDirs);
                 $form['workspace_navigation']['field']['next_directories']['#access'] = true;
@@ -293,20 +293,14 @@ function flat_workspaces_flat_bundle_node_form_validate(&$form, FormStateInterfa
         $next_dirs = $form_state->getValue(['next_directories']);
         if (!empty($next_dirs)) {
             if ($next_dirs == '..') {
+                // go one level up
                 $dir = dirname($flat_ws_path);
-                $subDirs = \Workspaces::listAccessibleFolderContent($dir, ['hasValidDirectoryName', 'isDir', 'userHasWritePermissions', 'webUserHasWritePermissions', 'isNotCurrentDir']);
+                $subDirs = \Workspaces::listAccessibleFolderContent($dir, ['hasValidDirectoryName', 'isDir', 'userHasWritePermissions', 'webUserHasWritePermissions', 'isNotDot']);
                 if (!empty($subDirs)) {
-                    ddm('unsetting next_directories');
                     $form['workspace_navigation']['field']['next_directories']['#options'] = array_combine($subDirs, $subDirs);
-                    $form['workspace_navigation']['field']['next_directories']['#value'] = '';
-                    $form['workspace_navigation']['field']['next_directories']['value']['#default_value'] = '';
-                    //$form['workspace_navigation']['field']['next_directories']['#value']['#default_value'] = '';
-
-
-                    $form_state->setRebuild();
-                    return ($form);
                 }
             } else {
+                // add selected directory to path
                 $dir = $flat_ws_path . '/' . $next_dirs;
             }
         } else {

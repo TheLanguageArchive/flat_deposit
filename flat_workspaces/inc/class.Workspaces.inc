@@ -191,13 +191,13 @@ class Workspaces
         return is_dir($directory);
     }
 
-    static function isNotCurrentDir($directory)
+    static function isNotDot($directory)
     {
 
         return basename($directory) != '.';
     }
 
-    static function isNotParentDir($directory)
+    static function isNotDoubleDot($directory)
     {
 
         return basename($directory) != '..';
@@ -314,5 +314,9 @@ class Workspaces
 
 function reload_workspace_navigation_container_ajax_callback(&$form, FormStateInterface $form_state)
 {
+    $next_dirs = $form_state->getValue(['next_directories']);
+    if ($next_dirs == '..') {
+        $form['workspace_navigation']['field']['next_directories']['#value'] = '';
+    }
     return $form['workspace_navigation'];
 }
