@@ -8,28 +8,6 @@ use Drupal\Core\Entity\EntityInterface;
  *
  */
 
-
-/**
- * Implements hook_menu().
- */
-function flat_nextcloud_menu()
-{
-
-    $items = array();
-
-    // Admin configuration - Nextcloud settings
-    $items['admin/config/flat_deposit/manage_nextcloud'] = array(
-        'title' => 'Nextcloud settings',
-        'description' => 'Configure local Nextcloud instance settings for user data upload',
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('flat_nextcloud_admin_form'),
-        'file' => 'inc/flat_nextcloud.admin_form.inc',
-        'access arguments' => array('admin deposit module')
-    );
-
-    return $items;
-}
-
 /**
  * Implements hook_user_profile_form_alter.
  *
@@ -77,8 +55,6 @@ function flat_nextcloud_form_node_form_alter(&$form, FormStateInterface $form_st
             hide($form['flat_ws_path']);
         }
 
-        $form['#validate'][] = 'flat_nextcloud_flat_bundle_node_form_validate';
-
         $form_state->loadInclude('flat_nextcloud', 'inc', 'inc/class.Nextcloud');
         module_load_include('inc', 'node', 'node.pages');
         $form['nextcloud_navigation'] = \Nextcloud::get_container();
@@ -91,8 +67,8 @@ function flat_nextcloud_form_node_form_alter(&$form, FormStateInterface $form_st
         $nextcloudUid = $user->nextcloud_uid->value ? $user->nextcloud_uid->value : false;
 
         if (!$nextcloudActivated || !$nextcloudAllowed || !$nextcloudEnabledForUser) {
-            ddm('nextcloud not allowed');
             unset($form['flat_source']['#options']['cloud']);
+            $form['flat_source']['widget'][0]['value']['#default_value'] = NULL;
             unset($form['nextcloud_navigation']);
             return;
         }
@@ -119,6 +95,8 @@ function flat_nextcloud_form_node_form_alter(&$form, FormStateInterface $form_st
         if (isset($form['nextcloud_navigation'])) {
             $form_state->loadInclude('node', 'inc', 'node.pages');
 
+            hide($form['nextcloud_navigation']['field']['chosen_nc_path']);
+
             $node = $form_state->getFormObject()->getEntity();
             // add original path to values if node is edited and thus original path is already set.
             $flat_original_path = $node->get('flat_original_path')->value;
@@ -129,10 +107,8 @@ function flat_nextcloud_form_node_form_alter(&$form, FormStateInterface $form_st
                 $form_state->setRebuild();
             }
 
-            // Get original directory value.
-            $current = Nextcloud::get_flat_nc_path($form_state, $nextcloud_root);
-
-            ddm('current: ' . $current);
+            // Get nextcloud path value.
+            $current = \Nextcloud::get_flat_nc_path($form_state, $nextcloud_root);
 
             // (if chosen) extend 'current' directory value with value of next_directories
             if (!empty($form_state->getValue(['next_nc_directories']))) {
@@ -194,11 +170,17 @@ function flat_nextcloud_flat_bundle_node_form_validate($form, &$form_state)
         if (!$dir or !file_exists(\Drupal::service('file_system')->realpath($dir))) {
             $form_state->setErrorByName('next_nc_directories', 'Please select a valid Nextcloud folder.');
             return $form;
+        } else {
             $form_state->setValue(['flat_nc_path', 0, 'value'], $dir);
             $errors = array();
             $files = [];
             if (is_dir($dir)) {
                 $files = \Drupal::service('file_system')->scanDirectory($dir, '/.*/', array('min_depth' => 0));
+            }
+            $dir_in_use = \Nextcloud::isDirInUse($dir);
+            if ($dir_in_use) {
+                $form_state->setErrorByName('next_nc_directories', 'The selected Nextcloud folder is already in use for a different bundle.');
+                return $form;
             }
             $ingest_service_variables = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service');
             $max_files = $ingest_service_variables['max_ingest_files'];
@@ -254,42 +236,8 @@ function flat_nextcloud_flat_bundle_node_form_validate($form, &$form_state)
                 return $form;
             }
         }
-        // check if folder is used by a different node
-        $query = new EntityQuery('node');
-        $query->condition('type', 'flat_bundle')
-            ->condition('flat_original_path.value', $dir, '=');
-
-        $result = $query->execute();
-
-        if (empty(!$result)) {
-            // if result is current node itself (when modifying it), that is fine
-            $nid = array_keys($result['node']);
-            $nid = (string)$nid[0];
-
-            if ($nid !== $form_state->getValue(['nid'])) {
-
-                $form_state->setErrorByName('next_nc_directories', 'The selected Nextcloud folder is already in use for a different bundle.');
-            }
-        }
     }
 }
-
-/* function flat_nextcloud_node_view($node, $view_mode, $langcode)
-{
-
-    if ($node->type == 'flat_bundle' and $view_mode == 'full' and node_is_page($node)) {
-
-        $wrapper = entity_metadata_wrapper('node', $node);
-
-        if ($wrapper->flat_source->value() == 'cloud') {
-            $path = $node->content['flat_original_path'][0]['#markup'];
-            $path = str_replace('nextcloud://', '', $path);
-            $path = str_replace('external://', '', $path);
-            $path = str_replace('freeze://', '[protected folder on server]', $path);
-            $node->content['flat_original_path'][0]['#markup'] = $path;
-        }
-    }
-} */
 
 /**
  * Implements hook_data_move_actions().
@@ -331,9 +279,9 @@ function flat_nextcloud_node_presave($node)
         if ($node->bundle() === 'flat_bundle') {
             $flat_source = $node->get('flat_source')->value;
             if ($flat_source == 'cloud') {
-                $flat_ws_path = $node->get('flat_nc_path')->value;
-                $node->set('flat_original_path', $flat_ws_path);
-                $node->set('flat_location', $flat_ws_path);
+                $flat_nc_path = $node->get('flat_nc_path')->value;
+                $node->set('flat_original_path', $flat_nc_path);
+                $node->set('flat_location', $flat_nc_path);
             }
         }
     }

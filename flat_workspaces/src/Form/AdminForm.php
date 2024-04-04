@@ -13,15 +13,15 @@ use Drupal\Core\Form\FormStateInterface;
 class AdminForm extends ConfigFormBase
 {
 
-    /** 
+    /**
      * Config settings.
      *
      * @var string
      */
     const SETTINGS = 'flat_workspaces.settings';
 
-    /**  
-     * {@inheritdoc}  
+    /**
+     * {@inheritdoc}
      */
     protected function getEditableConfigNames()
     {
@@ -102,7 +102,7 @@ class AdminForm extends ConfigFormBase
         return parent::buildForm($form, $form_state);
     }
 
-    /** 
+    /**
      * {@inheritdoc}
      */
     public function submitForm(array &$form, FormStateInterface $form_state)
@@ -123,21 +123,40 @@ class AdminForm extends ConfigFormBase
         parent::submitForm($form, $form_state);
     }
 
-    /** 
+    /**
      * {@inheritdoc}
      */
     public function setDefault()
     {
 
-        $config = $this->config(static::SETTINGS);
+        $config_name = static::SETTINGS;
 
-        $config->getRawData();
+        //if ($form_state->getTriggeringElement()['#name'] == 'reset') {
+        $config = \Drupal::configFactory()->getEditable($config_name);
+
+         // Get the extension path.
+        $module_handler = \Drupal::service('module_handler');
+        $module_path = $module_handler->getModule('flat_workspaces')->getPath();
+        $config_install_path = $module_path . '/config/install/';
+
+        // setup file storage
+        $file_storage = new \Drupal\Core\Config\FileStorage($config_install_path);
+
+        if ($file_storage->exists($config_name)) {
+            // Get the default values
+            $default_values = $file_storage->read($config_name);
+
+            // Set the configuration to the default values and save.
+            $config->setData($default_values)->save();
+
+            \Drupal::messenger()->addMessage(t('Settings have been reset to defaults.'));
+        }
     }
 }
 
 /**
  * @param $array config array with dept. dir as key and name as value
- * 
+ *
  * @return
  *  Formatted string with dirname = "department name" on each line
  */
@@ -156,7 +175,7 @@ function decode_department_mapping($mapping)
 
 /**
  * @param $string  with dirname = "department name" on each line
- * 
+ *
  * @return
  *  $array config array with dept. dir as key and name as value
  */

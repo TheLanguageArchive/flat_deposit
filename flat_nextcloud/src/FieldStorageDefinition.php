@@ -1,6 +1,6 @@
 <?php // flat_nextcloud/src/FieldStorageDefinition.php
 
-namespace Drupal\flat_workspaces;
+namespace Drupal\flat_nextcloud;
 
 use Drupal\Core\Field\BaseFieldDefinition;
 

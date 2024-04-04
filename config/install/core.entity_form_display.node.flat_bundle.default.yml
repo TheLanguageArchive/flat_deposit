@@ -87,7 +87,7 @@ content:
   flat_location:
     type: string_textfield
     weight: 0
-    region: hidden
+    region: content
     settings:
       size: 60
       placeholder: ''
@@ -100,6 +100,9 @@ hidden:
   flat_fid_super: true
   flat_original_path: true
   flat_parent_title: true
+  flat_bundle_status: true
+  flat_type: true
+  flat_location: true
   langcode: true
   path: true
   promote: true

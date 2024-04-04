@@ -13,15 +13,15 @@ use Drupal\Core\Form\FormStateInterface;
 class AdminForm extends ConfigFormBase
 {
 
-    /** 
+    /**
      * Config settings.
      *
      * @var string
      */
     const SETTINGS = 'flat_nextcloud.settings';
 
-    /**  
-     * {@inheritdoc}  
+    /**
+     * {@inheritdoc}
      */
     protected function getEditableConfigNames()
     {
@@ -122,7 +122,7 @@ class AdminForm extends ConfigFormBase
     }
 
 
-    /** 
+    /**
      * {@inheritdoc}
      */
     public function submitForm(array &$form, FormStateInterface $form_state)
@@ -141,19 +141,34 @@ class AdminForm extends ConfigFormBase
         parent::submitForm($form, $form_state);
     }
 
-    /** 
+    /**
      * {@inheritdoc}
      */
     public function setDefault()
     {
 
-        ddm('set default');
+        $config_name = static::SETTINGS;
 
-        $config = \Drupal::config(static::SETTINGS);
+        //if ($form_state->getTriggeringElement()['#name'] == 'reset') {
+        $config = \Drupal::configFactory()->getEditable($config_name);
 
-        ddm($config->getOriginal());
+         // Get the extension path.
+        $module_handler = \Drupal::service('module_handler');
+        $module_path = $module_handler->getModule('flat_nextcloud')->getPath();
+        $config_install_path = $module_path . '/config/install/';
 
-        $config->getOriginal();
+        // setup file storage
+        $file_storage = new \Drupal\Core\Config\FileStorage($config_install_path);
+
+        if ($file_storage->exists($config_name)) {
+            // Get the default values
+            $default_values = $file_storage->read($config_name);
+
+            // Set the configuration to the default values and save.
+            $config->setData($default_values)->save();
+
+            \Drupal::messenger()->addMessage(t('Settings have been reset to defaults.'));
+        }
     }
 }
 

@@ -27,6 +27,7 @@ class Workspaces
             'field' => array(
                 '#type' => 'fieldset',
                 '#description' => t("Select the folder that contains the file(s) for this bundle. The final folder can have no sub-folders and should not contain more than @max_files files.", array('@max_files' => $max_files)),
+                '#title' => 'Workspace folder',
                 '#states' => array(
                     // Hide this select menu if source of resources is not local.
                     'visible' => array(
@@ -38,15 +39,15 @@ class Workspaces
                     '#markup' => '',
                 ),
 
-                'chosen_ws' => array(
+                'chosen_ws_path' => array(
                     '#type' => 'textfield',
-                    '#title' => t('Chosen ws'),
+                    '#title' => t('Chosen workspace path'),
                 ),
 
                 'department' => array(
                     '#type' => 'radios',
                     '#title' => t('Department'),
-                    '#options' => $department_mapping, //drupal_parse_info_format($department_mapping),
+                    '#options' => $department_mapping,
                     '#empty_option' => '-- Select Department --',
                     '#empty_value' => 'unselected',
                     '#ajax' => array(
@@ -125,12 +126,17 @@ class Workspaces
         return $current;
     }
 
-    static function listAccessibleFolderContent($directory, $filters = [])
+    static function listAccessibleFolderContent($directory, $root, $filters = [])
     {
 
         $content = [];
         if (!file_exists($directory)) {
             return $content;
+        }
+
+        if ($directory == $root) {
+            // if we are in the root, do not list the .. option to go one directory up
+            $filters[] = 'isNotDoubleDot';
         }
 
         $results = scandir($directory);
@@ -307,6 +313,15 @@ class Workspaces
         }
 
         return false;
+    }
+
+    static function isDirInUse($directory) {
+        $nodeQuery = \Drupal::entityQuery('node')
+            ->accessCheck(TRUE)
+            ->condition('type', 'flat_bundle')
+            ->condition('flat_original_path', $directory, '=');
+        $bundles = $nodeQuery->execute();
+        return !empty($bundles);
     }
 }
 

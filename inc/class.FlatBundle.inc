@@ -2,7 +2,6 @@
 
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\file\Entity\File;
-use Drupal\node\Entity\Node;
 
 /**
  *
@@ -303,14 +302,12 @@ class FlatBundle
             }
 
             // Change node information
-            //ddm('target: ' . $target_location);
             //$node = \Drupal::entityTypeManager()->getStorage('node')->load($node->id());
             //$node = Node::load($node->id());
             //$node->set('flat_location', $target_location); //$node->flat_location->value = $target_location;
             //$node->save();
 
             //$saved_location = $node->get('flat_location')->value;
-            //ddm('saved location: ' . $saved_location);
         }
 
         return $target_location;

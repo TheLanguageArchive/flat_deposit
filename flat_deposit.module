@@ -194,8 +194,11 @@ function flat_bundle_form($node, $form_state)
  *
  * Changes visibility and accessibility of certain node fields and adds collection-selection options based on users membership.
  */
-function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterface $form_state, $form_id)
+function flat_deposit_form_node_form_alter(&$form, FormStateInterface $form_state, $form_id)
 {
+    if ($form_id == 'node_flat_bundle_form' or $form_id == 'node_flat_bundle_edit_form') {
+
+    ddm($form_id);
     if (isset($form['additional_settings'])) {
         $form['additional_settings']['#access'] = false;
     }
@@ -224,17 +227,17 @@ function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterfac
     $userId = $user->id();
 
     // Hide unwanted buttons and fields.
-    //hide($form['flat_bundle_status']);
+    hide($form['flat_bundle_status']);
     hide($form['flat_exception']);
     hide($form['flat_create_cmdi']);
     hide($form['flat_external']);
-    //hide($form['flat_location']);
-    //hide($form['flat_type']);
-    //hide($form['flat_fid']);
-    //hide($form['flat_original_path']);
-    //hide($form['flat_parent_title']);
-    //hide($form['flat_deleted_resources']);
-    //hide($form['flat_encrypted_resources']);
+    hide($form['flat_location']);
+    hide($form['flat_type']);
+    hide($form['flat_fid']);
+    hide($form['flat_original_path']);
+    hide($form['flat_parent_title']);
+    hide($form['flat_deleted_resources']);
+    hide($form['flat_encrypted_resources']);
     hide($form['flat_encrypted_auth_endpoint']);
     hide($form['actions']['preview']);
     hide($form['meta']);
@@ -303,10 +306,11 @@ function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterfac
     //$old_options = $form['flat_parent_nid_bundle']['widget']['#options'];
     //unset($old_options['key']);
     $form['flat_parent_title']['#disabled'] = true;
-    /*     $form['flat_parent_nid_bundle']['widget']['#options'] = $options;
+    /*
+    $form['flat_parent_nid_bundle']['widget']['#options'] = $options;
     $form['flat_parent_nid_bundle']['widget']['#empty_value'] = 0;
     $form['flat_parent_nid_bundle']['widget']['#empty_option'] = 'unassigned';
- */
+    */
     if (isset($args[1]['type'])) {
 
         $form['flat_type']['#default_value'][0] = (string) $args[1]['type'];
@@ -315,14 +319,13 @@ function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterfac
     // Form alterations depending on node status.
     $node = $form_state->getFormObject()->getEntity();
 
-    //ksm($node);
-
     if ($node->isNew()) {
         $new_node = true;
         $update = (isset($args[1]['type']) and $args[1]['type'] == 'update') ? true : false;
     } else {
         $new_node = false;
-        $update = ($node->flat_type[0]['value'] == 'update') ? true : false;
+        //$update = ($node->flat_type[0]['value'] == 'update') ? true : false;
+        $update = ($node->flat_type->value == 'update') ? true : false;
     }
 
     if ($new_node and !$update) {
@@ -455,6 +458,8 @@ function flat_deposit_form_node_flat_bundle_form_alter(&$form, FormStateInterfac
 
                 break;
             }
+
+        }
     }
 }
 
@@ -1613,7 +1618,7 @@ function flat_deposit_menu_local_tasks_alter(&$data, $route_name, \Drupal\Core\C
 /**
  * hook_form_FORM_ID_alter().
  */
-function flat_deposit_form_node_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id)
+/* function flat_deposit_form_node_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id)
 {
     $form['additional_settings']['#access'] = FALSE;
     $form['meta']['#access'] = FALSE;
@@ -1623,7 +1628,7 @@ function flat_deposit_form_node_form_alter(&$form, \Drupal\Core\Form\FormStateIn
     $form['options']['#access'] = FALSE;
     $form['#theme'] = 'tla_bootstrap_sass';
 
-}
+} */
 
 /*
 /**

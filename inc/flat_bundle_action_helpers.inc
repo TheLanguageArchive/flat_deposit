@@ -343,7 +343,6 @@ function bundle_has_subfolders($nid)
             $content = \Drupal::service('file_system')->scanDirectory($location, '/.*/', ['recurse' => FALSE]);
             if (!empty($content)) {
                 foreach ($content as $item) {
-                    ddm($item);
                     if (is_dir($item->uri)) {
                         return TRUE;
                     }

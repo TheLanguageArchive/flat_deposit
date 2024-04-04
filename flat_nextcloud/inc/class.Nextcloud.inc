@@ -20,12 +20,14 @@ class Nextcloud
             '#weight' => 11,
             '#type' => 'container',
             '#tree' => FALSE,
+            '#title' => 'Nextcloud folder',
             '#attributes' => array(
                 'id' => array('nextcloud_navigation'),
             ),
             'field' => array(
                 '#type' => 'fieldset',
                 '#description' => t("Select the folder that contains the file(s) for this bundle. The final folder can have no sub-folders and should not contain more than @max_files files.", array('@max_files' => $max_files)),
+                '#title' => 'Nextcloud folder',
                 '#states' => array(
                     // Hide this select menu if source of resources is not cloud.
                     'visible' => array(
@@ -269,6 +271,15 @@ class Nextcloud
         }
 
         return false;
+    }
+
+    static function isDirInUse($directory) {
+        $nodeQuery = \Drupal::entityQuery('node')
+            ->accessCheck(TRUE)
+            ->condition('type', 'flat_bundle')
+            ->condition('flat_original_path', $directory, '=');
+        $bundles = $nodeQuery->execute();
+        return !empty($bundles);
     }
 }
 
