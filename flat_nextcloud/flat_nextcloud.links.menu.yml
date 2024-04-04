@@ -1,0 +1,6 @@
+flat_nextcloud.admin_settings_form:  
+  title: 'FLAT Nextcloud configuration'  
+  route_name: flat_nextcloud.admin_settings_form  
+  description: 'FLAT Nextcloud configuration'  
+  parent: system.admin_config_flat
+  weight: 99

@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+  enforced:
+    module:
+      - flat_deposit
+id: node.flat_nc_path
+field_name: flat_nc_path
+entity_type: node
+type: string
+module: core
+locked: false
+cardinality: 1
+settings: { }
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

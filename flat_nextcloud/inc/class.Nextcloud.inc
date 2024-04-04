@@ -1,4 +1,7 @@
 <?php
+
+use Drupal\Core\Form\FormStateInterface;
+
 module_load_include('inc', 'node', 'node.pages');
 /**
  * Created by PhpStorm.
@@ -8,11 +11,10 @@ module_load_include('inc', 'node', 'node.pages');
  */
 class Nextcloud
 {
+    static function get_container()
+    {
 
-
-    static function get_container(){
-
-        $max_files = variable_get('flat_deposit_ingest_service')['max_ingest_files'];
+        $max_files = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['max_ingest_files'];
 
         return array(
             '#weight' => 11,
@@ -35,6 +37,11 @@ class Nextcloud
                     '#markup' => '',
                 ),
 
+                'chosen_nc_path' => array(
+                    '#type' => 'textfield',
+                    '#title' => t('Chosen Nextcloud path'),
+                ),
+
                 'next_nc_directories' => array(
                     '#title' => 'Navigate to',
                     '#type' => 'select',
@@ -53,7 +60,6 @@ class Nextcloud
 
             )
         );
-
     }
 
     /**
@@ -64,9 +70,10 @@ class Nextcloud
      * @param $project_root
      * @return string
      */
-    static function get_flat_nc_path($form_state, $project_root){
-        if (isset($form_state['values']['flat_source'][0]['value'])) {
-            if ($form_state['values']['flat_source'][0]['value'] == 'external') {
+    static function get_flat_nc_path(FormStateInterface $form_state, $project_root)
+    {
+        if ($form_state->hasValue(['flat_source', 0, 'value'])) {
+            if ($form_state->getValue(['flat_source', 0, 'value']) == 'external') {
 
                 return '';
             }
@@ -74,34 +81,30 @@ class Nextcloud
         // 1) If not set yet, set to project root. Otherwise,
         // 2) if project root folder has changed set to root folder.
         // 3) Otherwise take saved value
+        $value = $form_state->hasValue(['flat_nc_path', 0, 'value']) ? $form_state->getValue(['flat_nc_path', 0, 'value']) : $project_root;
 
-        $value = isset($form_state['values']['flat_nc_path'][0]['value']) ? $form_state['values']['flat_nc_path'][0]['value'] : $project_root;
-
-
-        if (strpos ($value, $project_root ) === FALSE){
+        if (strpos($value, $project_root) === FALSE) {
 
             $current = $project_root;
-
         } else {
 
-            $current = $value ;
-
+            $current = $value;
         }
 
         return $current;
-
     }
 
-     static function listAccessibleFolderContent($directory, $root, $filters=[]){
+    static function listAccessibleFolderContent($directory, $root, $filters = [])
+    {
 
         $content = [];
-        if (!file_exists($directory)){
+        if (!file_exists($directory)) {
             return $content;
         }
 
         if ($directory == $root) {
             // if we are in the user's Nextcloud data root, do not list the .. option to go one directory up
-            $filters[] = 'isNotParentDir';
+            $filters[] = 'isNotDoubleDot';
         }
 
         $results = scandir($directory);
@@ -114,42 +117,42 @@ class Nextcloud
 
             if (!$check) {
 
-                    continue;
-
+                continue;
             } else {
 
                 $content[] = $result;
-
             }
-
         }
 
         return $content;
-
     }
 
-    static function passedAllChecks($directory, $filters=[]){
+    static function passedAllChecks($directory, $filters = [])
+    {
 
         foreach ($filters as $filter) {
-            if (!self::$filter($directory)){
+            if (!self::$filter($directory)) {
                 return false;
             }
         }
         return TRUE;
     }
 
-    static function isAccessibleDir($directory){
-        return is_dir($directory) AND is_readable($directory) ? TRUE: FALSE;
+    static function isAccessibleDir($directory)
+    {
+        return is_dir($directory) and is_readable($directory) ? TRUE : FALSE;
     }
 
-    static function isAccessible($directory){
+    static function isAccessible($directory)
+    {
         return is_readable($directory);
     }
 
-    static function hasValidDirectoryName($directory){
+    static function hasValidDirectoryName($directory)
+    {
 
         $dir_name = basename($directory);
-        if($dir_name == '.' OR $dir_name == '..') {
+        if ($dir_name == '.' or $dir_name == '..') {
             return true;
         }
 
@@ -157,105 +160,123 @@ class Nextcloud
         return preg_match($pattern, $dir_name) != 0;
     }
 
-    static function isDir($directory){
-        return is_dir($directory) ;
+    static function isDir($directory)
+    {
+        return is_dir($directory);
     }
 
-    static function isNotCurrentDir($directory){
+    static function isNotDot($directory)
+    {
 
         return basename($directory) != '.';
     }
 
-    static function isNotParentDir($directory)
+    static function isNotDoubleDot($directory)
     {
 
         return basename($directory) != '..';
-
     }
 
-   static function isNotArchiveFolder($directory)
+    static function hasSubfolders($directory)
     {
-	\Drupal::messenger()->addMessage('dirname: ' . basename(dirname($directory)), 'error');
-	\Drupal::messenger()->addMessage('archive_folder: ' . variable_get('flat_workspaces')['archive_folder'], 'error');
-        if (basename(dirname($directory)) == variable_get('flat_workspaces')['archive_folder']) {
-            return false;
+        if (is_dir($directory)) {
 
-        } else {
-            return true;
-
+            $content = \Drupal::service('file_system')->scanDirectory($directory, '/.*/', ['recurse' => FALSE]);
+            if (!empty($content)) {
+                foreach ($content as $item) {
+                    if (is_dir($item->uri)) {
+                        return TRUE;
+                    }
+                }
+            }
         }
     }
 
-    static function userHasReadPermissions($directory){
-        module_load_include('inc', 'flat_nextcloud','inc/class.AclHandler');
-        $acl = new AclHandlerNc(drupal_realpath($directory));
-        if (empty($acl->getInfo())){
-            return false;
+    static function userHasReadPermissions($directory)
+    {
+        if (is_dir($directory)) {
+
+            module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
+            $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
+            if (empty($acl->getInfo())) {
+                return false;
+            }
+
+            $username = \Drupal::currentUser()->getAccountName();
+            $id = $username == 'admin' ? exec('whoami') : $username;
+            $id = str_replace('@mpi.nl', '', $id);
+
+            return $acl->checkReadAccess($id);
         }
 
-        global $user;
-        $id = $user->name == 'admin' ? exec('whoami') : $user->name;
-        $id = str_replace('@mpi.nl', '', $id);
-
-        return $acl->checkReadAccess($id) ;
+        return false;
     }
 
-    static function webUserHasReadPermissions($directory){
-        module_load_include('inc', 'flat_nextcloud','inc/class.AclHandler');
-        $acl = new AclHandlerNc(drupal_realpath($directory));
+    static function webUserHasReadPermissions($directory)
+    {
+        if (is_dir($directory)) {
 
-        if (empty($acl->getInfo())){
-            return false;
+            module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
+            $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
+
+            if (empty($acl->getInfo())) {
+                return false;
+            }
+
+            $id = exec('whoami');
+
+            return $acl->checkReadAccess($id);
         }
 
-        $id = exec('whoami');
-
-        return $acl->checkReadAccess($id) ;
+        return false;
     }
 
-    static function userHasWritePermissions($directory){
-        module_load_include('inc', 'flat_nextcloud','inc/class.AclHandler');
-        $acl = new AclHandlerNc(drupal_realpath($directory));
+    static function userHasWritePermissions($directory)
+    {
+        if (is_dir($directory)) {
 
-        if (empty($acl->getInfo())){
-            return false;
+            module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
+            $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
+
+            if (empty($acl->getInfo())) {
+                return false;
+            }
+
+            $username = \Drupal::currentUser()->getAccountName();
+            $id = $username == 'admin' ? exec('whoami') : $username;
+            $id = str_replace('@mpi.nl', '', $id);
+
+            return $acl->checkWriteAccess($id);
         }
 
-        global $user;
-        $id = $user->name == 'admin' ? exec('whoami') : $user->name;
-        $id = str_replace('@mpi.nl', '', $id);
-
-        return $acl->checkWriteAccess($id) ;
+        return false;
     }
 
-    static function webUserHasWritePermissions($directory){
-        module_load_include('inc', 'flat_nextcloud','inc/class.AclHandler');
-        $acl = new AclHandlerNc(drupal_realpath($directory));
+    static function webUserHasWritePermissions($directory)
+    {
+        if (is_dir($directory)) {
 
-        if (empty($acl->getInfo())){
-            return false;
+            module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
+            $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
+
+            if (empty($acl->getInfo())) {
+                return false;
+            }
+
+            $id = exec('whoami');
+
+            return $acl->checkWriteAccess($id);
         }
 
-        $id = exec('whoami');
-
-        return $acl->checkWriteAccess($id) ;
+        return false;
     }
-
 }
 
-
-function reload_nextcloud_navigation_container_ajax_callback ($form, $form_state)
+function reload_nextcloud_navigation_container_ajax_callback(&$form, FormStateInterface $form_state)
 {
-
+    $next_dirs = $form_state->getValue(['next_nc_directories']);
+    if ($next_dirs == '..') {
+        $form['nextcloud_navigation']['field']['next_nc_directories']['#value'] = '';
+    }
     return $form['nextcloud_navigation'];
-
 }
-
-
-
-
-
-
-
-
-

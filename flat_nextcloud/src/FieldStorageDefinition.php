@@ -1,4 +1,4 @@
-<?php // flat_workspaces/src/FieldStorageDefinition.php
+<?php // flat_nextcloud/src/FieldStorageDefinition.php
 
 namespace Drupal\flat_workspaces;
 

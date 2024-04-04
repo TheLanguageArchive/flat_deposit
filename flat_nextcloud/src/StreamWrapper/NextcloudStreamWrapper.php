@@ -1,23 +1,23 @@
 <?php
 
-namespace Drupal\flat_deposit\StreamWrapper;
+namespace Drupal\flat_nextcloud\StreamWrapper;
 
 use Drupal\Core\StreamWrapper\LocalStream;
 use Drupal\Core\Url;
 
-class LocalStreamWrapper extends LocalStream
+class NextcloudStreamWrapper extends LocalStream
 {
 
   protected $uri;
 
   public function getName()
   {
-    return 'Local Stream';
+    return 'Nextcloud Stream';
   }
 
   public function getDescription()
   {
-    return 'Streamwrapper for local (workspace) files.';
+    return 'Streamwrapper for Nextcloud files.';
   }
 
   public function getExternalUrl()
@@ -30,7 +30,7 @@ class LocalStreamWrapper extends LocalStream
    */
   public function getDirectoryPath()
   {
-    return \Drupal::config('flat_workspaces.settings')->get('mount_folder');
+    return \Drupal::config('flat_nextcloud.settings')->get('data_dir');
   }
 
   /**

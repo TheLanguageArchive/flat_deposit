@@ -11,47 +11,6 @@ use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\File\FileSystemInterface;
 
 /**
- * Created by PhpStorm.
- * User: danrhe
- * Date: 07/11/16
- * Time: 16:22
- */
-
-/**
- * Implements hook_stream_wrappers().
- */
-/*
-function flat_workspaces_stream_wrappers()
-{
-    return array(
-        'local' => array(
-            'name' => t('The Local Data Stream'),
-            'class' => 'LocalStreamWrapper',
-            'description' => t('Stream wrapper for locally stored data'),
-            'type' => STREAM_WRAPPERS_LOCAL_NORMAL,
-        ),
-
-    );
-}
-*/
-
-/**
- * Implements hook_permission().
- *
- * setting up permission to use the workspaces module
- *
- */
-function flat_workspaces_permission()
-{
-    return array(
-        'use workspaces' => array(
-            'title' => t('Use local workspaces'),
-            'description' => t('Permission to use local workspace folders for adding resources to bundles')
-        ),
-    );
-}
-
-/**
  * Implements hook_menu().
  */
 function flat_workspaces_menu()
@@ -92,54 +51,6 @@ function flat_workspaces_field_create_definitions_alter(array &$definitions)
 }
 
 /**
- * Implements hook_entity_base_field_info().
- */
-/* function flat_workspaces_entity_base_field_info(EntityTypeInterface $entity_type)  {
-    $fields = [];
-
-    $bundle = $entity_type->getBundleLabel();
-
-    if ($entity_type->id() == 'node' && $bundle == 'flat_bundle') {
-      $fields['flat_ws_path'] = FieldStorageDefinition::create('string')
-      ->setLabel(t('Flat workspace path'))
-      ->setDescription(t('Path to a folder containing resources to be added to the bundle.'))
-      ->setComputed(TRUE)
-      ->setReadOnly(FALSE)
-      ->setInternal(FALSE)
-      ->setDisplayOptions('view', [
-        'label' => 'hidden',
-        'region' => 'hidden',
-        'weight' => -5,
-      ])
-      ->setDisplayOptions('form', [
-        'label' => 'hidden',
-        'region' => 'hidden',
-        'weight' => -5,
-      ])
-      ->setTargetEntityTypeId($entity_type->id())
-      ->setTargetBundle($bundle)
-      ->setName('flat_ws_path')
-      ->setDisplayConfigurable('form', FALSE)
-      ->setDisplayConfigurable('view', FALSE);
-  }
-  return $fields;
-} */
-
-
-/**
- * Implements hook_entity_bundle_field_info_alter() to update the field map.
- */
-/* function flat_workspaces_entity_bundle_field_info_alter(&$fields, EntityTypeInterface $entity_type, $bundle) {
-    if ($entity_type->id() === 'node' && $bundle === 'flat_bundle') {
-      // Define the field mapping for the content type.
-      // You can specify which fields belong to the content type.
-      $fields['node']['flat_bundle']['fields'][] = 'flat_ws_path';
-    }
-  }
- */
-
-
-/**
  * Implements hook_node_form_alter
  *
  * create form elements for selecting a workspace folder as the source of the files to be added to the bundle
@@ -157,12 +68,7 @@ function flat_workspaces_form_node_form_alter(&$form, FormStateInterface $form_s
 
         //$form['flat_ws_path']['widget'][0]['#access'] = true;
 
-        ///////////
-        // Add local project directory selection form container element
-        // #state attribute makes it only visible if flat_source field is set to 'local'
-        ///////////
         $form_state->loadInclude('flat_workspaces', 'inc', 'inc/class.Workspaces');
-        // form_load_include($form_state, 'inc', 'flat_workspaces', 'inc/class.Workspaces');
         module_load_include('inc', 'node', 'node.pages');
         $form['workspace_navigation'] = \Workspaces::get_container();
 
@@ -281,7 +187,6 @@ function flat_workspaces_form_node_form_alter(&$form, FormStateInterface $form_s
         }
     }
 }
-
 
 function flat_workspaces_flat_bundle_node_form_validate(&$form, FormStateInterface $form_state)
 {
@@ -420,8 +325,6 @@ function flat_workspaces_node_presave(EntityInterface $node)
         }
     }
 }
-
-
 
 function flat_workspaces_form_node_flat_bundle_form_submit(array $form, \Drupal\Core\Form\FormStateInterface $form_state)
 {

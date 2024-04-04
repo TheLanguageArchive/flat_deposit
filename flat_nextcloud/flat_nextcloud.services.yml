@@ -1,0 +1,5 @@
+services:
+  stream_wrapper.nextcloud:
+    class: Drupal\flat_nextcloud\StreamWrapper\NextcloudStreamWrapper
+    tags:
+      - { name: stream_wrapper, scheme: nextcloud }

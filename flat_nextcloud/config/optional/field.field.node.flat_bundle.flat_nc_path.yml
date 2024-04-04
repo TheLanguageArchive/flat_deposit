@@ -1,0 +1,19 @@
+# field.field.node.flat_bundle.flat_nc_path.yml
+langcode: en
+status: true
+dependencies:
+    config:
+      - field.storage.node.flat_nc_path
+      - node.type.flat_bundle
+id: node.flat_bundle.flat_nc_path
+field_name: flat_nc_path
+field_type: string
+entity_type: node
+bundle: flat_bundle
+label: Path to Nextcloud directory that includes files to be added to the bundle
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: { }

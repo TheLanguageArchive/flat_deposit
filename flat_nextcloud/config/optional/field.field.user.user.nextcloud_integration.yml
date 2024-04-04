@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.nextcloud_integration
+    - user.role.authenticated
+  module:
+    - user
+id: user.user.nextcloud_integration
+field_name: nextcloud_integration
+entity_type: user
+bundle: user
+label: 'Nextcloud Integration'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: boolean

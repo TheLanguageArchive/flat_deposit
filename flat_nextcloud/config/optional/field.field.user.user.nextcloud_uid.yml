@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.nextcloud_uid
+    - user.role.authenticated
+  module:
+    - user
+id: user.user.nextcloud_uid
+field_name: nextcloud_uid
+entity_type: user
+bundle: user
+label: 'Nextcloud UID'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

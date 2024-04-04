@@ -14,10 +14,6 @@ services:
     tags:
       - { name: stream_wrapper, scheme: external }
 
-  stream_wrapper.local:
-    class: Drupal\flat_deposit\StreamWrapper\LocalStreamWrapper
-    tags:
-      - { name: stream_wrapper, scheme: local }
   theme.negotiator.flat_deposit:
     class: Drupal\flat_deposit\Theme\ThemeNegotiator
     tags:

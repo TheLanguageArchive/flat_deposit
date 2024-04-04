@@ -1,0 +1,33 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.user.user.nextcloud_integration
+    - field.field.user.user.nextcloud_uid
+    - user.role.authenticated
+  module:
+    - user
+id: user.user.default
+targetEntityType: user
+bundle: user
+mode: default
+content:
+  nextcloud_integration:
+    weight: 10
+    settings: {}
+    third_party_settings: {}
+    type: boolean_checkbox
+    region: content
+    label: above
+    visibility: true
+  nextcloud_uid:
+    weight: 20
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {}
+    type: string_textfield
+    region: content
+    label: above
+    visibility: true
+hidden: {}

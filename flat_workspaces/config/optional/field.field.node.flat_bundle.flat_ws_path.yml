@@ -10,7 +10,7 @@ field_name: flat_ws_path
 field_type: string
 entity_type: node
 bundle: flat_bundle
-label: Path to workspace directory that includes files to be added to the bunlde
+label: Path to workspace directory that includes files to be added to the bundle
 description: ''
 required: false
 translatable: true

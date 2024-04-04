@@ -1,0 +1,4 @@
+use workspaces:
+  title: 'Use FLAT Workspaces'
+admin workspaces:
+  title: 'Administer FLAT Workspaces'

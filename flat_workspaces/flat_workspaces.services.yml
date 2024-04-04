@@ -1,0 +1,5 @@
+services:
+  stream_wrapper.local:
+    class: Drupal\flat_workspaces\StreamWrapper\LocalStreamWrapper
+    tags:
+      - { name: stream_wrapper, scheme: local }

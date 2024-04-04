@@ -125,7 +125,6 @@ class Workspaces
         return $current;
     }
 
-
     static function listAccessibleFolderContent($directory, $filters = [])
     {
 
