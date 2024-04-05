@@ -23,7 +23,7 @@ class FlatBundle
      *
      * @return bool TRUE if combination of collection and bundle name is unique
      */
-    public static function checkUniquenessNaming($user_id, $collection, $bundle_name)
+    public static function checkUniquenessNaming($user_id, $collection, $bundle_name, $node_id)
     {
         $query = \Drupal::entityQuery('node')
             ->accessCheck(TRUE)
@@ -42,7 +42,19 @@ class FlatBundle
         $user_node_nids_in_collection = $query->execute();
 
         if (!empty($user_node_nids_in_collection)) {
-            return FALSE;
+            if (count($user_node_nids_in_collection) > 1) {
+                //more than one node with the same name, so definitely not unique
+                return FALSE;
+            } elseif (count($user_node_nids_in_collection) == 1) {
+                // one node with the same name. Check if its the one we're currently editing in case of an update
+                $key = array_key_first($user_node_nids_in_collection);
+                $nid = $user_node_nids_in_collection[$key];
+                if ($nid == $node_id) {
+                    return TRUE;
+                }
+            } else {
+                return FALSE;
+            }
         }
 
         return TRUE;

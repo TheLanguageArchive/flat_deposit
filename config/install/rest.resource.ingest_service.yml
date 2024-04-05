@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - flat_deposit
+    - serialization
+  enforced:
+    module:
+      - flat_deposit
+id: ingest_service
+plugin_id: 'ingest_service'
+granularity: resource
+configuration:
+  methods:
+    - POST
+  formats:
+    - json
+  authentication:
+    - cookie
+    - basic_auth

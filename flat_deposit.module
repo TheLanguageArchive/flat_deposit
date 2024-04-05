@@ -198,76 +198,75 @@ function flat_deposit_form_node_form_alter(&$form, FormStateInterface $form_stat
 {
     if ($form_id == 'node_flat_bundle_form' or $form_id == 'node_flat_bundle_edit_form') {
 
-    ddm($form_id);
-    if (isset($form['additional_settings'])) {
-        $form['additional_settings']['#access'] = false;
-    }
+        if (isset($form['additional_settings'])) {
+            $form['additional_settings']['#access'] = false;
+        }
 
-    if (isset($form['revision_information'])) {
-        $form['revision_information']['#access'] = false;
-    }
+        if (isset($form['revision_information'])) {
+            $form['revision_information']['#access'] = false;
+        }
 
-    $form['#prefix'] = '<div class="flat_bundle_form_wrapper">';
-    $form['#suffix'] = '</div>';
+        $form['#prefix'] = '<div class="flat_bundle_form_wrapper">';
+        $form['#suffix'] = '</div>';
 
-    // Remove after next install.
-    $form['flat_parent_nid_bundle']['#required'] = false;
+        // Remove after next install.
+        $form['flat_parent_nid_bundle']['#required'] = false;
 
-    $form['flat_policies']['#description'] = t('Select which access policy should be applied to the files within this bundle. "Public" materials can be accessed by anyone without having to log in. "Authenticated Users" means any user with a valid account for the archive. "Academic Users" are users that log in with an academic account or whose academic status has been verified. "Private" means that the materials are only accessible to the depositor. Access policies can be refined later.');
+        $form['flat_policies']['#description'] = t('Select which access policy should be applied to the files within this bundle. "Public" materials can be accessed by anyone without having to log in. "Authenticated Users" means any user with a valid account for the archive. "Academic Users" are users that log in with an academic account or whose academic status has been verified. "Private" means that the materials are only accessible to the depositor. Access policies can be refined later.');
 
-    $form['flat_metadata_visibility']['#description'] = t('Hidden bundles are not visible to anyone but the depositor and the archive managers. This is to be used only in rare cases in which the name or other metadata fields reveal too much information about work in progresss. Only materials with a private access policy can be hidden.');
+        $form['flat_metadata_visibility']['#description'] = t('Hidden bundles are not visible to anyone but the depositor and the archive managers. This is to be used only in rare cases in which the name or other metadata fields reveal too much information about work in progresss. Only materials with a private access policy can be hidden.');
 
-    $form['flat_metadata_visibility']['#states'] = array(
-        'visible' => array(
-            ':input[name="flat_policies"]' => array('value' => 'private'),
-        ),
-    );
+        $form['flat_metadata_visibility']['#states'] = array(
+            'visible' => array(
+                ':input[name="flat_policies"]' => array('value' => 'private'),
+            ),
+        );
 
-    $user = \Drupal::currentUser();
-    $userId = $user->id();
+        $user = \Drupal::currentUser();
+        $userId = $user->id();
 
-    // Hide unwanted buttons and fields.
-    hide($form['flat_bundle_status']);
-    hide($form['flat_exception']);
-    hide($form['flat_create_cmdi']);
-    hide($form['flat_external']);
-    hide($form['flat_location']);
-    hide($form['flat_type']);
-    hide($form['flat_fid']);
-    hide($form['flat_original_path']);
-    hide($form['flat_parent_title']);
-    hide($form['flat_deleted_resources']);
-    hide($form['flat_encrypted_resources']);
-    hide($form['flat_encrypted_auth_endpoint']);
-    hide($form['actions']['preview']);
-    hide($form['meta']);
-    hide($form['menu']);
-    hide($form['menu_link']);
-    hide($form['revision']);
-    hide($form['revision_information']);
+        // Hide unwanted buttons and fields.
+        hide($form['flat_bundle_status']);
+        hide($form['flat_exception']);
+        hide($form['flat_create_cmdi']);
+        hide($form['flat_external']);
+        hide($form['flat_location']);
+        hide($form['flat_type']);
+        hide($form['flat_fid']);
+        hide($form['flat_original_path']);
+        hide($form['flat_parent_title']);
+        hide($form['flat_deleted_resources']);
+        hide($form['flat_encrypted_resources']);
+        hide($form['flat_encrypted_auth_endpoint']);
+        hide($form['actions']['preview']);
+        hide($form['meta']);
+        hide($form['menu']);
+        hide($form['menu_link']);
+        hide($form['revision']);
+        hide($form['revision_information']);
 
-    // Conditionally hide cmdi file field.
-    $form['flat_cmdi_file']['#states'] = array(
-        'visible' => array(
-            array(
+        // Conditionally hide cmdi file field.
+        $form['flat_cmdi_file']['#states'] = array(
+            'visible' => array(
                 array(
-                    ':input[name="flat_cmdi_option"]' => array('value' => 'import'),
-                    //':input[name="flat_type"]' => array('value' => 'new'),
+                    array(
+                        ':input[name="flat_cmdi_option"]' => array('value' => 'import'),
+                        //':input[name="flat_type"]' => array('value' => 'new'),
+                    ),
+                    'or',
+                    array(':input[name="flat_cmdi_option"]' => array('value' => 'template')),
                 ),
-                'or',
-                array(':input[name="flat_cmdi_option"]' => array('value' => 'template')),
             ),
-        ),
-        'required' => array(
-            array(
-                array(':input[name="flat_cmdi_option"]' => array('value' => 'import')),
-                'or',
-                array(':input[name="flat_cmdi_option"]' => array('value' => 'template')),
+            'required' => array(
+                array(
+                    array(':input[name="flat_cmdi_option"]' => array('value' => 'import')),
+                    'or',
+                    array(':input[name="flat_cmdi_option"]' => array('value' => 'template')),
+                ),
             ),
-        ),
-    );
+        );
 
-    /*     // Query all flat_collection nodes that are owned by the user and have no empty fedora_fid (flat_fid) value.
+        /*     // Query all flat_collection nodes that are owned by the user and have no empty fedora_fid (flat_fid) value.
     // Resulting nodes will be added as options with the node's nid as option-key and node's title as option-labels.
     $options = [];
 
@@ -299,166 +298,165 @@ function flat_deposit_form_node_form_alter(&$form, FormStateInterface $form_stat
     }
     */
 
-    $build_info = $form_state->getBuildInfo();
-    // Adapt parent node related fields.
-    $args = $build_info['args'];
+        $build_info = $form_state->getBuildInfo();
+        // Adapt parent node related fields.
+        $args = $build_info['args'];
 
-    //$old_options = $form['flat_parent_nid_bundle']['widget']['#options'];
-    //unset($old_options['key']);
-    $form['flat_parent_title']['#disabled'] = true;
-    /*
+        //$old_options = $form['flat_parent_nid_bundle']['widget']['#options'];
+        //unset($old_options['key']);
+        $form['flat_parent_title']['#disabled'] = true;
+        /*
     $form['flat_parent_nid_bundle']['widget']['#options'] = $options;
     $form['flat_parent_nid_bundle']['widget']['#empty_value'] = 0;
     $form['flat_parent_nid_bundle']['widget']['#empty_option'] = 'unassigned';
     */
-    if (isset($args[1]['type'])) {
+        if (isset($args[1]['type'])) {
 
-        $form['flat_type']['#default_value'][0] = (string) $args[1]['type'];
-    }
+            $form['flat_type']['#default_value'][0] = (string) $args[1]['type'];
+        }
 
-    // Form alterations depending on node status.
-    $node = $form_state->getFormObject()->getEntity();
+        // Form alterations depending on node status.
+        $node = $form_state->getFormObject()->getEntity();
 
-    if ($node->isNew()) {
-        $new_node = true;
-        $update = (isset($args[1]['type']) and $args[1]['type'] == 'update') ? true : false;
-    } else {
-        $new_node = false;
-        //$update = ($node->flat_type[0]['value'] == 'update') ? true : false;
-        $update = ($node->flat_type->value == 'update') ? true : false;
-    }
+        if ($node->isNew()) {
+            $new_node = true;
+            $update = (isset($args[1]['type']) and $args[1]['type'] == 'update') ? true : false;
+        } else {
+            $new_node = false;
+            //$update = ($node->flat_type[0]['value'] == 'update') ? true : false;
+            $update = ($node->flat_type->value == 'update') ? true : false;
+        }
 
-    if ($new_node and !$update) {
+        if ($new_node and !$update) {
+
+            $node_status = 'create';
+            //$form['actions']['submit']['#submit'][0] = 'flat_deposit_flat_bundle_node_form_submit';
+        } elseif ($new_node and $update) {
+
+            $node_status = 'update';
+            //$form['actions']['submit']['#submit'][0] = 'flat_deposit_flat_bundle_node_form_submit';
+        } else {
+
+            $node_status = 'edit';
+            //$form['actions']['submit']['#submit'][0] = 'flat_deposit_flat_bundle_node_form_submit';
+        }
 
         $node_status = 'create';
-        //$form['actions']['submit']['#submit'][0] = 'flat_deposit_flat_bundle_node_form_submit';
-    } elseif ($new_node and $update) {
 
-        $node_status = 'update';
-        //$form['actions']['submit']['#submit'][0] = 'flat_deposit_flat_bundle_node_form_submit';
-    } else {
+        switch ($node_status) {
 
-        $node_status = 'edit';
-        //$form['actions']['submit']['#submit'][0] = 'flat_deposit_flat_bundle_node_form_submit';
-    }
+            case 'create': {
 
-    $node_status = 'create';
+                    /** @TODO drupal_set_title no longer exists */
+                    // drupal_set_title(t('Add Bundle'));
 
-    switch ($node_status) {
+                    // Assign value to flat_original_path field.
+                    $form['flat_original_path'][0]['value']['#default_value'] = 'external://USER/COLLECTION/BUNDLE';
 
-        case 'create': {
+                    // Create selection of collections.
+                    // This is dependent from extra parameters. In case the name of a collection is provided only that specific collection can be used
+                    // Otherwise options are queried based on collection membership.
+                    if (isset($args[1])) {
 
-                /** @TODO drupal_set_title no longer exists */
-                // drupal_set_title(t('Add Bundle'));
+                        $form['flat_parent_nid_bundle']['#default_value'][] = (string) $args[1]['parent_nid'];
+                        $form['flat_parent_nid_bundle']['#disabled'] = true;
 
-                // Assign value to flat_original_path field.
-                $form['flat_original_path'][0]['value']['#default_value'] = 'external://USER/COLLECTION/BUNDLE';
+                        $form['flat_parent_title'][0]['value']['#default_value'] = (string) $args[1]['parent_title'];
+                    }
 
-                // Create selection of collections.
-                // This is dependent from extra parameters. In case the name of a collection is provided only that specific collection can be used
-                // Otherwise options are queried based on collection membership.
-                if (isset($args[1])) {
+                    // custom validate and submit handlers.
+                    $form['#validate'][] = 'flat_bundle_node_form_add_validate';
+                    $form['#validate'][] = 'flat_bundle_node_form_add_import_validate';
+                    $form['actions']['submit']['#submit'][] = 'flat_bundle_node_form_add_submit';
 
-                    $form['flat_parent_nid_bundle']['#default_value'][] = (string) $args[1]['parent_nid'];
+                    // make sure custom submit handler is called first.
+                    array_unshift($form['actions']['submit']['#submit'], 'flat_bundle_node_form_add_submit');
+
+                    break;
+                }
+
+                // For existing bundles:
+            case 'edit': {
+
+                    if ($update) {
+                        $form['flat_cmdi_file']['#access'] = false;
+                        $form['flat_parent_nid_bundle']['#access'] = false;
+                    }
+                    // $node_wrapper = entity_metadata_wrapper('node', $node);
+
+                    // Prevent altering bundle name (title), policy.
+                    $form['title']['#disabled'] = true;
+                    // $form['flat_policies']['#disabled'] = TRUE;.
+                    //$form['flat_cmdi_option']['#disabled'] = true;
+                    //$form['flat_source']['#disabled'] = true;
+
+                    // Hide cmdi file field.
+                    $status = $node->flat_bundle_status->value;
+                    if ($status != 'open' and $status != 'failed') {
+                        hide($form['flat_cmdi_file']);
+                        $form['flat_parent_nid_bundle']['#disabled'] = true;
+                    }
+
+                    // Set default_value of parent_nid and parent_title.
+                    $parent_nid = $node->flat_parent_nid_bundle->value;
+                    $form['flat_parent_nid_bundle']['#default_value'][] = $parent_nid;
+
+                    $collection_name = $node->flat_parent_title->value;
+                    $form['flat_parent_title']['#default_value'][] = $collection_name;
+
+                    // custom validate and submit handlers.
+                    $form['#validate'][] = 'flat_bundle_node_form_edit_validate';
+                    $form['#submit'][] = 'flat_bundle_node_form_edit_submit';
+
+                    // make sure custom submit handler is called first.
+                    array_unshift($form['actions']['submit']['#submit'], 'flat_bundle_node_form_edit_submit');
+
+                    break;
+                }
+                // For updated bundles:
+            case 'update': {
+
+                    // Assign value to flat_original_path field.
+                    $form['flat_original_path'][0]['value']['#default_value'] = 'external://USER/COLLECTION/BUNDLE';
+
+                    // Set default_value of parent_nid and parent_title.
+                    $form['flat_cmdi_option']['#default_value'][] = 'import';
+                    if (isset($args[1]['node_title'])) {
+                        $form['title']['#default_value'] = (string) $args[1]['node_title'];
+                    }
+                    if (isset($args[1]['parent_nid'])) {
+                        $form['flat_parent_nid_bundle']['#default_value'][] = (string) $args[1]['parent_nid'];
+                    }
+                    if (isset($args[1]['flat_parent_title'])) {
+                        $form['flat_parent_title'][0]['value']['#default_value'] = (string) $args[1]['parent_title'];
+                    }
+                    if (isset($args[1]['fid_bundle'])) {
+                        $form['flat_fid'][0]['value']['#default_value'] = (string) $args[1]['fid_bundle']->id;
+                    }
+
+                    $form['title']['#disabled'] = true;
                     $form['flat_parent_nid_bundle']['#disabled'] = true;
+                    //$form['flat_cmdi_option']['#disabled'] = true;
 
-                    $form['flat_parent_title'][0]['value']['#default_value'] = (string) $args[1]['parent_title'];
+                    // Attach fedora object to validation.
+                    $form['bundleInFedora'] = array(
+                        '#type' => 'value',
+                        '#value' => $args[1]['fid_bundle'],
+                    );
+
+                    // Use same custom validation as add bundle and add some extra validation.
+                    $form['#validate'][] = 'flat_bundle_node_form_add_validate';
+                    $form['#validate'][] = 'flat_bundle_node_form_update_validate';
+                    // Use same custom submit handler as add bundle and add some extra handling.
+                    $form['#submit'][] = 'flat_bundle_node_form_add_submit';
+                    $form['#submit'][] = 'flat_bundle_node_form_update_submit';
+
+                    // make sure custom submit handlers are called first.
+                    array_unshift($form['actions']['submit']['#submit'], 'flat_bundle_node_form_add_submit');
+                    array_unshift($form['actions']['submit']['#submit'], 'flat_bundle_node_form_update_submit');
+
+                    break;
                 }
-
-                // custom validate and submit handlers.
-                $form['#validate'][] = 'flat_bundle_node_form_add_validate';
-                $form['#validate'][] = 'flat_bundle_node_form_add_import_validate';
-                $form['actions']['submit']['#submit'][] = 'flat_bundle_node_form_add_submit';
-
-                // make sure custom submit handler is called first.
-                array_unshift($form['actions']['submit']['#submit'], 'flat_bundle_node_form_add_submit');
-
-                break;
-            }
-
-            // For existing bundles:
-        case 'edit': {
-
-                if ($update) {
-                    $form['flat_cmdi_file']['#access'] = false;
-                    $form['flat_parent_nid_bundle']['#access'] = false;
-                }
-                // $node_wrapper = entity_metadata_wrapper('node', $node);
-
-                // Prevent altering bundle name (title), policy.
-                $form['title']['#disabled'] = true;
-                // $form['flat_policies']['#disabled'] = TRUE;.
-                //$form['flat_cmdi_option']['#disabled'] = true;
-                //$form['flat_source']['#disabled'] = true;
-
-                // Hide cmdi file field.
-                $status = $node->flat_bundle_status->value;
-                if ($status != 'open' and $status != 'failed') {
-                    hide($form['flat_cmdi_file']);
-                    $form['flat_parent_nid_bundle']['#disabled'] = true;
-                }
-
-                // Set default_value of parent_nid and parent_title.
-                $parent_nid = $node->flat_parent_nid_bundle->value;
-                $form['flat_parent_nid_bundle']['#default_value'][] = $parent_nid;
-
-                $collection_name = $node->flat_parent_title->value;
-                $form['flat_parent_title']['#default_value'][] = $collection_name;
-
-                // custom validate and submit handlers.
-                $form['#validate'][] = 'flat_bundle_node_form_edit_validate';
-                $form['#submit'][] = 'flat_bundle_node_form_edit_submit';
-
-                // make sure custom submit handler is called first.
-                array_unshift($form['actions']['submit']['#submit'], 'flat_bundle_node_form_edit_submit');
-
-                break;
-            }
-            // For updated bundles:
-        case 'update': {
-
-                // Assign value to flat_original_path field.
-                $form['flat_original_path'][0]['value']['#default_value'] = 'external://USER/COLLECTION/BUNDLE';
-
-                // Set default_value of parent_nid and parent_title.
-                $form['flat_cmdi_option']['#default_value'][] = 'import';
-                if (isset($args[1]['node_title'])) {
-                    $form['title']['#default_value'] = (string) $args[1]['node_title'];
-                }
-                if (isset($args[1]['parent_nid'])) {
-                    $form['flat_parent_nid_bundle']['#default_value'][] = (string) $args[1]['parent_nid'];
-                }
-                if (isset($args[1]['flat_parent_title'])) {
-                    $form['flat_parent_title'][0]['value']['#default_value'] = (string) $args[1]['parent_title'];
-                }
-                if (isset($args[1]['fid_bundle'])) {
-                    $form['flat_fid'][0]['value']['#default_value'] = (string) $args[1]['fid_bundle']->id;
-                }
-
-                $form['title']['#disabled'] = true;
-                $form['flat_parent_nid_bundle']['#disabled'] = true;
-                //$form['flat_cmdi_option']['#disabled'] = true;
-
-                // Attach fedora object to validation.
-                $form['bundleInFedora'] = array(
-                    '#type' => 'value',
-                    '#value' => $args[1]['fid_bundle'],
-                );
-
-                // Use same custom validation as add bundle and add some extra validation.
-                $form['#validate'][] = 'flat_bundle_node_form_add_validate';
-                $form['#validate'][] = 'flat_bundle_node_form_update_validate';
-                // Use same custom submit handler as add bundle and add some extra handling.
-                $form['#submit'][] = 'flat_bundle_node_form_add_submit';
-                $form['#submit'][] = 'flat_bundle_node_form_update_submit';
-
-                // make sure custom submit handlers are called first.
-                array_unshift($form['actions']['submit']['#submit'], 'flat_bundle_node_form_add_submit');
-                array_unshift($form['actions']['submit']['#submit'], 'flat_bundle_node_form_update_submit');
-
-                break;
-            }
-
         }
     }
 }
@@ -603,7 +601,7 @@ function flat_bundle_node_form_add_validate($form, FormStateInterface $form_stat
     $user_id = $user->id();
 
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
-    $unique = \FlatBundle::checkUniquenessNaming($user_id, $collection, $bundle_name);
+    $unique = \FlatBundle::checkUniquenessNaming($user_id, $collection, $bundle_name, NULL);
 
     if (!$unique) {
         $form_state->setErrorByName('title', t('Bundle with same or very similar bundle name exists'));
@@ -815,7 +813,7 @@ function flat_bundle_node_form_edit_validate($form, FormStateInterface $form_sta
     // Check that bundle name within collection is distinctive from existing bundles, otherwise we get problems with creating new folders.
     $user_id = $node->getOwnerId();
     module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
-    $unique = \FlatBundle::checkUniquenessNaming($user_id, $collection_node->title, $node->title);
+    $unique = \FlatBundle::checkUniquenessNaming($user_id, $collection_node->title, $node->title, $node->id);
 
     if (!$unique) {
 
