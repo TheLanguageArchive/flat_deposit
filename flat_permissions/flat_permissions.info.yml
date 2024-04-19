@@ -1,0 +1,9 @@
+name: FLAT Permissions
+description: Module to define and use access policies in the collection hierarchy
+package: FLAT
+type: module
+core_version_requirement: ^10
+dependencies:
+  - flat_deposit
+update_module_enable:
+  - flat_permissions

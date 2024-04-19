@@ -1,0 +1,47 @@
+<?php
+
+use Drupal\media\MediaInterface;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Session\AccountInterface;
+
+
+function flat_permissions_media_access(MediaInterface $media, $op, AccountInterface $account) {
+
+    if ($op == "view" || $op == "download") {
+
+        $referenced_entities = $media->get('field_media_of')->referencedEntities();
+        $referenced_ids = [];
+
+        foreach ($referenced_entities as $entity) {
+        $referenced_ids[] = $entity->id();
+        }
+        $parent_nid = $referenced_ids[0];
+
+        $policy = json_decode(fetchAccessPolicy($parent_nid));
+        $read_rules = $policy->read;
+        if (array_key_exists('mimes', $read_rules)) {
+            $mimes = $read_rules['mimes'];
+        }
+
+        $allowed_roles = [];
+
+        // If the operation is 'view', and the user's role is not one of the allowed roles, deny access
+        if ($op == "view" && !array_intersect($allowed_roles, $account->getRoles())) {
+            return AccessResult::forbidden();
+        }
+
+        // Other case, we don't affect the access and let it be determined by core or other modules
+        return AccessResult::allowed();
+    }
+}
+
+function fetchAccessPolicy($nid): ?string
+{
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+    if ($node->hasField('field_access_policy')) {
+        return $node->get('field_access_policy')->value;
+    }
+
+    $parent = $node->getParent();
+    return fetchAccessPolicy($parent);
+}
