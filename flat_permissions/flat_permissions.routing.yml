@@ -1,0 +1,11 @@
+flat_permissions.edit_permissions:
+  path: '/node/{node}/permissions'
+  defaults:
+    _title: 'Permissions'
+    _controller: '\Drupal\flat_permissions\Controller\PermissionsFormController::editPermissions'
+  requirements:
+    _custom_access: '\Drupal\flat_permissions\Controller\PermissionsFormController::editPermissionsCheckAccess'
+  options:
+    parameters:
+      node:
+        type: 'entity:node'

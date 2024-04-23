@@ -1,0 +1,5 @@
+flat_permissions.edit_permissions:
+  route_name: 'flat_permissions.edit_permissions'
+  title: 'Permissions'
+  base_route: 'entity.node.canonical'
+  weight: 100

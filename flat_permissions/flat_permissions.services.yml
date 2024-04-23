@@ -1,0 +1,5 @@
+# FLAT Permissions Services
+# flat_permissions.services.yml:
+services:
+  flat_permissions.permissions_manager:
+    class: Drupal\flat_permissions\PermissionsManager

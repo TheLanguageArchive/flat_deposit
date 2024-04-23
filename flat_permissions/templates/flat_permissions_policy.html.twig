@@ -1,0 +1,69 @@
+{% for item in data %}
+{% if item.read is defined %}
+{% set read = item.read %}
+{% if read.all is defined %}
+{% set all = read.all %}
+{% if all.roles is defined %}
+<ul>
+{$ for role in all.roles %}
+<li>{{ role.value }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% if all.users is defined %}
+<ul>
+{% for user in all.users %}
+<li>{{ user.username }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% if read.mimes is defined %}
+{% set mimes = read.mimes %}
+{% if mimes.roles is defined %}
+<ul>
+{% for role in mimes.roles %}
+<li>{{ role.value }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% if mimes.users is defined %}
+<ul>
+{% for user in mimes.users %}
+<li>{{ user.username }}</li>
+{% endfor %}
+</ul>
+{% if mimes.mimes is defined %}
+<ul>
+{% for mime in mimes.mimes %}
+<li>{{ mime }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% if read.files is defined %}
+{% set files = read.files %}
+{% if files.roles is defined %}
+<ul>
+{% for role in files.roles %}
+<li>{{ role.value }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% if files.users is defined %}
+<ul>
+{% for user in files.users %}
+<li>{{ user.username }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% if files.ids is defined %}
+<ul>
+{% for id in files.ids %}
+<li>{{ id }}</li>
+{% endfor %}
+{% endif %}
+</ul>
+{% endif %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% endfor %}
