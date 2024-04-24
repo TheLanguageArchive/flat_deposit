@@ -34,11 +34,11 @@ class PermissionsManager
     const LEVELS      = ['anonymous' => 'Open', 'authenticated' => 'Registered Users', 'academic' => 'Academic Users', 'none' => 'Restricted'];
 
     /** Fetch the access policy for the given node, or go up the hierarchy if it doesn't have one
-    *
-    * @param string $nid
-    * @return object | null
-    *      access policy object
-    */
+     *
+     * @param string $nid
+     * @return object | null
+     *      access policy object
+     */
     public function fetchAccessPolicy($nid): ?stdClass
     {
         $nodeStorage = \Drupal::entityTypeManager()->getStorage('node');
@@ -55,13 +55,53 @@ class PermissionsManager
         if ($node && $node->hasField('field_member_of')) {
             $parentNodes = $node->get('field_member_of')->referencedEntities();
             if ($parentNodes) {
-                $policy_json =  fetchAccessPolicy($parentNodes[0]->id());
-                return json_decode($policy_json);
+                $policy = $this->fetchAccessPolicy($parentNodes[0]->id());
+                if ($policy) {
+                    return $policy;
+                }
             }
         }
 
         return null;
     }
+
+    /**
+     * Interpret roles and add access levels to the policy
+     * 
+     * @param object $policy
+     * @return object
+     */
+    public function addLevels($policy)
+    {
+        $rules = [];
+        $read = $policy->read;
+        if (property_exists($read, 'all')) {
+            $rules[] = $read->all;
+        };
+        if (property_exists($read, 'mimes')) {
+            $rules = $read->mimes;
+        };
+        if (property_exists($read, 'files')) {
+            $rules = $read->files;
+        };
+        foreach ($rules as $rule) {
+            if (property_exists($rule, 'roles')) {
+                if (in_array('anonymous', $rule->roles)) {
+                    $rule->level = 'Open';
+                } elseif (in_array('authenticated', $rule->roles)) {
+                    $rule->level = 'Registered Users';
+                } elseif (in_array('academic', $rule->roles)) {
+                    $rule->level = 'Academic Users';
+                } else {
+                    $rule->level = 'Restricted';
+                };
+            } else {
+                $rule->level = 'Restricted';
+            }
+        }
+        return $policy;
+    }
+
 
     /**
      * Get current permissions grouped by users and roles
@@ -353,13 +393,15 @@ class PermissionsManager
 
         if (count($filters) > 0) {
 
-            $mimeFilters = format_string('
+            $mimeFilters = format_string(
+                '
                 {
                     ?ds <info:fedora/fedora-system:def/view#disseminationType> <info:fedora/*/OBJ> .
                     ?ds <info:fedora/fedora-system:def/view#mimeType> ?mime .
                     FILTER(!filters)
 
-                }', ['!filters' => implode(' || ', $filters)]
+                }',
+                ['!filters' => implode(' || ', $filters)]
             );
         }
 
@@ -376,11 +418,11 @@ class PermissionsManager
                  !mimeFilters
             }', ['!mimeFilters' => $mimeFilters, '!pid' => $this->object->id]);
 
-            return [
+        return [
 
-                'type'        => 'sparql',
-                'query'       => $query,
-                'description' => 'All children of this collection and collections within this collection (existing and new)',
-            ];
+            'type'        => 'sparql',
+            'query'       => $query,
+            'description' => 'All children of this collection and collections within this collection (existing and new)',
+        ];
     }
 }

@@ -37,122 +37,129 @@ class EditPermissionsForm extends FormBase
     $manager = \Drupal::service('flat_permissions.permissions_manager');
     $policy = $manager->fetchAccessPolicy($nid);
 
-    $form['#markup'] = [
+    $policy = $manager->addLevels($policy);
+
+    $form['info'] = [
+      '#type' => 'html_tag',
+      '#title' => 'Effective Access Rules',
+      '#prefix' => '<h3>Effective Access Rules</h3>',
+      '#tag' => 'div',
       '#theme' => 'flat_permissions_policy',
       '#data' => $policy,
     ];
 
     $form['rules'] = array(
       '#type' => 'container',
+      '#prefix' => '<h3>Define Access Rules</h3><p>Define access rules that will apply within this collection. Defining a rule here will override any rule in the parent collection(s).</p>',
     );
 
-      $form['rules']['all'] = [
-        '#type' => 'fieldset',
-      ];
+    $form['rules']['all'] = [
+      '#type' => 'fieldset',
+    ];
 
-      $form['rules']['all']['radio'] = [
-        '#type' => 'radio',
-        '#title' => 'Apply to all files',
-        '#return_value' => 'all',
-        '#name' => 'radio',
-      ];
+    $form['rules']['all']['radio'] = [
+      '#type' => 'radio',
+      '#title' => 'Rule for all files',
+      '#return_value' => 'all',
+      '#name' => 'radio',
+    ];
 
-      $form['rules']['all']['level'] = [
-        '#type' => 'select',
-        '#title' => t('Access level'),
-        '#options' => $manager::LEVELS,
-        '#name' => 'all_level',
-        '#states' => [
-          'visible' => [
-            ':input[name="radio"]' => ['value' => 'all'],
-          ],
+    $form['rules']['all']['level'] = [
+      '#type' => 'select',
+      '#title' => t('Access level'),
+      '#options' => $manager::LEVELS,
+      '#name' => 'all_level',
+      '#states' => [
+        'visible' => [
+          ':input[name="radio"]' => ['value' => 'all'],
         ],
-      ];
+      ],
+    ];
 
-      $form['rules']['all']['users'] = [
-        '#type' => 'textfield',
-        '#title' => t('Specific users'),
-        '#states' => [
-          'visible' => [
-            [':input[name="all_level"]' => ['value' => 'none']],
-            [':input[name="all_level"]' => ['value' => 'academic']],
-          ],
+    $form['rules']['all']['users'] = [
+      '#type' => 'textfield',
+      '#title' => t('Specific users'),
+      '#states' => [
+        'visible' => [
+          [':input[name="all_level"]' => ['value' => 'none']],
+          [':input[name="all_level"]' => ['value' => 'academic']],
         ],
-      ];
+      ],
+    ];
 
-      $form['rules']['mimes'] = [
-        '#type' => 'fieldset',
-      ];
+    $form['rules']['mimes'] = [
+      '#type' => 'fieldset',
+    ];
 
-      $form['rules']['mimes']['radio'] = [
-        '#type' => 'radio',
-        '#title' => 'Apply to specific file types',
-        '#return_value' => 'mimes',
-        '#name' => 'radio',
-      ];
+    $form['rules']['mimes']['radio'] = [
+      '#type' => 'radio',
+      '#title' => 'Rule(s) for specific file types',
+      '#return_value' => 'mimes',
+      '#name' => 'radio',
+    ];
 
-      $form['rules']['mimes']['mimes'] = $this->build_mimes_fieldset($form_state);
+    $form['rules']['mimes']['mimes'] = $this->build_mimes_fieldset($form_state);
 
 
-      $form['rules']['mimes']['level'] = [
-        '#type' => 'select',
-        '#title' => t('Access level'),
-        '#options' => $manager::LEVELS,
-        '#name' => 'mimes_level',
-        '#states' => [
-          'visible' => [
-            ':input[name="radio"]' => ['value' => 'mimes'],
-          ],
+    $form['rules']['mimes']['level'] = [
+      '#type' => 'select',
+      '#title' => t('Access level'),
+      '#options' => $manager::LEVELS,
+      '#name' => 'mimes_level',
+      '#states' => [
+        'visible' => [
+          ':input[name="radio"]' => ['value' => 'mimes'],
         ],
-      ];
+      ],
+    ];
 
-      $form['rules']['mimes']['users'] = [
-        '#type' => 'textfield',
-        '#title' => t('Specific users'),
-        '#states' => [
-          'visible' => [
-            [':input[name="mimes_level"]' => ['value' => 'none']],
-            [':input[name="mimes_level"]' => ['value' => 'academic']],
-          ],
+    $form['rules']['mimes']['users'] = [
+      '#type' => 'textfield',
+      '#title' => t('Specific users'),
+      '#states' => [
+        'visible' => [
+          [':input[name="mimes_level"]' => ['value' => 'none']],
+          [':input[name="mimes_level"]' => ['value' => 'academic']],
         ],
-      ];
+      ],
+    ];
 
-      $form['rules']['files'] = [
-        '#type' => 'fieldset',
-      ];
+    $form['rules']['files'] = [
+      '#type' => 'fieldset',
+    ];
 
-      $form['rules']['files']['radio'] = [
-        '#type' => 'radio',
-        '#title' => 'Apply to specific files',
-        '#return_value' => 'files',
-        '#name' => 'radio',
-      ];
+    $form['rules']['files']['radio'] = [
+      '#type' => 'radio',
+      '#title' => 'Rule(s) for specific files',
+      '#return_value' => 'files',
+      '#name' => 'radio',
+    ];
 
-      $form['rules']['files']['level'] = [
-        '#type' => 'select',
-        '#title' => t('Access level'),
-        '#options' => $manager::LEVELS,
-        '#name' => 'files_level',
-        '#states' => [
-          'visible' => [
-            ':input[name="radio"]' => ['value' => 'files'],
-          ],
+    $form['rules']['files']['level'] = [
+      '#type' => 'select',
+      '#title' => t('Access level'),
+      '#options' => $manager::LEVELS,
+      '#name' => 'files_level',
+      '#states' => [
+        'visible' => [
+          ':input[name="radio"]' => ['value' => 'files'],
         ],
-      ];
+      ],
+    ];
 
-      $form['rules']['files']['users'] = [
-        '#type' => 'textfield',
-        '#title' => t('Specific users'),
-        '#states' => [
-          'visible' => [
-              [':input[name="files_level"]' => ['value' => 'none']],
-              [':input[name="files_level"]' => ['value' => 'academic']],
-          ],
+    $form['rules']['files']['users'] = [
+      '#type' => 'textfield',
+      '#title' => t('Specific users'),
+      '#states' => [
+        'visible' => [
+          [':input[name="files_level"]' => ['value' => 'none']],
+          [':input[name="files_level"]' => ['value' => 'academic']],
         ],
-      ];
+      ],
+    ];
 
 
-/*     $manager = \Drupal::service('flat_permissions.permissions_manager');
+    /*     $manager = \Drupal::service('flat_permissions.permissions_manager');
 
     $form['#validate']              = ['flat_permissions_form_validate'];
     $form['#group']                 = $manager->determineReadGroup();
@@ -171,34 +178,35 @@ class EditPermissionsForm extends FormBase
   }
 
   /**
- * Mimes fieldset
- *
- * @param array  $form_state
- * @param string $pid
- * @param array  $mimes
- * @param array  $availableMimes
- * @param bool   $enabled
- *
- * @return array
- */
-private function build_mimes_fieldset(&$form_state) {
+   * Mimes fieldset
+   *
+   * @param array  $form_state
+   * @param string $pid
+   * @param array  $mimes
+   * @param array  $availableMimes
+   * @param bool   $enabled
+   *
+   * @return array
+   */
+  private function build_mimes_fieldset(&$form_state)
+  {
 
-  $mimes = [];
-/*   if (count($form_state->get('mimes')->value()) > 0) {
+    $mimes = [];
+    /*   if (count($form_state->get('mimes')->value()) > 0) {
       $mimes = array_merge($mimes, $form_state['mimes']);
   } */
 
-/*   $availableMimes = array_map(function($mime) {
+    /*   $availableMimes = array_map(function($mime) {
       return ['field' => $mime, 'label' => $mime];
   }, $availableMimes); */
 
-  $database = \Drupal::database();
-  $query = $database->select('media__field_mime_type', 'mfmt');
-  $query->addField('mfmt', 'field_mime_type_value');
-  $query->distinct(TRUE);
-  $allmimes = $query->execute()->fetchAllKeyed(0, 0);
+    $database = \Drupal::database();
+    $query = $database->select('media__field_mime_type', 'mfmt');
+    $query->addField('mfmt', 'field_mime_type_value');
+    $query->distinct(TRUE);
+    $allmimes = $query->execute()->fetchAllKeyed(0, 0);
 
-  $field = [
+    $field = [
 
       '#tree'       => true,
       '#type'       => 'select',
@@ -208,9 +216,9 @@ private function build_mimes_fieldset(&$form_state) {
           ':input[name="radio"]' => ['value' => 'mimes'],
         ],
       ],
-  ];
+    ];
 
-/*   $fieldset = [
+    /*   $fieldset = [
 
       '#tree'        => true,
       '#type'        => 'container',
@@ -228,155 +236,161 @@ private function build_mimes_fieldset(&$form_state) {
       ),
   ]; */
 
-  return $field;
-}
+    return $field;
+  }
 
-/**
-* @param array $mimes
-*
-* @return array
-*/
-private function build_hidden_mimes_fieldset($mimes) {
+  /**
+   * @param array $mimes
+   *
+   * @return array
+   */
+  private function build_hidden_mimes_fieldset($mimes)
+  {
 
-  $fieldset = [
+    $fieldset = [
 
       '#tree'       => true,
       '#type'       => 'container',
       '#attributes' => [
-          'data-role' => 'hidden-mimes',
+        'data-role' => 'hidden-mimes',
       ],
-  ];
+    ];
 
-  foreach ($mimes as $key => $mime) {
+    foreach ($mimes as $key => $mime) {
 
       $fieldset[$key + 1] = [
 
-          '#type'       => 'hidden',
-          '#value'      => $mime,
-          '#attributes' => [
-              'data-mime' => $mime,
-          ],
+        '#type'       => 'hidden',
+        '#value'      => $mime,
+        '#attributes' => [
+          'data-mime' => $mime,
+        ],
       ];
+    }
+
+    return $fieldset;
   }
 
-  return $fieldset;
-}
+  /**
+   * Deleted mimes fieldset
+   *
+   * @param string $mimes
+   *
+   * @return array
+   */
+  private function build_delete_mimes_fieldset($mimes)
+  {
 
-/**
-* Deleted mimes fieldset
-*
-* @param string $mimes
-*
-* @return array
-*/
-private function build_delete_mimes_fieldset($mimes) {
+    $fieldset = [];
 
-  $fieldset = [];
+    $i = 1;
 
-  $i = 1;
-
-  foreach ($mimes as $mime) {
+    foreach ($mimes as $mime) {
 
       $fieldset[$i] = [
 
-          '#type'         => 'checkbox',
-          '#title'        => $mime,
-          '#return_value' => $mime,
+        '#type'         => 'checkbox',
+        '#title'        => $mime,
+        '#return_value' => $mime,
       ];
 
       $i += 1;
+    }
+
+    return $fieldset;
   }
 
-  return $fieldset;
-}
+  /**
+   * @param array   $mimes
+   * @param boolean $enabled
+   *
+   * @return boolean
+   */
+  private function build_enabled_mimes_fieldset(array $mimes, $enabled)
+  {
 
-/**
-* @param array   $mimes
-* @param boolean $enabled
-*
-* @return boolean
-*/
-private function build_enabled_mimes_fieldset(array $mimes, $enabled) {
-
-  return [
+    return [
 
       '#type'          => 'checkbox',
       '#default_value' => (count($mimes) > 0 ? $enabled : false),
       '#title'         => t('Only apply read permissions to certain file types'),
-  ];
-}
+    ];
+  }
 
-/**
-* Read group fieldset
-*
-* @param string $currentGroup
-*
-* @return array
-*/
-private function build_read_group_fieldset($currentGroup) {
+  /**
+   * Read group fieldset
+   *
+   * @param string $currentGroup
+   *
+   * @return array
+   */
+  private function build_read_group_fieldset($currentGroup)
+  {
 
-  return [
+    return [
 
       '#type'      => 'fieldset',
       '#title'     => 'Read groups',
       'read_group' => [
 
-          '#type'          => 'radios',
-          '#default_value' => $currentGroup,
-          '#attributes'    => [
-              'data-role' => 'select-group',
-          ],
-          '#options'       => [
+        '#type'          => 'radios',
+        '#default_value' => $currentGroup,
+        '#attributes'    => [
+          'data-role' => 'select-group',
+        ],
+        '#options'       => [
 
-              PermissionsManager::ROLE_ANONYMOUS     => 'Public',
-              PermissionsManager::ROLE_AUTHENTICATED => 'Registered Users',
-              PermissionsManager::ROLE_ACADEMIC      => 'Academic Users',
-              PermissionsManager::ROLE_SPECIFIC      => 'Specific Users',
-          ],
+          PermissionsManager::ROLE_ANONYMOUS     => 'Public',
+          PermissionsManager::ROLE_AUTHENTICATED => 'Registered Users',
+          PermissionsManager::ROLE_ACADEMIC      => 'Academic Users',
+          PermissionsManager::ROLE_SPECIFIC      => 'Specific Users',
+        ],
       ],
-  ];
-}
+    ];
+  }
 
-/**
-* Visibility checkbox fieldset
-*
-* @return array
-*/
-private function build_visibility_fieldset($visibility) {
+  /**
+   * Visibility checkbox fieldset
+   *
+   * @return array
+   */
+  private function build_visibility_fieldset($visibility)
+  {
 
-  return [
+    return [
 
       '#type'      => 'fieldset',
       '#title'     => 'Visibility',
       'visibility' => [
 
-          '#type'          => 'checkbox',
-          '#title'         => 'Invisible',
-          '#default_value' => $visibility,
-          '#attributes'    => [
-              'data-role' => 'visibility',
-          ],
+        '#type'          => 'checkbox',
+        '#title'         => 'Invisible',
+        '#default_value' => $visibility,
+        '#attributes'    => [
+          'data-role' => 'visibility',
+        ],
       ],
-  ];
-}
-
-/**
-* Abstract add user fieldset (for read and management)
-*
-* @param array  $form
-* @param array  $form_state
-* @param string $type (usually read/management)
-* @param array  $users
-*
-* @return array
-*/
-private function build_users_fieldset(&$form_state, $type, $users) {
-
-  if (count($form_state['new_users'][$type]) > 0) {
-      $users = array_merge($users, $form_state['new_users'][$type]);
+    ];
   }
 
-  $fieldset = [
+  /**
+   * Abstract add user fieldset (for read and management)
+   *
+   * @param array  $form
+   * @param array  $form_state
+   * @param string $type (usually read/management)
+   * @param array  $users
+   *
+   * @return array
+   */
+  private function build_users_fieldset(&$form_state, $type, $users)
+  {
+
+    if (count($form_state['new_users'][$type]) > 0) {
+      $users = array_merge($users, $form_state['new_users'][$type]);
+    }
+
+    $fieldset = [
 
       '#tree'        => true,
       '#type'        => 'container',
@@ -384,174 +398,179 @@ private function build_users_fieldset(&$form_state, $type, $users) {
       'hidden'       => build_hidden_users_fieldset($type, $users),
       'autocomplete' => build_autocomplete_fieldset(
 
-          'user/autocomplete',
-          'Add user',
-          'add_' . $type . '_user',
-          'flat_permissions_form_add_' . $type . '_user_submit',
-          'flat_permissions_form_add_user_validate',
-          'flat_permissions_form_add_' . $type . '_user_js'
+        'user/autocomplete',
+        'Add user',
+        'add_' . $type . '_user',
+        'flat_permissions_form_add_' . $type . '_user_submit',
+        'flat_permissions_form_add_user_validate',
+        'flat_permissions_form_add_' . $type . '_user_js'
       ),
-  ];
+    ];
 
-  return $fieldset;
-}
+    return $fieldset;
+  }
 
-/**
-* @param array  $results
-* @param string $title
-* @param string $name
-* @param string $submit
-* @param string $validation
-* @param string $ajax
-*
-* @return array
-*/
-private function build_static_autocomplete_fieldset($results, $title, $name, $submit, $validation, $ajax) {
+  /**
+   * @param array  $results
+   * @param string $title
+   * @param string $name
+   * @param string $submit
+   * @param string $validation
+   * @param string $ajax
+   *
+   * @return array
+   */
+  private function build_static_autocomplete_fieldset($results, $title, $name, $submit, $validation, $ajax)
+  {
 
-  return [
+    return [
 
       '#type'  => 'fieldset',
       '#title' => $title,
       'field'  => [
-          'input' => [
+        'input' => [
 
-              '#type'       => 'textfield',
-              '#prefix'     => '<div class="input-group form-autocomplete">',
-              '#suffix'     => '<span class="input-group-addon"><span class="icon glyphicon glyphicon-refresh"></span></span></div>',
-              '#attributes' => [
+          '#type'       => 'textfield',
+          '#prefix'     => '<div class="input-group form-autocomplete">',
+          '#suffix'     => '<span class="input-group-addon"><span class="icon glyphicon glyphicon-refresh"></span></span></div>',
+          '#attributes' => [
 
-                  'data-role'    => 'static-autocomplete',
-                  'data-results' => drupal_json_encode($results),
-              ],
+            'data-role'    => 'static-autocomplete',
+            'data-results' => drupal_json_encode($results),
           ],
+        ],
       ],
       'button' => [
 
-          '#type'     => 'submit',
-          '#prefix'   => '<div class="mt-1">',
-          '#suffix'   => '</div>',
-          '#validate' => [$validation],
-          '#name'     => $name,
-          '#value'    => t($title),
-          '#submit'   => [$submit],
-          '#ajax'     => [
-              'callback' => $ajax,
-          ],
+        '#type'     => 'submit',
+        '#prefix'   => '<div class="mt-1">',
+        '#suffix'   => '</div>',
+        '#validate' => [$validation],
+        '#name'     => $name,
+        '#value'    => t($title),
+        '#submit'   => [$submit],
+        '#ajax'     => [
+          'callback' => $ajax,
+        ],
       ],
-  ];
-}
+    ];
+  }
 
-/**
-* Autocomplete fieldset
-*
-* @param string $autocomplete
-* @param string $title
-* @param string $name
-* @param string $submit
-* @param string $validation
-* @param string $ajax
-*
-* @return array
-*/
-private function build_autocomplete_fieldset($autocomplete, $title, $name, $submit, $validation, $ajax) {
+  /**
+   * Autocomplete fieldset
+   *
+   * @param string $autocomplete
+   * @param string $title
+   * @param string $name
+   * @param string $submit
+   * @param string $validation
+   * @param string $ajax
+   *
+   * @return array
+   */
+  private function build_autocomplete_fieldset($autocomplete, $title, $name, $submit, $validation, $ajax)
+  {
 
-  return [
+    return [
 
       '#type'  => 'fieldset',
       '#title' => t($title),
       'field'  => [
 
-          '#type'              => 'textfield',
-          '#autocomplete_path' => $autocomplete,
+        '#type'              => 'textfield',
+        '#autocomplete_path' => $autocomplete,
       ],
       'button' => [
 
-          '#type'     => 'submit',
-          '#validate' => [$validation],
-          '#name'     => $name,
-          '#value'    => t($title),
-          '#submit'   => [$submit],
-          '#ajax'     => [
-              'callback' => $ajax,
-          ],
+        '#type'     => 'submit',
+        '#validate' => [$validation],
+        '#name'     => $name,
+        '#value'    => t($title),
+        '#submit'   => [$submit],
+        '#ajax'     => [
+          'callback' => $ajax,
+        ],
       ],
-  ];
-}
+    ];
+  }
 
-/**
-* Deleted users fieldset
-*
-* @param string $type
-* @param array  $users
-*
-* @return array
-*/
-private function build_delete_users_fieldset($type, $users) {
+  /**
+   * Deleted users fieldset
+   *
+   * @param string $type
+   * @param array  $users
+   *
+   * @return array
+   */
+  private function build_delete_users_fieldset($type, $users)
+  {
 
-  $fieldset = [];
+    $fieldset = [];
 
-  $i = 1;
+    $i = 1;
 
-  foreach ($users as $user) {
+    foreach ($users as $user) {
 
       $fieldset[$i] = [
 
-          '#type'         => 'checkbox',
-          '#title'        => $user,
-          '#return_value' => $user,
+        '#type'         => 'checkbox',
+        '#title'        => $user,
+        '#return_value' => $user,
       ];
 
       $i += 1;
+    }
+
+    return $fieldset;
   }
 
-  return $fieldset;
-}
+  /**
+   * @param string $type
+   * @param array  $users
+   *
+   * @return array
+   */
+  private function build_hidden_users_fieldset($type, $users)
+  {
 
-/**
-* @param string $type
-* @param array  $users
-*
-* @return array
-*/
-private function build_hidden_users_fieldset($type, $users) {
-
-  $fieldset = [
+    $fieldset = [
 
       '#tree'       => true,
       '#type'       => 'container',
       '#attributes' => [
-          'data-role' => 'hidden-' . $type . '-users',
+        'data-role' => 'hidden-' . $type . '-users',
       ],
-  ];
+    ];
 
-  foreach ($users as $key => $user) {
+    foreach ($users as $key => $user) {
 
       $fieldset[$key + 1] = [
 
-          '#type'       => 'hidden',
-          '#value'      => $user,
-          '#attributes' => [
+        '#type'       => 'hidden',
+        '#value'      => $user,
+        '#attributes' => [
 
-              'data-type' => $type,
-              'data-user' => $user,
-          ],
+          'data-type' => $type,
+          'data-user' => $user,
+        ],
       ];
+    }
+
+    return $fieldset;
   }
 
-  return $fieldset;
-}
+  /**
+   * Abstract add user submit handler, adding new user
+   * to the list using AJAX if javascript enabled
+   *
+   * @param array  $form
+   * @param array  $form_state
+   * @param string $type (usually read/management)
+   */
+  private function flat_permissions_form_add_user_submit($form, &$form_state, $type)
+  {
 
-/**
-* Abstract add user submit handler, adding new user
-* to the list using AJAX if javascript enabled
-*
-* @param array  $form
-* @param array  $form_state
-* @param string $type (usually read/management)
-*/
-private function flat_permissions_form_add_user_submit($form, &$form_state, $type) {
-
-  if (isset($form_state['values']['add_' . $type . '_user'])) {
+    if (isset($form_state['values']['add_' . $type . '_user'])) {
 
       // if checkbox is checked, it has a string, otherwise value is 0,
       // so let's filter by is_string
@@ -560,121 +579,127 @@ private function flat_permissions_form_add_user_submit($form, &$form_state, $typ
 
       foreach ($form[$type . '_users']['delete'] as $field) {
 
-          if ($field['#type'] === 'checkbox' && !in_array($field['#return_value'], $removedUsers)) {
-              $users[] = $field['#return_value'];
-          }
+        if ($field['#type'] === 'checkbox' && !in_array($field['#return_value'], $removedUsers)) {
+          $users[] = $field['#return_value'];
+        }
       }
 
       foreach ($form_state['new_users'][$type] as $user) {
 
-          if (!in_array($user, $removedUsers)) {
-              $users[] = $user;
-          }
+        if (!in_array($user, $removedUsers)) {
+          $users[] = $user;
+        }
       }
 
       if (!in_array($form_state['values'][$type . '_users']['autocomplete']['field'], $users)) {
 
-          $form_state['rebuild']            = true;
-          $form_state['new_users'][$type][] = $form_state['values'][$type . '_users']['autocomplete']['field'];
-          $form_state['new_users'][$type]   = array_unique($form_state['new_users'][$type]);
+        $form_state['rebuild']            = true;
+        $form_state['new_users'][$type][] = $form_state['values'][$type . '_users']['autocomplete']['field'];
+        $form_state['new_users'][$type]   = array_unique($form_state['new_users'][$type]);
       }
+    }
   }
-}
 
-/**
-* Concrete implementation of read users submit handler
-*
-* @param array $form
-* @param array $form_state
-*/
-private function flat_permissions_form_add_read_user_submit($form, &$form_state) {
-  flat_permissions_form_add_user_submit($form, $form_state, 'read');
-}
+  /**
+   * Concrete implementation of read users submit handler
+   *
+   * @param array $form
+   * @param array $form_state
+   */
+  private function flat_permissions_form_add_read_user_submit($form, &$form_state)
+  {
+    flat_permissions_form_add_user_submit($form, $form_state, 'read');
+  }
 
-/**
-* Concrete implementation of management users submit handler
-*
-* @param array $form
-* @param array $form_state
-*/
-private function flat_permissions_form_add_management_user_submit($form, &$form_state) {
-  return flat_permissions_form_add_user_submit($form, $form_state, 'management');
-}
+  /**
+   * Concrete implementation of management users submit handler
+   *
+   * @param array $form
+   * @param array $form_state
+   */
+  private function flat_permissions_form_add_management_user_submit($form, &$form_state)
+  {
+    return flat_permissions_form_add_user_submit($form, $form_state, 'management');
+  }
 
-/**
-* Abstract response handler ajax for adidng user
-*
-* @param array  $form
-* @param array  $form_state
-* @param string $type (usually read/management)
-*
-* @return array
-*/
-private function flat_permissions_form_add_user_js($form, &$form_state, $type) {
+  /**
+   * Abstract response handler ajax for adidng user
+   *
+   * @param array  $form
+   * @param array  $form_state
+   * @param string $type (usually read/management)
+   *
+   * @return array
+   */
+  private function flat_permissions_form_add_user_js($form, &$form_state, $type)
+  {
 
-  $count    = 0;
-  $username = '';
+    $count    = 0;
+    $username = '';
 
-  foreach ($form[$type . '_users']['delete'] as $field) {
+    foreach ($form[$type . '_users']['delete'] as $field) {
 
       if ($field['#type'] === 'checkbox') {
 
-          $count   += 1;
-          $username = $field['#return_value'];
+        $count   += 1;
+        $username = $field['#return_value'];
       }
-  }
+    }
 
-  unset($form[$type . '_users']['delete'][$count]['#title']);
+    unset($form[$type . '_users']['delete'][$count]['#title']);
 
-  return [
+    return [
 
       '#type'     => 'ajax',
       '#commands' => [
 
-          ajax_command_invoke(null, 'onAddUser', [
+        ajax_command_invoke(null, 'onAddUser', [
 
-              $type,
-              $username,
-              drupal_render($form[$type . '_users']['delete'][$count]),
-              drupal_render($form[$type . '_users']['hidden'][$count]),
-              $form_state['rebuild']
-          ]),
+          $type,
+          $username,
+          drupal_render($form[$type . '_users']['delete'][$count]),
+          drupal_render($form[$type . '_users']['hidden'][$count]),
+          $form_state['rebuild']
+        ]),
       ],
-  ];
-}
+    ];
+  }
 
-/**
-* Concrete implementation of read users ajax response
-* it calls the jQuery.fn.onAddUser method to add new line
-* in the users table
-*
-* @param array $form
-* @param array $form_state
-*/
-private function flat_permissions_form_add_read_user_js($form, &$form_state) {
-  return flat_permissions_form_add_user_js($form, $form_state, 'read');
-}
+  /**
+   * Concrete implementation of read users ajax response
+   * it calls the jQuery.fn.onAddUser method to add new line
+   * in the users table
+   *
+   * @param array $form
+   * @param array $form_state
+   */
+  private function flat_permissions_form_add_read_user_js($form, &$form_state)
+  {
+    return flat_permissions_form_add_user_js($form, $form_state, 'read');
+  }
 
-/**
-* Concrete implementation of management users ajax response
-* it calls the jQuery.fn.onAddUser method to add new line
-* in the users table
-*
-* @param array $form
-* @param array $form_state
-*/
-private function flat_permissions_form_add_management_user_js($form, &$form_state) {
-  return flat_permissions_form_add_user_js($form, $form_state, 'management');
-}
+  /**
+   * Concrete implementation of management users ajax response
+   * it calls the jQuery.fn.onAddUser method to add new line
+   * in the users table
+   *
+   * @param array $form
+   * @param array $form_state
+   */
+  private function flat_permissions_form_add_management_user_js($form, &$form_state)
+  {
+    return flat_permissions_form_add_user_js($form, $form_state, 'management');
+  }
 
-/**
-* @param array $form
-* @param array $form_state
-* @param array $mimes
-*/
-private function flat_permissions_form_add_mime_submit(&$form, &$form_state) {
+  /**
+   * @param array $form
+   * @param array $form_state
+   * @param array $mimes
+   */
+  private function flat_permissions_form_add_mime_submit(&$form, &$form_state)
+  {
 
-  if (isset($form_state['values']['add_mime'])) {
+    if (isset($form_state['values']['add_mime'])) {
 
       // if checkbox is checked, it has a string, otherwise value is 0,
       // so let's filter by is_string
@@ -683,70 +708,73 @@ private function flat_permissions_form_add_mime_submit(&$form, &$form_state) {
 
       foreach ($form['mimes']['delete'] as $field) {
 
-          if ($field['#type'] === 'checkbox' && !in_array($field['#return_value'], $removedMimes)) {
-              $mimes[] = $field['#return_value'];
-          }
+        if ($field['#type'] === 'checkbox' && !in_array($field['#return_value'], $removedMimes)) {
+          $mimes[] = $field['#return_value'];
+        }
       }
 
       foreach ($form_state['mimes'] as $mime) {
 
-          if (!in_array($mime, $removedMimes)) {
-              $mimes[] = $mime;
-          }
+        if (!in_array($mime, $removedMimes)) {
+          $mimes[] = $mime;
+        }
       }
 
       if (!in_array($form_state['values']['mimes']['autocomplete']['field']['input'], $mimes)) {
 
-          $form_state['rebuild'] = true;
-          $form_state['mimes'][] = $form_state['values']['mimes']['autocomplete']['field']['input'];
-          $form_state['mimes']   = array_unique($form_state['mimes']);
+        $form_state['rebuild'] = true;
+        $form_state['mimes'][] = $form_state['values']['mimes']['autocomplete']['field']['input'];
+        $form_state['mimes']   = array_unique($form_state['mimes']);
       }
+    }
   }
-}
 
-/**
-* @param array $form
-* @param array $form_state
-*/
-private function flat_permissions_form_add_mime_validate(&$form, &$form_state) {}
+  /**
+   * @param array $form
+   * @param array $form_state
+   */
+  private function flat_permissions_form_add_mime_validate(&$form, &$form_state)
+  {
+  }
 
-/**
-* @param array $form
-* @param array $form_state
-*
-* @return array
-*/
-private function flat_permissions_form_add_mime_js(&$form, &$form_state) {
+  /**
+   * @param array $form
+   * @param array $form_state
+   *
+   * @return array
+   */
+  private function flat_permissions_form_add_mime_js(&$form, &$form_state)
+  {
 
-  $count = 0;
-  $mime  = '';
+    $count = 0;
+    $mime  = '';
 
-  foreach ($form['mimes']['delete'] as $field) {
+    foreach ($form['mimes']['delete'] as $field) {
 
       if ($field['#type'] === 'checkbox') {
 
-          $count += 1;
-          $mime   = $field['#return_value'];
+        $count += 1;
+        $mime   = $field['#return_value'];
       }
-  }
+    }
 
-  unset($form['mimes']['delete'][$count]['#title']);
+    unset($form['mimes']['delete'][$count]['#title']);
 
-  return [
+    return [
 
       '#type'     => 'ajax',
       '#commands' => [
 
-          ajax_command_invoke(null, 'onAddMime', [
+        ajax_command_invoke(null, 'onAddMime', [
 
-              $mime,
-              drupal_render($form['mimes']['delete'][$count]),
-              drupal_render($form['mimes']['hidden'][$count]),
-              $form_state['rebuild']
-          ]),
+          $mime,
+          drupal_render($form['mimes']['delete'][$count]),
+          drupal_render($form['mimes']['hidden'][$count]),
+          $form_state['rebuild']
+        ]),
       ],
-  ];
-}
+    ];
+  }
 
   /**
    * Instead of using validateForm, which is called every time either ajax or form requests
@@ -795,6 +823,5 @@ private function flat_permissions_form_add_mime_js(&$form, &$form_state) {
     \Drupal::messenger()->addMessage(t('Metadata for bundle %title has been saved', [
       '%title' => $title
     ]));
-
   }
 }

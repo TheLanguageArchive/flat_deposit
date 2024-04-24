@@ -1,0 +1,91 @@
+{% if data.read is defined %}
+	{% set read = data.read %}
+	<fieldset class="form-wrapper card">
+		<div class="fieldset-wrapper">
+			{% if read.all is defined %}
+				{% set all = read.all %}
+				<fieldset class="form-wrapper card">
+					<div class="fieldset-wrapper">
+						<p>Rule for all files:</p>
+						{% if all.level is defined %}
+							<p>Access level:
+								{{ all.level }}</p>
+						{% endif %}
+						{% if all.users is defined %}
+							<p>Users</p>
+							<ul>
+								{% for user in all.users %}
+									<li>{{ user.username }}</li>
+								{% endfor %}
+							</ul>
+						{% endif %}
+					</div>
+				</fieldset>
+			{% endif %}
+			{% if read.mimes is defined %}
+				{% set mimes = read.mimes %}
+				<fieldset class="form-wrapper card">
+					<div class="fieldset-wrapper">
+						<p>Rule(s) for specific file types:</p>
+						{% for mime in mimes %}
+							<fieldset class="form-wrapper card">
+								<div class="fieldset-wrapper">
+									{% if mime.level is defined %}
+										<p>Access level:
+											{{ mime.level }}</p>
+									{% endif %}
+									{% if mime.users is defined %}
+										<p>Users:</p>
+										<ul>
+											{% for user in mime.users %}
+												<li>{{ user }}</li>
+											{% endfor %}
+										</ul>
+									{% endif %}
+									{% if mime.mimes is defined %}
+										<p>File types:</p>
+										<ul>
+											{% for mimetype in mime.mimes %}
+												<li>{{ mimetype }}</li>
+											{% endfor %}
+										</ul>
+									{% endif %}
+								</div>
+							</fieldset>
+						{% endfor %}
+					</div>
+				</fieldset>
+			{% endif %}
+			{% if read.files is defined %}
+				{% set files = read.files %}
+				<p>Rule(s) for specific files:</p>
+				{% for file in files %}
+					<fieldset class="form-wrapper card">
+						<div class="fieldset-wrapper">
+							{% if file.level is defined %}
+								<p>Access level:
+									{{ file.level }}</p>
+							{% endif %}
+							{% if file.users is defined %}
+								<p>Users:</p>
+								<ul>
+									{% for user in file.users %}
+										<li>{{ user }}</li>
+									{% endfor %}
+								</ul>
+							{% endif %}
+							{% if file.ids is defined %}
+								<p>Files:</p>
+								<ul>
+									{% for id in file.ids %}
+										<li>{{ id }}</li>
+									{% endfor %}
+								</ul>
+							{% endif %}
+						{% endfor %}
+					{% endif %}
+				</div>
+			</fieldset>
+		{% else %}
+			<p>No access rules defined</p>
+		{% endif %}

@@ -34,7 +34,7 @@ function flat_permissions_media_access(MediaInterface $media, $operation, Accoun
             return AccessResult::forbidden();
         }
 
-        if (property_exists ($policy, "read")) {
+        if (property_exists($policy, "read")) {
 
             // Get the read rules from the policy
             $read_rules = $policy->read;
@@ -109,7 +109,6 @@ function flat_permissions_media_access(MediaInterface $media, $operation, Accoun
                     }
                 }
             }
-
         }
 
         // If there are no rules that match, access is denied
@@ -117,7 +116,8 @@ function flat_permissions_media_access(MediaInterface $media, $operation, Accoun
     }
 }
 
-function flat_permissions_write_access ($nid, AccountInterface $account) {
+function flat_permissions_write_access($nid, AccountInterface $account)
+{
     $manager = \Drupal::service('flat_permissions.permissions_manager');
     $policy = $manager->fetchAccessPolicy($nid);
 
@@ -169,16 +169,17 @@ function flat_permissions_write_access ($nid, AccountInterface $account) {
  * @param AccountInterface $account
  * @return boolean
  */
-function flat_permissions_view_access ($nid, AccountInterface $account) {
+function flat_permissions_view_access($nid, AccountInterface $account)
+{
     $manager = \Drupal::service('flat_permissions.permissions_manager');
     $policy = $manager->fetchAccessPolicy($nid);
-
 }
 
-function flat_permissions_theme() {
+function flat_permissions_theme()
+{
     return [
         'flat_permissions_policy' => [
-            'variables' => ['policy' => null],
+            'variables' => ['data' => null],
         ],
     ];
 }
