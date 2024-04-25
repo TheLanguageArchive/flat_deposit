@@ -166,10 +166,9 @@ function flat_permissions_write_access($nid, AccountInterface $account)
  * in the policy
  *
  * @param string $nid
- * @param AccountInterface $account
  * @return boolean
  */
-function flat_permissions_view_access($nid, AccountInterface $account)
+function flat_permissions_view_access($nid)
 {
     $manager = \Drupal::service('flat_permissions.permissions_manager');
     $policy = $manager->fetchAccessPolicy($nid);

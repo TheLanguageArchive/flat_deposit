@@ -13,6 +13,8 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\file\Entity\File;
 use Symfony\Component\HttpFoundation\Request;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
 
 class EditPermissionsForm extends FormBase
 {
@@ -42,7 +44,8 @@ class EditPermissionsForm extends FormBase
     $form['info'] = [
       '#type' => 'html_tag',
       '#title' => 'Effective Access Rules',
-      '#prefix' => '<h3>Effective Access Rules</h3>',
+      '#prefix' => '<h3>Effective Access Rules</h3>
+      <p>The nearest access rules that are defined in the collection hierarchy and that are applicable to files below this item.</p>',
       '#tag' => 'div',
       '#theme' => 'flat_permissions_policy',
       '#data' => $policy,
@@ -50,7 +53,8 @@ class EditPermissionsForm extends FormBase
 
     $form['rules'] = array(
       '#type' => 'container',
-      '#prefix' => '<h3>Define Access Rules</h3><p>Define access rules that will apply within this collection. Defining a rule here will override any rule in the parent collection(s).</p>',
+      '#prefix' => '<h3>Define Access Rules</h3>
+      <p>Define access rules that will apply to files below this item. Defining a rule here will override any rule in the parent collection(s).</p>',
     );
 
     $form['rules']['all'] = [
@@ -98,8 +102,7 @@ class EditPermissionsForm extends FormBase
       '#name' => 'radio',
     ];
 
-    $form['rules']['mimes']['mimes'] = $this->build_mimes_fieldset($form_state);
-
+    $form['rules']['mimes'] = $this->build_mimes_fieldset($form_state, $this->getAvailableMimes());
 
     $form['rules']['mimes']['level'] = [
       '#type' => 'select',
@@ -177,10 +180,19 @@ class EditPermissionsForm extends FormBase
     return $form;
   }
 
+  public function getAvailableMimes() {
+    $database = \Drupal::database();
+    $query = $database->select('media__field_mime_type', 'mfmt');
+    $query->addField('mfmt', 'field_mime_type_value');
+    $query->distinct(TRUE);
+    $mimes = $query->execute()->fetchCol();
+    return $mimes;
+  }
+
   /**
    * Mimes fieldset
    *
-   * @param array  $form_state
+   * @param FormStateInterface  $form_state
    * @param string $pid
    * @param array  $mimes
    * @param array  $availableMimes
@@ -188,44 +200,26 @@ class EditPermissionsForm extends FormBase
    *
    * @return array
    */
-  private function build_mimes_fieldset(&$form_state)
+  public function build_mimes_fieldset(FormStateInterface &$form_state, $availableMimes = [], $enabled = true)
   {
 
     $mimes = [];
-    /*   if (count($form_state->get('mimes')->value()) > 0) {
+    if (count($form_state->getValue('rules','mimes')) > 0) {
       $mimes = array_merge($mimes, $form_state['mimes']);
-  } */
+    }
 
-    /*   $availableMimes = array_map(function($mime) {
+    $availableMimes = array_map(function($mime) {
       return ['field' => $mime, 'label' => $mime];
-  }, $availableMimes); */
+    }, $availableMimes);
 
-    $database = \Drupal::database();
-    $query = $database->select('media__field_mime_type', 'mfmt');
-    $query->addField('mfmt', 'field_mime_type_value');
-    $query->distinct(TRUE);
-    $allmimes = $query->execute()->fetchAllKeyed(0, 0);
-
-    $field = [
-
-      '#tree'       => true,
-      '#type'       => 'select',
-      '#options' => $allmimes,
-      '#states' => [
-        'visible' => [
-          ':input[name="radio"]' => ['value' => 'mimes'],
-        ],
-      ],
-    ];
-
-    /*   $fieldset = [
+    $fieldset = [
 
       '#tree'        => true,
       '#type'        => 'container',
-      'delete'       => build_delete_mimes_fieldset($mimes),
-      'hidden'       => build_hidden_mimes_fieldset($mimes),
-      'enabled'      => build_enabled_mimes_fieldset($mimes, $enabled),
-      'autocomplete' => build_static_autocomplete_fieldset(
+      'delete'       => $this->build_delete_mimes_fieldset($mimes),
+      'hidden'       => $this->build_hidden_mimes_fieldset($mimes),
+      'enabled'      => $this->build_enabled_mimes_fieldset($mimes, $enabled),
+      'autocomplete' => $this->build_static_autocomplete_fieldset(
 
           $availableMimes,
           'Add mime type',
@@ -234,9 +228,9 @@ class EditPermissionsForm extends FormBase
           'flat_permissions_form_add_mime_validate',
           'flat_permissions_form_add_mime_js'
       ),
-  ]; */
+  ];
 
-    return $field;
+    return $fieldset;
   }
 
   /**
@@ -244,7 +238,7 @@ class EditPermissionsForm extends FormBase
    *
    * @return array
    */
-  private function build_hidden_mimes_fieldset($mimes)
+  public function build_hidden_mimes_fieldset($mimes)
   {
 
     $fieldset = [
@@ -274,11 +268,11 @@ class EditPermissionsForm extends FormBase
   /**
    * Deleted mimes fieldset
    *
-   * @param string $mimes
+   * @param array $mimes
    *
    * @return array
    */
-  private function build_delete_mimes_fieldset($mimes)
+  public function build_delete_mimes_fieldset(array $mimes)
   {
 
     $fieldset = [];
@@ -306,7 +300,7 @@ class EditPermissionsForm extends FormBase
    *
    * @return boolean
    */
-  private function build_enabled_mimes_fieldset(array $mimes, $enabled)
+  public function build_enabled_mimes_fieldset(array $mimes, $enabled)
   {
 
     return [
@@ -324,7 +318,7 @@ class EditPermissionsForm extends FormBase
    *
    * @return array
    */
-  private function build_read_group_fieldset($currentGroup)
+  public function build_read_group_fieldset($currentGroup)
   {
 
     return [
@@ -354,7 +348,7 @@ class EditPermissionsForm extends FormBase
    *
    * @return array
    */
-  private function build_visibility_fieldset($visibility)
+  public function build_visibility_fieldset($visibility)
   {
 
     return [
@@ -383,7 +377,7 @@ class EditPermissionsForm extends FormBase
    *
    * @return array
    */
-  private function build_users_fieldset(&$form_state, $type, $users)
+  public function build_users_fieldset(&$form_state, $type, $users)
   {
 
     if (count($form_state['new_users'][$type]) > 0) {
@@ -420,7 +414,7 @@ class EditPermissionsForm extends FormBase
    *
    * @return array
    */
-  private function build_static_autocomplete_fieldset($results, $title, $name, $submit, $validation, $ajax)
+  public function build_static_autocomplete_fieldset($results, $title, $name, $submit, $validation, $ajax)
   {
 
     return [
@@ -436,21 +430,20 @@ class EditPermissionsForm extends FormBase
           '#attributes' => [
 
             'data-role'    => 'static-autocomplete',
-            'data-results' => drupal_json_encode($results),
+            'data-results' => json_encode($results),
           ],
         ],
       ],
       'button' => [
-
         '#type'     => 'submit',
         '#prefix'   => '<div class="mt-1">',
         '#suffix'   => '</div>',
-        '#validate' => [$validation],
+        '#validate' => ['::flat_permissions_form_add_mime_validate'],
         '#name'     => $name,
         '#value'    => t($title),
-        '#submit'   => [$submit],
+        '#submit'   => ['::flat_permissions_form_add_mime_submit'],
         '#ajax'     => [
-          'callback' => $ajax,
+          'callback' => ['::flat_permissions_form_add_mime_js'],
         ],
       ],
     ];
@@ -468,7 +461,7 @@ class EditPermissionsForm extends FormBase
    *
    * @return array
    */
-  private function build_autocomplete_fieldset($autocomplete, $title, $name, $submit, $validation, $ajax)
+  public function build_autocomplete_fieldset($autocomplete, $title, $name, $submit, $validation, $ajax)
   {
 
     return [
@@ -483,12 +476,12 @@ class EditPermissionsForm extends FormBase
       'button' => [
 
         '#type'     => 'submit',
-        '#validate' => [$validation],
+        '#validate' => [$this, $validation],
         '#name'     => $name,
         '#value'    => t($title),
-        '#submit'   => [$submit],
+        '#submit'   => [$this, $submit],
         '#ajax'     => [
-          'callback' => $ajax,
+          'callback' =>  'blahblah',
         ],
       ],
     ];
@@ -502,7 +495,7 @@ class EditPermissionsForm extends FormBase
    *
    * @return array
    */
-  private function build_delete_users_fieldset($type, $users)
+  public function build_delete_users_fieldset($type, $users)
   {
 
     $fieldset = [];
@@ -530,7 +523,7 @@ class EditPermissionsForm extends FormBase
    *
    * @return array
    */
-  private function build_hidden_users_fieldset($type, $users)
+  public function build_hidden_users_fieldset($type, $users)
   {
 
     $fieldset = [
@@ -564,10 +557,10 @@ class EditPermissionsForm extends FormBase
    * to the list using AJAX if javascript enabled
    *
    * @param array  $form
-   * @param array  $form_state
+   * @param FormStateInterface  $form_state
    * @param string $type (usually read/management)
    */
-  private function flat_permissions_form_add_user_submit($form, &$form_state, $type)
+  public function flat_permissions_form_add_user_submit(array &$form, FormStateInterface $form_state, $type)
   {
 
     if (isset($form_state['values']['add_' . $type . '_user'])) {
@@ -604,34 +597,34 @@ class EditPermissionsForm extends FormBase
    * Concrete implementation of read users submit handler
    *
    * @param array $form
-   * @param array $form_state
+   * @param FormStateInterface $form_state
    */
-  private function flat_permissions_form_add_read_user_submit($form, &$form_state)
+  public function flat_permissions_form_add_read_user_submit(array &$form, FormStateInterface $form_state)
   {
-    flat_permissions_form_add_user_submit($form, $form_state, 'read');
+    $this->flat_permissions_form_add_user_submit($form, $form_state, 'read');
   }
 
   /**
    * Concrete implementation of management users submit handler
    *
    * @param array $form
-   * @param array $form_state
+   * @param FormStateInterface $form_state
    */
-  private function flat_permissions_form_add_management_user_submit($form, &$form_state)
+  public function flat_permissions_form_add_management_user_submit(array &$form, FormStateInterface $form_state)
   {
-    return flat_permissions_form_add_user_submit($form, $form_state, 'management');
+    return $this->flat_permissions_form_add_user_submit($form, $form_state, 'management');
   }
 
   /**
    * Abstract response handler ajax for adidng user
    *
-   * @param array  $form
-   * @param array  $form_state
+   * @param array $form
+   * @param FormStateInterface $form_state
    * @param string $type (usually read/management)
    *
    * @return array
    */
-  private function flat_permissions_form_add_user_js($form, &$form_state, $type)
+  public function flat_permissions_form_add_user_js(array &$form, FormStateInterface $form_state)
   {
 
     $count    = 0;
@@ -671,11 +664,11 @@ class EditPermissionsForm extends FormBase
    * in the users table
    *
    * @param array $form
-   * @param array $form_state
+   * @param FormStateInterface $form_state
    */
-  private function flat_permissions_form_add_read_user_js($form, &$form_state)
+  public function flat_permissions_form_add_read_user_js(array &$form, FormStateInterface $form_state)
   {
-    return flat_permissions_form_add_user_js($form, $form_state, 'read');
+    return $this->flat_permissions_form_add_user_js($form, $form_state, 'read');
   }
 
   /**
@@ -684,72 +677,80 @@ class EditPermissionsForm extends FormBase
    * in the users table
    *
    * @param array $form
-   * @param array $form_state
+   * @param FormStateInterface $form_state
    */
-  private function flat_permissions_form_add_management_user_js($form, &$form_state)
+  public function flat_permissions_form_add_management_user_js(array &$form, FormStateInterface $form_state)
   {
-    return flat_permissions_form_add_user_js($form, $form_state, 'management');
+    return $this->flat_permissions_form_add_user_js($form, $form_state, 'management');
   }
 
   /**
    * @param array $form
-   * @param array $form_state
+   * @param FormStateInterface $form_state
    * @param array $mimes
    */
-  private function flat_permissions_form_add_mime_submit(&$form, &$form_state)
+  public function flat_permissions_form_add_mime_submit(array &$form, FormStateInterface $form_state)
   {
 
-    if (isset($form_state['values']['add_mime'])) {
+    if ($form_state->hasValue('add_mime')) {
 
       // if checkbox is checked, it has a string, otherwise value is 0,
       // so let's filter by is_string
       $mimes        = [];
-      $removedMimes = array_filter($form_state['values']['mimes']['delete'], 'is_string');
+      $removedMimes = $form_state->getValue(['mimes', 'delete']);
 
-      foreach ($form['mimes']['delete'] as $field) {
+      foreach ($form['rules']['mimes']['delete'] as $field) {
 
-        if ($field['#type'] === 'checkbox' && !in_array($field['#return_value'], $removedMimes)) {
-          $mimes[] = $field['#return_value'];
+        if (is_array($field)) {
+
+          if (array_key_exists('#type', $field)) {
+            if ($field['#type'] === 'checkbox' && !in_array($field['#return_value'], $removedMimes)) {
+              $mimes[] = $field['#return_value'];
+            }
+          }
         }
+
       }
 
-      foreach ($form_state['mimes'] as $mime) {
+      ddm($form_state->getValue(['mimes', 'delete']));
+
+      foreach ($form_state->getValue(['mimes', 'delete']) as $mime) {
 
         if (!in_array($mime, $removedMimes)) {
           $mimes[] = $mime;
         }
       }
 
-      if (!in_array($form_state['values']['mimes']['autocomplete']['field']['input'], $mimes)) {
+      if (!in_array($form_state->getValue(['rules', 'mimes', 'autocomplete', 'field', 'input']), $mimes)) {
 
-        $form_state['rebuild'] = true;
-        $form_state['mimes'][] = $form_state['values']['mimes']['autocomplete']['field']['input'];
-        $form_state['mimes']   = array_unique($form_state['mimes']);
+        $form_state->set('rebuild', true);
+        $form_state->set('rules', 'mimes', 'mimes', $form_state->getValue(['rules', 'mimes', 'autocomplete', 'field', 'input']));
+        $form_state->set('rules', 'mimes', 'mimes', array_unique($form_state->getValue(['rules', 'mimes', 'mimes'])));
       }
     }
   }
 
   /**
    * @param array $form
-   * @param array $form_state
+   * @param FormStateInterface $form_state
    */
-  private function flat_permissions_form_add_mime_validate(&$form, &$form_state)
+  public function flat_permissions_form_add_mime_validate(array &$form, FormStateInterface $form_state)
   {
   }
 
   /**
    * @param array $form
-   * @param array $form_state
+   * @param FormStateInterface $form_state
    *
    * @return array
    */
-  private function flat_permissions_form_add_mime_js(&$form, &$form_state)
+  public function flat_permissions_form_add_mime_js(array &$form, FormStateInterface $form_state)
   {
 
     $count = 0;
     $mime  = '';
 
-    foreach ($form['mimes']['delete'] as $field) {
+    foreach ($form['rules']['mimes']['mimes']['delete'] as $field) {
 
       if ($field['#type'] === 'checkbox') {
 
@@ -758,7 +759,7 @@ class EditPermissionsForm extends FormBase
       }
     }
 
-    unset($form['mimes']['delete'][$count]['#title']);
+    unset($form['rules']['mimes']['mimes']['delete'][$count]['#title']);
 
     return [
 
@@ -768,8 +769,8 @@ class EditPermissionsForm extends FormBase
         ajax_command_invoke(null, 'onAddMime', [
 
           $mime,
-          drupal_render($form['mimes']['delete'][$count]),
-          drupal_render($form['mimes']['hidden'][$count]),
+          drupal_render($form['rules']['mimes']['mimes']['delete'][$count]),
+          drupal_render($form['rules']['mimes']['mimes']['hidden'][$count]),
           $form_state['rebuild']
         ]),
       ],
@@ -788,7 +789,7 @@ class EditPermissionsForm extends FormBase
    */
   public function validateForm(array &$form, FormStateInterface $form_state)
   {
-    $owner = $form_state->getValue(['owner']);
+    //$owner = $form_state->getValue(['owner']);
   }
 
 
@@ -797,31 +798,5 @@ class EditPermissionsForm extends FormBase
 
     $node = \Drupal::routeMatch()->getParameter('node');
     $nid = $node->id();
-    $title = $node->get('title')->value;
-
-    $new_file = File::create([
-      'filename' => 'record.cmdi',
-      'uri' => $form_state->getValue('cmdiFile'),
-      'status' => 1,
-      'filemime' => 'application/x-cmdi+xml',
-      'display' => '1',
-      'description' => '',
-    ]);
-
-    $new_file->setPermanent();
-    $new_file->save();
-    $new_file_id = $new_file->id();
-
-    // for some unknown reason flat_location and flat_original_path are messed up by attaching the newly created cmdi file, so we need to restore it
-    // TODO check if still needed
-    //$flat_location_original = $node->flat_location->value();
-    //$flat_original_path_original = $node->flat_original_path->value();
-
-    $node->set('flat_cmdi_file', ['target_id' => $new_file_id]);
-    $node->save();
-
-    \Drupal::messenger()->addMessage(t('Metadata for bundle %title has been saved', [
-      '%title' => $title
-    ]));
   }
 }

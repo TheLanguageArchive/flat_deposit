@@ -66,8 +66,8 @@ class PermissionsManager
     }
 
     /**
-     * Interpret roles and add access levels to the policy
-     * 
+     * Interpret roles and add access level to the policy (for display purposes only)
+     *
      * @param object $policy
      * @return object
      */
@@ -87,13 +87,13 @@ class PermissionsManager
         foreach ($rules as $rule) {
             if (property_exists($rule, 'roles')) {
                 if (in_array('anonymous', $rule->roles)) {
-                    $rule->level = 'Open';
+                    $rule->level = $this::LEVELS['anonymous'];
                 } elseif (in_array('authenticated', $rule->roles)) {
-                    $rule->level = 'Registered Users';
+                    $rule->level = $this::LEVELS['authenticated'];
                 } elseif (in_array('academic', $rule->roles)) {
-                    $rule->level = 'Academic Users';
+                    $rule->level = $this::LEVELS['academic'];
                 } else {
-                    $rule->level = 'Restricted';
+                    $rule->level = $this::LEVELS['none'];
                 };
             } else {
                 $rule->level = 'Restricted';
