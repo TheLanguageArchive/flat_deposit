@@ -39,7 +39,8 @@ class EditPermissionsForm extends FormBase
     $manager = \Drupal::service('flat_permissions.permissions_manager');
     $policy = $manager->fetchAccessPolicy($nid);
 
-    $policy = $manager->addLevels($policy);
+    $policy = $policy ? $manager->addLevels($policy) : null;
+
 
     $form['info'] = [
       '#type' => 'html_tag',
@@ -95,14 +96,7 @@ class EditPermissionsForm extends FormBase
       '#type' => 'fieldset',
     ];
 
-    $form['rules']['mimes']['radio'] = [
-      '#type' => 'radio',
-      '#title' => 'Rule(s) for specific file types',
-      '#return_value' => 'mimes',
-      '#name' => 'radio',
-    ];
-
-    $form['rules']['mimes'] = $this->build_mimes_fieldset($form_state, $this->getAvailableMimes());
+    $form['rules']['mimes'] = $this->getAvailableMimes() ? $this->build_mimes_fieldset($form_state, $this->getAvailableMimes()) : [];
 
     $form['rules']['mimes']['level'] = [
       '#type' => 'select',
@@ -180,7 +174,8 @@ class EditPermissionsForm extends FormBase
     return $form;
   }
 
-  public function getAvailableMimes() {
+  public function getAvailableMimes()
+  {
     $database = \Drupal::database();
     $query = $database->select('media__field_mime_type', 'mfmt');
     $query->addField('mfmt', 'field_mime_type_value');
@@ -204,31 +199,29 @@ class EditPermissionsForm extends FormBase
   {
 
     $mimes = [];
-    if (count($form_state->getValue('rules','mimes')) > 0) {
-      $mimes = array_merge($mimes, $form_state['mimes']);
-    }
 
-    $availableMimes = array_map(function($mime) {
+
+    $availableMimes = array_map(function ($mime) {
       return ['field' => $mime, 'label' => $mime];
     }, $availableMimes);
 
     $fieldset = [
 
       '#tree'        => true,
-      '#type'        => 'container',
+      '#type'        => 'fieldset',
       'delete'       => $this->build_delete_mimes_fieldset($mimes),
       'hidden'       => $this->build_hidden_mimes_fieldset($mimes),
-      'enabled'      => $this->build_enabled_mimes_fieldset($mimes, $enabled),
+      'radio'      => $this->build_enabled_mimes_fieldset($mimes, $enabled),
       'autocomplete' => $this->build_static_autocomplete_fieldset(
 
-          $availableMimes,
-          'Add mime type',
-          'add_mime',
-          'flat_permissions_form_add_mime_submit',
-          'flat_permissions_form_add_mime_validate',
-          'flat_permissions_form_add_mime_js'
+        $availableMimes,
+        'Add mime type',
+        'add_mime',
+        'flat_permissions_form_add_mime_submit',
+        'flat_permissions_form_add_mime_validate',
+        'flat_permissions_form_add_mime_js'
       ),
-  ];
+    ];
 
     return $fieldset;
   }
@@ -286,6 +279,11 @@ class EditPermissionsForm extends FormBase
         '#type'         => 'checkbox',
         '#title'        => $mime,
         '#return_value' => $mime,
+        '#states' => [
+          'visible' => [
+            ':input[name="radio"]' => ['value' => 'mimes'],
+          ],
+        ],
       ];
 
       $i += 1;
@@ -305,9 +303,11 @@ class EditPermissionsForm extends FormBase
 
     return [
 
-      '#type'          => 'checkbox',
+      '#type'          => 'radio',
       '#default_value' => (count($mimes) > 0 ? $enabled : false),
-      '#title'         => t('Only apply read permissions to certain file types'),
+      '#title'         => t('Rule(s) for specific file types'),
+      '#return_value' => 'mimes',
+      '#name' => 'radio',
     ];
   }
 
@@ -421,12 +421,22 @@ class EditPermissionsForm extends FormBase
 
       '#type'  => 'fieldset',
       '#title' => $title,
+      '#states' => [
+        'visible' => [
+          ':input[name="radio"]' => ['value' => 'mimes'],
+        ],
+      ],
       'field'  => [
         'input' => [
 
           '#type'       => 'textfield',
           '#prefix'     => '<div class="input-group form-autocomplete">',
           '#suffix'     => '<span class="input-group-addon"><span class="icon glyphicon glyphicon-refresh"></span></span></div>',
+          '#states' => [
+            'visible' => [
+              ':input[name="radio"]' => ['value' => 'mimes'],
+            ],
+          ],
           '#attributes' => [
 
             'data-role'    => 'static-autocomplete',
@@ -441,6 +451,11 @@ class EditPermissionsForm extends FormBase
         '#validate' => ['::flat_permissions_form_add_mime_validate'],
         '#name'     => $name,
         '#value'    => t($title),
+        '#states' => [
+          'visible' => [
+            ':input[name="radio"]' => ['value' => 'mimes'],
+          ],
+        ],
         '#submit'   => ['::flat_permissions_form_add_mime_submit'],
         '#ajax'     => [
           'callback' => ['::flat_permissions_form_add_mime_js'],
@@ -709,7 +724,6 @@ class EditPermissionsForm extends FormBase
             }
           }
         }
-
       }
 
       ddm($form_state->getValue(['mimes', 'delete']));

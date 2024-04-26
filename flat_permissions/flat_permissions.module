@@ -168,11 +168,11 @@ function flat_permissions_write_access($nid, AccountInterface $account)
  * @param string $nid
  * @return boolean
  */
-function flat_permissions_view_access($nid)
+/* function flat_permissions_view_access($nid)
 {
     $manager = \Drupal::service('flat_permissions.permissions_manager');
     $policy = $manager->fetchAccessPolicy($nid);
-}
+} */
 
 function flat_permissions_theme()
 {
