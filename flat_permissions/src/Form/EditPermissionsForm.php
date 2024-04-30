@@ -11,10 +11,16 @@ namespace Drupal\flat_permissions\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Core\Ajax\HtmlCommand;
+use Drupal\Core\Ajax\AppendCommand;
+use Drupal\Core\Render\RendererInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class EditPermissionsForm extends FormBase
 {
@@ -41,6 +47,25 @@ class EditPermissionsForm extends FormBase
 
     $policy = $policy ? $manager->addLevels($policy) : null;
 
+    // Using Drupal tempstore to store the number of fieldsets
+    $tempstore = \Drupal::service('tempstore.private');
+
+    $store = $tempstore->get('flat_permissions_collection');
+
+    $mime_fieldset_count = $store->get('mime_fieldset_count');
+
+    // If tempstore value is not yet set or if the form is reloaded other than through an AJAX call, we set it to 0
+    $request = \Drupal::request();
+    $is_ajax = $request->isXmlHttpRequest();
+
+    if (!$mime_fieldset_count || !$is_ajax) {
+      $store->set('mime_fieldset_count', 0);
+      $mime_fieldset_count = 0;
+    }
+
+    ddm($mime_fieldset_count);
+
+    $form_state->set('mime_fieldset_count', $mime_fieldset_count);
 
     $form['info'] = [
       '#type' => 'html_tag',
@@ -96,7 +121,39 @@ class EditPermissionsForm extends FormBase
       '#type' => 'fieldset',
     ];
 
-    $form['rules']['mimes'] = $this->getAvailableMimes() ? $this->build_mimes_fieldset($form_state, $this->getAvailableMimes()) : [];
+    $form['rules']['mimes']['radio'] = [
+      '#type' => 'radio',
+      '#title' => 'Rule(s) for specific files',
+      '#return_value' => 'mimes',
+      '#name' => 'radio',
+    ];
+
+    $form['rules']['mimes']['mime_fieldset'] = [
+      '#type' => 'fieldset',
+      '#prefix' => '<div id="mime-fieldset-wrapper">',
+      '#suffix' => '</div>',
+      '#states' => [
+        'visible' => [
+          ':input[name="radio"]' => ['value' => 'mimes'],
+        ],
+      ],
+    ];
+
+    for ($i = 0; $i < $mime_fieldset_count; $i++) {
+
+      $form['rules']['mimes']['mime_fieldset'][$mime_fieldset_count] = $this->buildMimeFieldset();
+
+    }
+
+    $form['rules']['mimes']['mime_fieldset']['add_more'] = [
+      '#type' => 'submit',
+      '#title' => t('Add more'),
+      '#attributes' => ['class' => ['use-ajax']],
+      '#ajax' => [
+        'callback' => [$this, 'addMoreCallback'],
+        'arguments' => ['mime_fieldset'],
+        ],
+    ];
 
     $form['rules']['mimes']['level'] = [
       '#type' => 'select',
@@ -172,6 +229,65 @@ class EditPermissionsForm extends FormBase
     } */
 
     return $form;
+  }
+
+  public function addMoreCallback(&$form, FormStateInterface $form_state) {
+
+    $tempstore = \Drupal::service('tempstore.private');
+    $store = $tempstore->get('flat_permissions_collection');
+    $count = $form_state->get('mime_fieldset_count');
+    $count++;
+    $store->set('mime_fieldset_count', $count);
+    return $form;
+
+  }
+
+  public function removeFieldsetCallback(&$form, FormStateInterface $form_state) {
+    $tempstore = \Drupal::service('tempstore.private');
+    $store = $tempstore->get('flat_permissions_collection');
+    $count = $form_state->get('mime_fieldset_count');
+    $count--;
+    $store->set('mime_fieldset_count', $count);
+    return $form;
+
+  }
+
+  protected function buildMimeFieldset($availableMimes = [], $enabled = true) {
+
+/*     $mimes = [];
+
+    $availableMimes = array_map(function ($mime) {
+      return ['field' => $mime, 'label' => $mime];
+    }, $availableMimes);
+
+    $fieldset = [
+
+      '#tree'        => true,
+      '#type'        => 'fieldset',
+      'delete'       => $this->build_delete_mimes_fieldset($mimes),
+      'hidden'       => $this->build_hidden_mimes_fieldset($mimes),
+      'radio'      => $this->build_enabled_mimes_fieldset($mimes, $enabled),
+      'autocomplete' => $this->build_static_autocomplete_fieldset(
+
+        $availableMimes,
+        'Add mime type',
+        'add_mime',
+        'flat_permissions_form_add_mime_submit',
+        'flat_permissions_form_add_mime_validate',
+        'flat_permissions_form_add_mime_js'
+      ),
+    ]; */
+
+        $fieldset = [
+          '#type' => 'fieldset',
+          '#title' => $this->t("Mime rule"),
+          '#tree' => TRUE,
+          'your_field_in_fieldset' => [
+              '#type' => 'textfield',
+              '#title' => $this->t("Your Field"),
+          ],
+      ];
+      return $fieldset;
   }
 
   public function getAvailableMimes()
@@ -725,8 +841,6 @@ class EditPermissionsForm extends FormBase
           }
         }
       }
-
-      ddm($form_state->getValue(['mimes', 'delete']));
 
       foreach ($form_state->getValue(['mimes', 'delete']) as $mime) {
 
