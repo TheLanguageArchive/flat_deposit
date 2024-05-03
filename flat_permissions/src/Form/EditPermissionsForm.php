@@ -59,13 +59,13 @@ class EditPermissionsForm extends FormBase
     $is_ajax = $request->isXmlHttpRequest();
 
     if (!$mime_fieldset_count || !$is_ajax) {
-      $store->set('mime_fieldset_count', 0);
-      $mime_fieldset_count = 0;
+      $store->set('mime_fieldset_count', 1);
+      $mime_fieldset_count = 1;
     }
 
-    ddm($mime_fieldset_count);
-
     $form_state->set('mime_fieldset_count', $mime_fieldset_count);
+
+    $form['#tree'] = true;
 
     $form['info'] = [
       '#type' => 'html_tag',
@@ -130,8 +130,7 @@ class EditPermissionsForm extends FormBase
 
     $form['rules']['mimes']['mime_fieldset'] = [
       '#type' => 'fieldset',
-      '#prefix' => '<div id="mime-fieldset-wrapper">',
-      '#suffix' => '</div>',
+      '#tree' => true,
       '#states' => [
         'visible' => [
           ':input[name="radio"]' => ['value' => 'mimes'],
@@ -139,20 +138,26 @@ class EditPermissionsForm extends FormBase
       ],
     ];
 
+    $form['rules']['mimes']['mime_fieldset']['fieldsets'] = [
+      '#type' => 'fieldset',
+      '#tree' => true,
+      '#prefix' => '<div id="mime-fieldsets-wrapper">',
+      '#suffix' => '</div>',
+    ];
+
     for ($i = 0; $i < $mime_fieldset_count; $i++) {
-
-      $form['rules']['mimes']['mime_fieldset'][$mime_fieldset_count] = $this->buildMimeFieldset();
-
+      $form['rules']['mimes']['mime_fieldset']['fieldsets'][$i] = $this->buildMimeFieldset($i);
     }
 
     $form['rules']['mimes']['mime_fieldset']['add_more'] = [
       '#type' => 'submit',
       '#title' => t('Add more'),
-      '#attributes' => ['class' => ['use-ajax']],
       '#ajax' => [
-        'callback' => [$this, 'addMoreCallback'],
-        'arguments' => ['mime_fieldset'],
-        ],
+        'callback' => '::addMoreCallback',
+        'wrapper' => 'mime-fieldsets-wrapper',
+      ],
+      '#submit' => ['::addField'],
+      '#limit_validation_errors' => [],
     ];
 
     $form['rules']['mimes']['level'] = [
@@ -231,30 +236,36 @@ class EditPermissionsForm extends FormBase
     return $form;
   }
 
-  public function addMoreCallback(&$form, FormStateInterface $form_state) {
+  public function addMoreCallback(&$form, FormStateInterface $form_state)
+  {
+    return $form['rules']['mimes']['mime_fieldset']['fieldsets'];
+  }
 
+  public function addField(&$form, FormStateInterface $form_state)
+  {
     $tempstore = \Drupal::service('tempstore.private');
     $store = $tempstore->get('flat_permissions_collection');
     $count = $form_state->get('mime_fieldset_count');
     $count++;
     $store->set('mime_fieldset_count', $count);
-    return $form;
-
+    $form_state->setRebuild();
   }
 
-  public function removeFieldsetCallback(&$form, FormStateInterface $form_state) {
+  public function removeFieldsetCallback(&$form, FormStateInterface $form_state)
+  {
     $tempstore = \Drupal::service('tempstore.private');
     $store = $tempstore->get('flat_permissions_collection');
     $count = $form_state->get('mime_fieldset_count');
     $count--;
     $store->set('mime_fieldset_count', $count);
-    return $form;
-
+    $form_state->setRebuild();
+    return $form['rules']['mimes']['mime_fieldset']['fieldsets'];
   }
 
-  protected function buildMimeFieldset($availableMimes = [], $enabled = true) {
+  protected function buildMimeFieldset($index, $availableMimes = [], $enabled = true)
+  {
 
-/*     $mimes = [];
+    $mimes = [];
 
     $availableMimes = array_map(function ($mime) {
       return ['field' => $mime, 'label' => $mime];
@@ -276,18 +287,9 @@ class EditPermissionsForm extends FormBase
         'flat_permissions_form_add_mime_validate',
         'flat_permissions_form_add_mime_js'
       ),
-    ]; */
+    ];
 
-        $fieldset = [
-          '#type' => 'fieldset',
-          '#title' => $this->t("Mime rule"),
-          '#tree' => TRUE,
-          'your_field_in_fieldset' => [
-              '#type' => 'textfield',
-              '#title' => $this->t("Your Field"),
-          ],
-      ];
-      return $fieldset;
+    return $fieldset;
   }
 
   public function getAvailableMimes()
