@@ -1,0 +1,11 @@
+multivalue_autocomplete:
+  version: 1.x
+  js:
+    js/multivalue_autocomplete.js: {}
+  css:
+    theme:
+      css/multivalue_autocomplete.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupal.autocomplete

@@ -9,3 +9,11 @@ flat_permissions.edit_permissions:
     parameters:
       node:
         type: 'entity:node'
+
+flat_permissions.autocomplete:
+  path: '/permissions/autocomplete/{field_name}'
+  defaults:
+    _title: 'Autocomplete'
+    _controller: '\Drupal\flat_permissions\Controller\AutocompleteController::handleAutocomplete'
+  requirements:
+    _custom_access: '\Drupal\flat_permissions\Controller\AutocompleteController::autocompleteCheckAccess'
