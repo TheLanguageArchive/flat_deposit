@@ -38,7 +38,8 @@ class AutocompleteController extends ControllerBase
                 ->fields('mfmt', ['field_mime_type_value']);
 
             $query->condition('mfmt.field_mime_type_value', '%' . $this->database->escapeLike($string) . '%', 'LIKE')
-                ->range(0, 10);
+                ->range(0, 10)
+                ->distinct(TRUE);
             $results = $query->execute()->fetchAll();
 
             foreach ($results as $row) {

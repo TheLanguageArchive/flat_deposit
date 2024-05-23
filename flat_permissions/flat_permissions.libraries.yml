@@ -9,3 +9,6 @@ multivalue_autocomplete:
     - core/jquery
     - core/drupal
     - core/drupal.autocomplete
+    - core/jquery.ui
+    - core/jquery.ui.autocomplete
+    - core/once'
