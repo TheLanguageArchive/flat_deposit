@@ -151,7 +151,7 @@ class EditPermissionsForm extends FormBase
     ];
 
     foreach ($mime_fieldset_indexes as $i) {
-      $form['rules']['mimes']['mime_fieldset']['fieldsets'][$i] = $this->buildMimeFieldset($i, $manager);
+      $form['rules']['mimes']['mime_fieldset']['fieldsets'][$i] = $this->buildMimeFieldset($i, $manager, $form_state);
     }
 
     $form['rules']['mimes']['mime_fieldset']['add_more'] = [
@@ -207,6 +207,12 @@ class EditPermissionsForm extends FormBase
 
   public function addMoreCallback(&$form, FormStateInterface $form_state)
   {
+    foreach ($form['rules']['mimes']['mime_fieldset']['fieldsets'] as $key => &$element) {
+      if (is_array($element) && isset($element['#type']) && $element['#type'] === 'hidden' && isset($element['#attributes']['class']) && in_array('hidden-multi-autocomplete', $element['#attributes']['class'])) {
+        $element['#value'] = $form_state->getValue($element['#attributes']['name']);
+      }
+    }
+    ddm(json_encode($form_state->getValues()));
     return $form['rules']['mimes']['mime_fieldset']['fieldsets'];
   }
 
@@ -248,16 +254,12 @@ class EditPermissionsForm extends FormBase
     $form_state->setRebuild();
   }
 
-  protected function buildMimeFieldset($index, $manager, $availableMimes = [], $enabled = true)
+  protected function buildMimeFieldset($index, $manager, FormStateInterface $form_state)
   {
 
     $mimes = [];
 
     $levels = $manager::LEVELS;
-
-    $availableMimes = array_map(function ($mime) {
-      return ['field' => $mime, 'label' => $mime];
-    }, $availableMimes);
 
     $fieldset = [
 
@@ -265,22 +267,20 @@ class EditPermissionsForm extends FormBase
       '#type'        => 'fieldset',
       'delete'       => $this->build_delete_mimes_fieldset($mimes),
       'hidden'       => $this->build_hidden_mimes_fieldset($mimes),
-      'autocomplete' => $this->build_static_autocomplete_fieldset(
-
-        $availableMimes,
-        'Add mime type',
-        'add_mime',
-        'flat_permissions_form_add_mime_submit',
-        'flat_permissions_form_add_mime_validate',
-        'flat_permissions_form_add_mime_js'
-      ),
       'mimes'        => [
         '#type' => 'textfield',
-        '#title' => t('Test mime autocomplete'),
-        '#autocomplete_route_name' => 'flat_permissions.autocomplete',
-        '#autocomplete_route_parameters' => ['field_name' => 'mime_type'],
+        '#title' => t('Add mime type'),
         '#attributes' => [
           'class' => ['multi-autocomplete'],
+          'data-autocomplete-url' => 'permissions/autocomplete/mime_type',
+        ],
+      ],
+      'mimes_hidden' => [
+        '#type' => 'hidden',
+        '#default_value' => $form_state->getValue('mimes_hidden_' . $index, ''),
+        '#attributes' => [
+          'class' => ['hidden-multi-autocomplete'],
+          'name' => 'mimes_hidden_' . $index,
         ],
       ],
       'level'        => $this->build_mime_levels($levels),
