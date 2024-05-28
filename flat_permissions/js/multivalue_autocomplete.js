@@ -3,17 +3,16 @@
     attach: function (context, settings) {
       once('customAutocomplete', 'input.multi-autocomplete', context).forEach(function (input) {
         var $input = $(input);
-        console.log('customAutocomplete: Attaching to input:', $input);
         var endpointUrl = $input.data('autocomplete-url');
+        var hiddenInputName = $input.data('hidden-input-name');
 
-        // Store reference to the hidden input field before modifying the DOM
-        var $hiddenInput = $input.closest('.form-item').find('.hidden-multi-autocomplete');
-        console.log('customAutocomplete: Hidden input element:', $hiddenInput);
+        // Find the hidden input by its name attribute.
+        var $hiddenInput = $('input[name="' + hiddenInputName + '"]');
 
         var $wrapper = $('<div class="custom-autocomplete-wrapper"></div>');
         var $tagsContainer = $('<div class="tags-container"></div>');
 
-        // Change the original input name to avoid duplication
+        // Change the original input name to avoid duplication.
         $input.attr('name', $input.attr('name') + '-autocomplete');
         $input.before($tagsContainer);
         $input.wrap($wrapper);
@@ -23,24 +22,20 @@
         function updateHiddenInput() {
           var values = [];
           $tagsContainer.find('.tag').each(function () {
-            console.log('customAutocomplete: Tag:', $(this).text());
             values.push($(this).text().replace('×', '').trim());
           });
-          $hiddenInput.val(values.join(',')).trigger('change');  // Ensure change event is triggered
+          $hiddenInput.val(values.join(',')).trigger('change');  // Ensure change event is triggered.
         }
 
         function getCurrentSelections() {
-          console.log('customAutocomplete: Getting current selections');
           var selectedValues = [];
           $tagsContainer.find('.tag').each(function () {
-            console.log('customAutocomplete: Tag:', $(this).text());
             selectedValues.push($(this).text().replace('×', '').trim());
           });
           return selectedValues;
         }
 
         function sortTags() {
-          console.log('customAutocomplete: Sorting tags');
           var tags = $tagsContainer.find('.tag').toArray().sort(function (a, b) {
             return $(a).text().localeCompare($(b).text());
           });
@@ -48,7 +43,6 @@
         }
 
         function addTag(value) {
-          console.log('customAutocomplete: Adding tag:', value);
           var $tag = $('<span class="tag"></span>').text(value);
           var $removeButton = $('<span class="remove-tag">&times;</span>').click(function () {
             $tag.remove();
@@ -62,14 +56,12 @@
           updateHiddenInput();
         }
 
-        // Reinitialize tags from hidden input value on load
+        // Reinitialize tags from hidden input value on load.
         function reinitializeTags($container, $hiddenInput) {
-          console.log('customAutocomplete: Reinitializing tags from hidden input');
-          if ($hiddenInput.length) { // Check if hidden input exists
+          if ($hiddenInput.length) { // Check if hidden input exists.
             var values = $hiddenInput.val() ? $hiddenInput.val().split(',') : [];
-            values.forEach(function (value) {
+            values.forEach(function(value) {
               if (value && !$container.find('.tag:contains(' + value + ')').length) {
-                console.log('customAutocomplete: Adding tag:', value);
                 var $tag = $('<span class="tag"></span>').text(value.trim());
                 var $removeButton = $('<span class="remove-tag">&times;</span>').click(function () {
                   $tag.remove();
@@ -84,7 +76,6 @@
 
         $input.autocomplete({
           source: function (request, response) {
-            console.log('customAutocomplete: AJAX request sent to:', Drupal.url(endpointUrl));
             $.ajax({
               url: Drupal.url(endpointUrl),
               dataType: 'json',
@@ -92,19 +83,15 @@
                 q: request.term
               },
               success: function (data) {
-                console.log('customAutocomplete: AJAX response:', data);
                 var currentSelections = getCurrentSelections();
-                console.log('customAutocomplete: Current selections:', currentSelections);
                 var filteredData = data.filter(function (item) {
                   return currentSelections.indexOf(item.value) === -1;
                 });
-                console.log('customAutocomplete: Filtered data:', filteredData);
                 response(filteredData);
               }
             });
           },
           select: function (event, ui) {
-            console.log('customAutocomplete: Item selected:', ui.item.value);
             var value = ui.item.value;
             addTag(value);
             $input.val('');
@@ -112,22 +99,18 @@
             event.preventDefault();
           },
           focus: function (event, ui) {
-            console.log('customAutocomplete: Focusing event received');
             event.preventDefault();
           },
           close: function (event) {
             if (!itemSelected) {
-              console.log('customAutocomplete: No item selected. Clearing input.');
               $input.val('');
             }
           }
         });
 
         $input.on('keypress', function (e) {
-          console.log('customAutocomplete: Keypress event received');
           if (e.which === 13) {
             if (itemSelected) {
-              console.log('customAutocomplete: Item selected. Adding tag.');
               var value = $input.val().trim();
               if (value) {
                 addTag(value);
@@ -136,52 +119,42 @@
               }
               return false;
             } else {
-              console.log('customAutocomplete: No item selected. Returning false.');
               return false;
             }
           }
         });
 
         $(document).on('mousedown', '.ui-menu-item', function (event) {
-          console.log('customAutocomplete: Mousedown event received');
           itemSelected = true;
         });
 
-        $input.on('autocompleteclose', function (event) {
-          console.log('customAutocomplete: Autocomplete closed.');
+        $input.on('autocompleteclose', function(event) {
           var value = $input.val().trim();
-          console.log('customAutocomplete: Input value after autocomplete close:', value);
           if (value && itemSelected) {
-            console.log('customAutocomplete: Item selected. Adding tag.');
             addTag(value);
             $input.val('');
             itemSelected = false;
           } else {
-            console.log('customAutocomplete: No item selected. Clearing input.');
             $input.val('');
           }
         });
 
-        $input.on('input', function () {
-          console.log('customAutocomplete: Input event received');
+        $input.on('input', function() {
           itemSelected = false;
         });
 
-        $input.on('autocompleteopen', function () {
-          console.log('customAutocomplete: Autocomplete opened.');
+        $input.on('autocompleteopen', function() {
           itemSelected = false;
         });
 
-        // Reinitialize tags when the page is loaded
+        // Reinitialize tags when the page is loaded.
         reinitializeTags($tagsContainer, $hiddenInput);
 
-        // Listen for AJAX events to reinitialize tags after new fields are added
-        $(document).ajaxComplete(function (event, xhr, settings) {
-          console.log('customAutocomplete: AJAX complete event received');
+        // Listen for AJAX events to reinitialize tags after new fields are added.
+        $(document).ajaxComplete(function(event, xhr, settings) {
           $('input.multi-autocomplete', context).each(function () {
             var $thisInput = $(this);
-            var $thisHiddenInput = $thisInput.closest('.form-item').find('.hidden-multi-autocomplete');
-            console.log('customAutocomplete: Reinitializing tags for input:', $thisInput);
+            var $thisHiddenInput = $('input[name="' + $thisInput.data('hidden-input-name') + '"]');
             var $thisTagsContainer = $thisInput.siblings('.tags-container');
             reinitializeTags($thisTagsContainer, $thisHiddenInput);
           });

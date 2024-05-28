@@ -21,6 +21,7 @@ use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Ajax\AppendCommand;
 use Drupal\Core\Render\RendererInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Component\Utility\NestedArray;
 
 class EditPermissionsForm extends FormBase
 {
@@ -77,11 +78,17 @@ class EditPermissionsForm extends FormBase
       '#data' => $policy,
     ];
 
-    $form['rules'] = array(
+    $form['hidden'] = [
+      '#type' => 'container',
+      '#prefix' => '<div id="hidden-fields-wrapper">',
+      '#suffix' => '</div>',
+    ];
+
+    $form['rules'] = [
       '#type' => 'container',
       '#prefix' => '<h3>Define Access Rules</h3>
       <p>Define access rules that will apply to files below this item. Defining a rule here will override any rule in the parent collection(s).</p>',
-    );
+    ];
 
     $form['rules']['all'] = [
       '#type' => 'fieldset',
@@ -151,10 +158,21 @@ class EditPermissionsForm extends FormBase
     ];
 
     foreach ($mime_fieldset_indexes as $i) {
-      $form['rules']['mimes']['mime_fieldset']['fieldsets'][$i] = $this->buildMimeFieldset($i, $manager, $form_state);
+      if (sizeof($mime_fieldset_indexes) == 1) {
+        $remove = false;
+      } else {
+        $remove = true;
+      }
+      $form['rules']['mimes']['mime_fieldset']['fieldsets'][$i] = $this->buildMimesFieldset($i, $remove, $manager, $form_state);
+      $form['rules']['mimes']['mime_fieldset']['fieldsets'][$i]['hidden_mimes_field_' . $i] = $this->buildHiddenMimesField($i, $form_state);
     }
 
-    $form['rules']['mimes']['mime_fieldset']['add_more'] = [
+    ddm('in buildForm');
+
+    $value_array = $form_state->getValue(['rules', 'mimes', 'mime_fieldset', 'fieldsets', '1', 'hidden_mimes_field_1']);
+    ddm($value_array);
+
+    $form['rules']['mimes']['mime_fieldset']['fieldsets']['add_more'] = [
       '#type' => 'submit',
       '#title' => t('Add rule'),
       '#value' => t('Add rule'),
@@ -205,34 +223,47 @@ class EditPermissionsForm extends FormBase
     return $form;
   }
 
-  public function addMoreCallback(&$form, FormStateInterface $form_state)
+  public function addMoreCallback(array &$form, FormStateInterface $form_state)
   {
-    foreach ($form['rules']['mimes']['mime_fieldset']['fieldsets'] as $key => &$element) {
-      if (is_array($element) && isset($element['#type']) && $element['#type'] === 'hidden' && isset($element['#attributes']['class']) && in_array('hidden-multi-autocomplete', $element['#attributes']['class'])) {
-        $element['#value'] = $form_state->getValue($element['#attributes']['name']);
-      }
-    }
-    ddm(json_encode($form_state->getValues()));
+    $form_state->setRebuild();
+    ddm('addMoreCallback called');
+    $values = $form_state->getValues();
+    ddm($values);
     return $form['rules']['mimes']['mime_fieldset']['fieldsets'];
   }
 
-  public function removeCallback(&$form, FormStateInterface $form_state)
+  public function removeCallback(array &$form, FormStateInterface $form_state)
   {
     return $form['rules']['mimes']['mime_fieldset']['fieldsets'];
   }
 
-  public function addField(&$form, FormStateInterface $form_state)
+  public function addField(array &$form, FormStateInterface $form_state)
   {
+    $form_state->setRebuild();
+    ddm('addfield called');
+
+    $value = $form_state->getValue('rules.mimes.mime_fieldset.fieldsets.1.hidden_mimes_field_1');
+    ddm($value);
+    // Retrieve the nested value using an array of keys
+    $value_array = $form_state->getValue(['rules', 'mimes', 'mime_fieldset', 'fieldsets', '1', 'hidden_mimes_field_1']);
+    ddm($value_array);
     $tempstore = \Drupal::service('tempstore.private');
     $store = $tempstore->get('flat_permissions_collection');
     $indexes = $form_state->get('mime_fieldset_indexes');
     $next_index = max($indexes) + 1;
     $indexes[] = $next_index;
     $store->set('mime_fieldset_indexes', $indexes);
-    $form_state->setRebuild();
+    $values = $form_state->getValues();
+    //ddm($values);
+    //ddm($values);
+/*     foreach ($form_state->getValues() as $key => $value) {
+      if (strpos($key, '_hidden') !== false) {
+        $form[$key]['#value'] = $value;
+      }
+    } */
   }
 
-  public function removeField(&$form, FormStateInterface $form_state)
+  public function removeField(array &$form, FormStateInterface $form_state)
   {
     $triggeringElement = $form_state->getTriggeringElement();
     $triggeringElementId = $triggeringElement['#id'];
@@ -254,7 +285,7 @@ class EditPermissionsForm extends FormBase
     $form_state->setRebuild();
   }
 
-  protected function buildMimeFieldset($index, $manager, FormStateInterface $form_state)
+  public function buildMimesFieldset($i, $remove, $manager, FormStateInterface $form_state)
   {
 
     $mimes = [];
@@ -265,33 +296,41 @@ class EditPermissionsForm extends FormBase
 
       '#tree'        => true,
       '#type'        => 'fieldset',
-      'delete'       => $this->build_delete_mimes_fieldset($mimes),
-      'hidden'       => $this->build_hidden_mimes_fieldset($mimes),
       'mimes'        => [
         '#type' => 'textfield',
         '#title' => t('Add mime type'),
         '#attributes' => [
           'class' => ['multi-autocomplete'],
           'data-autocomplete-url' => 'permissions/autocomplete/mime_type',
+          'data-hidden-input-name' => 'hidden_mimes_field_' . $i,
         ],
       ],
-      'mimes_hidden' => [
-        '#type' => 'hidden',
-        '#default_value' => $form_state->getValue('mimes_hidden_' . $index, ''),
-        '#attributes' => [
-          'class' => ['hidden-multi-autocomplete'],
-          'name' => 'mimes_hidden_' . $index,
-        ],
-      ],
-      'level'        => $this->build_mime_levels($levels),
-      'users'        => $this->build_mime_users(),
-      'remove'       => $this->build_remove($index),
+      'level'        => $this->build_mimes_levels($levels),
+      'users'        => $this->build_mimes_users(),
     ];
+
+    if ($remove) {
+      $fieldset['remove'] = $this->build_remove($i);
+    }
 
     return $fieldset;
   }
 
-  public function build_mime_levels($levels)
+  public function buildHiddenMimesField($i, FormStateInterface $form_state) {
+    $field = [
+      '#type' => 'hidden',
+      //'#default_value' => $form_state->getValue('hidden_mimes_field_' . $i, ''),
+      //'#value' => $form_state->getValue('hidden_mimes_field_' . $i, ''),
+      '#attributes' => [
+        'class' => ['hidden-multi-autocomplete'],
+        'name' => 'hidden_mimes_field_' . $i,
+      ],
+    ];
+
+    return $field;
+    }
+
+  public function build_mimes_levels($levels)
   {
     $level_element = [
       '#type' => 'select',
@@ -307,7 +346,7 @@ class EditPermissionsForm extends FormBase
     return $level_element;
   }
 
-  public function build_mime_users()
+  public function build_mimes_users()
   {
     $users_element = [
       '#type' => 'textfield',
@@ -336,82 +375,6 @@ class EditPermissionsForm extends FormBase
       '#submit' => ['::removeField'],
     ];
     return $remove_element;
-  }
-
-  public function getAvailableMimes()
-  {
-    $database = \Drupal::database();
-    $query = $database->select('media__field_mime_type', 'mfmt');
-    $query->addField('mfmt', 'field_mime_type_value');
-    $query->distinct(TRUE);
-    $mimes = $query->execute()->fetchCol();
-    return $mimes;
-  }
-
-  /**
-   * @param array $mimes
-   *
-   * @return array
-   */
-  public function build_hidden_mimes_fieldset($mimes)
-  {
-
-    $fieldset = [
-
-      '#tree'       => true,
-      '#type'       => 'container',
-      '#attributes' => [
-        'data-role' => 'hidden-mimes',
-      ],
-    ];
-
-    foreach ($mimes as $key => $mime) {
-
-      $fieldset[$key + 1] = [
-
-        '#type'       => 'hidden',
-        '#value'      => $mime,
-        '#attributes' => [
-          'data-mime' => $mime,
-        ],
-      ];
-    }
-
-    return $fieldset;
-  }
-
-  /**
-   * Deleted mimes fieldset
-   *
-   * @param array $mimes
-   *
-   * @return array
-   */
-  public function build_delete_mimes_fieldset(array $mimes)
-  {
-
-    $fieldset = [];
-
-    $i = 1;
-
-    foreach ($mimes as $mime) {
-
-      $fieldset[$i] = [
-
-        '#type'         => 'checkbox',
-        '#title'        => $mime,
-        '#return_value' => $mime,
-        '#states' => [
-          'visible' => [
-            ':input[name="radio"]' => ['value' => 'mimes'],
-          ],
-        ],
-      ];
-
-      $i += 1;
-    }
-
-    return $fieldset;
   }
 
   /**
