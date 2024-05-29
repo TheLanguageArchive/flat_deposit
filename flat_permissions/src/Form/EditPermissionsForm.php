@@ -11,17 +11,6 @@ namespace Drupal\flat_permissions\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Link;
-use Drupal\Core\Url;
-use Drupal\file\Entity\File;
-use Symfony\Component\HttpFoundation\Request;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\ReplaceCommand;
-use Drupal\Core\Ajax\HtmlCommand;
-use Drupal\Core\Ajax\AppendCommand;
-use Drupal\Core\Render\RendererInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Component\Utility\NestedArray;
 
 class EditPermissionsForm extends FormBase
 {
@@ -158,19 +147,14 @@ class EditPermissionsForm extends FormBase
     ];
 
     foreach ($mime_fieldset_indexes as $i) {
+      // we only need a "remove" button if there's more than one fieldset
       if (sizeof($mime_fieldset_indexes) == 1) {
         $remove = false;
       } else {
         $remove = true;
       }
-      $form['rules']['mimes']['mime_fieldset']['fieldsets'][$i] = $this->buildMimesFieldset($i, $remove, $manager, $form_state);
-      $form['rules']['mimes']['mime_fieldset']['fieldsets'][$i]['hidden_mimes_field_' . $i] = $this->buildHiddenMimesField($i, $form_state);
+      $form['rules']['mimes']['mime_fieldset']['fieldsets'][$i] = $this->build_mimes_fieldset($i, $remove, $manager, $form_state);
     }
-
-    ddm('in buildForm');
-
-    $value_array = $form_state->getValue(['rules', 'mimes', 'mime_fieldset', 'fieldsets', '1', 'hidden_mimes_field_1']);
-    ddm($value_array);
 
     $form['rules']['mimes']['mime_fieldset']['fieldsets']['add_more'] = [
       '#type' => 'submit',
@@ -223,46 +207,58 @@ class EditPermissionsForm extends FormBase
     return $form;
   }
 
+
+  /**
+   * Ajax callback for updating the mime fieldsets after adding a fieldset
+   *
+   * @param array &$form The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state The form state object.
+   * @return array The mime fieldsets element from the given form array.
+   */
   public function addMoreCallback(array &$form, FormStateInterface $form_state)
   {
     $form_state->setRebuild();
-    ddm('addMoreCallback called');
-    $values = $form_state->getValues();
-    ddm($values);
     return $form['rules']['mimes']['mime_fieldset']['fieldsets'];
   }
 
+  /**
+   * Ajax callback for updating the mime fieldsets after removing a fieldset
+   *
+   * @param array &$form The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state The form state object.
+   * @return array The mime fieldsets element from the given form array.
+   */
   public function removeCallback(array &$form, FormStateInterface $form_state)
   {
     return $form['rules']['mimes']['mime_fieldset']['fieldsets'];
   }
 
+  /**
+   * Adds a new value to the "indexes", thereby creating a new fieldset in the form and stores the new indexes in the temporary store.
+   *
+   * @param array &$form The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state The form state object.
+   *
+   * @return void
+   */
   public function addField(array &$form, FormStateInterface $form_state)
   {
     $form_state->setRebuild();
-    ddm('addfield called');
-
-    $value = $form_state->getValue('rules.mimes.mime_fieldset.fieldsets.1.hidden_mimes_field_1');
-    ddm($value);
-    // Retrieve the nested value using an array of keys
-    $value_array = $form_state->getValue(['rules', 'mimes', 'mime_fieldset', 'fieldsets', '1', 'hidden_mimes_field_1']);
-    ddm($value_array);
     $tempstore = \Drupal::service('tempstore.private');
     $store = $tempstore->get('flat_permissions_collection');
     $indexes = $form_state->get('mime_fieldset_indexes');
     $next_index = max($indexes) + 1;
     $indexes[] = $next_index;
     $store->set('mime_fieldset_indexes', $indexes);
-    $values = $form_state->getValues();
-    //ddm($values);
-    //ddm($values);
-/*     foreach ($form_state->getValues() as $key => $value) {
-      if (strpos($key, '_hidden') !== false) {
-        $form[$key]['#value'] = $value;
-      }
-    } */
   }
 
+  /**
+   * Removes a fieldset from the form based on the triggering element.
+   *
+   * @param array &$form The form array.
+   * @param FormStateInterface $form_state The current state of the form.
+   * @return void
+   */
   public function removeField(array &$form, FormStateInterface $form_state)
   {
     $triggeringElement = $form_state->getTriggeringElement();
@@ -285,7 +281,16 @@ class EditPermissionsForm extends FormBase
     $form_state->setRebuild();
   }
 
-  public function buildMimesFieldset($i, $remove, $manager, FormStateInterface $form_state)
+  /**
+   * Builds a fieldset for adding mime types.
+   *
+   * @param int $i The index of the fieldset.
+   * @param bool $remove Whether to include a remove button.
+   * @param string $manager The manager class.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state The form state object.
+   * @return array The fieldset array.
+   */
+  public function build_mimes_fieldset($i, $remove, $manager, FormStateInterface $form_state)
   {
 
     $mimes = [];
@@ -307,6 +312,7 @@ class EditPermissionsForm extends FormBase
       ],
       'level'        => $this->build_mimes_levels($levels),
       'users'        => $this->build_mimes_users(),
+      'hidden'       => $this->build_hidden_mimes_field($i, $form_state),
     ];
 
     if ($remove) {
@@ -316,11 +322,24 @@ class EditPermissionsForm extends FormBase
     return $fieldset;
   }
 
-  public function buildHiddenMimesField($i, FormStateInterface $form_state) {
+  /**
+   * Builds a hidden field that will contain the selected mime type values.
+   *
+   * @param int $i The index of the field.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state The form state object.
+   * @return array The hidden field array.
+   */
+  public function build_hidden_mimes_field($i, FormStateInterface $form_state)
+  {
+    $user_input = $form_state->getUserInput();
+    if (isset($user_input['hidden_mimes_field_' . $i])) {
+      $default_value = $user_input['hidden_mimes_field_' . $i];
+    } else {
+      $default_value = '';
+    }
     $field = [
       '#type' => 'hidden',
-      //'#default_value' => $form_state->getValue('hidden_mimes_field_' . $i, ''),
-      //'#value' => $form_state->getValue('hidden_mimes_field_' . $i, ''),
+      '#default_value' => $default_value,
       '#attributes' => [
         'class' => ['hidden-multi-autocomplete'],
         'name' => 'hidden_mimes_field_' . $i,
@@ -328,8 +347,14 @@ class EditPermissionsForm extends FormBase
     ];
 
     return $field;
-    }
+  }
 
+  /**
+   * Builds a select element for the access level
+   *
+   * @param array $levels The array of levels to be used as options.
+   * @return array The select element for the access level.
+   */
   public function build_mimes_levels($levels)
   {
     $level_element = [
@@ -346,6 +371,15 @@ class EditPermissionsForm extends FormBase
     return $level_element;
   }
 
+  /**
+   * Builds a textfield element for specific users.
+   *
+   * This function creates a textfield element with the title "Specific users".
+   * The element is conditionally visible based on the value of the "mimes_level" input field.
+   * If the value is either "none" or "academic", the element will be visible.
+   *
+   * @return array The textfield element for specific users.
+   */
   public function build_mimes_users()
   {
     $users_element = [
@@ -361,6 +395,12 @@ class EditPermissionsForm extends FormBase
     return $users_element;
   }
 
+  /**
+   * Builds a remove element for the mime fieldset.
+   *
+   * @param int $index The index of the rule to be removed.
+   * @return array The remove element with the specified index.
+   */
   public function build_remove($index)
   {
 
@@ -375,25 +415,6 @@ class EditPermissionsForm extends FormBase
       '#submit' => ['::removeField'],
     ];
     return $remove_element;
-  }
-
-  /**
-   * @param array   $mimes
-   * @param boolean $enabled
-   *
-   * @return boolean
-   */
-  public function build_enabled_mimes_fieldset(array $mimes, $enabled)
-  {
-
-    return [
-
-      '#type'          => 'radio',
-      '#default_value' => (count($mimes) > 0 ? $enabled : false),
-      '#title'         => t('Rule(s) for specific file types'),
-      '#return_value' => 'mimes',
-      '#name' => 'radio',
-    ];
   }
 
   /**
@@ -487,104 +508,6 @@ class EditPermissionsForm extends FormBase
     ];
 
     return $fieldset;
-  }
-
-  /**
-   * @param array  $results
-   * @param string $title
-   * @param string $name
-   * @param string $submit
-   * @param string $validation
-   * @param string $ajax
-   *
-   * @return array
-   */
-  public function build_static_autocomplete_fieldset($results, $title, $name, $submit, $validation, $ajax)
-  {
-
-    return [
-
-      '#type'  => 'fieldset',
-      '#title' => $title,
-      '#states' => [
-        'visible' => [
-          ':input[name="radio"]' => ['value' => 'mimes'],
-        ],
-      ],
-      'field'  => [
-        'input' => [
-
-          '#type'       => 'textfield',
-          '#prefix'     => '<div class="input-group form-autocomplete">',
-          '#suffix'     => '<span class="input-group-addon"><span class="icon glyphicon glyphicon-refresh"></span></span></div>',
-          '#states' => [
-            'visible' => [
-              ':input[name="radio"]' => ['value' => 'mimes'],
-            ],
-          ],
-          '#attributes' => [
-
-            'data-role'    => 'static-autocomplete',
-            'data-results' => json_encode($results),
-          ],
-        ],
-      ],
-      'button' => [
-        '#type'     => 'submit',
-        '#prefix'   => '<div class="mt-1">',
-        '#suffix'   => '</div>',
-        '#validate' => ['::flat_permissions_form_add_mime_validate'],
-        '#name'     => $name,
-        '#value'    => t($title),
-        '#states' => [
-          'visible' => [
-            ':input[name="radio"]' => ['value' => 'mimes'],
-          ],
-        ],
-        '#submit'   => ['::flat_permissions_form_add_mime_submit'],
-        '#ajax'     => [
-          'callback' => ['::flat_permissions_form_add_mime_js'],
-        ],
-      ],
-    ];
-  }
-
-  /**
-   * Autocomplete fieldset
-   *
-   * @param string $autocomplete
-   * @param string $title
-   * @param string $name
-   * @param string $submit
-   * @param string $validation
-   * @param string $ajax
-   *
-   * @return array
-   */
-  public function build_autocomplete_fieldset($autocomplete, $title, $name, $submit, $validation, $ajax)
-  {
-
-    return [
-
-      '#type'  => 'fieldset',
-      '#title' => t($title),
-      'field'  => [
-
-        '#type'              => 'textfield',
-        '#autocomplete_path' => $autocomplete,
-      ],
-      'button' => [
-
-        '#type'     => 'submit',
-        '#validate' => [$this, $validation],
-        '#name'     => $name,
-        '#value'    => t($title),
-        '#submit'   => [$this, $submit],
-        '#ajax'     => [
-          'callback' =>  'blahblah',
-        ],
-      ],
-    ];
   }
 
   /**
