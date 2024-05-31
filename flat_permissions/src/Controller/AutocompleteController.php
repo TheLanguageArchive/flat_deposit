@@ -9,6 +9,8 @@ use Drupal\Core\Database\Connection;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Access\AccessResult;
+use Drupal\user\Entity\User;
+
 
 class AutocompleteController extends ControllerBase
 {
@@ -40,15 +42,22 @@ class AutocompleteController extends ControllerBase
             $query->condition('mfmt.field_mime_type_value', '%' . $this->database->escapeLike($string) . '%', 'LIKE')
                 ->range(0, 10)
                 ->distinct(TRUE);
-            $results = $query->execute()->fetchAll();
+            $results = $query->execute()->fetchCol();
 
-            foreach ($results as $row) {
-                $matches[] = ['value' => $row->field_mime_type_value, 'label' => $row->field_mime_type_value];
+            foreach ($results as $match) {
+                $matches[] = ['value' => $match, 'label' => $match];
             }
         } elseif ($field_name === 'users') {
-            // @TODO implement this
-            $entity_query = \Drupal::entityQuery('user');
-            $matches = $entity_query->execute();
+
+            $query = $this->database->select('users_field_data', 'u')
+                ->fields('u', ['name'])
+                ->condition('u.name', '%' . $this->database->escapeLike($string) . '%', 'LIKE');
+
+            $results = $query->execute()->fetchCol();
+
+            foreach ($results as $match) {
+                $matches[] = ['value' => $match, 'label' => $match];
+            }
         }
 
         return new JsonResponse($matches);
