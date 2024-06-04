@@ -1431,7 +1431,7 @@ function flat_deposit_menu_access(Menu $menu, $op, AccountInterface $account)
             case 'update bundle menu':
             case 'update bundle metadata menu':
 
-                // Bundles should in principle have compoundCModel and not collectioCModel, however empty imported bundles do not seem to have compoundCModel...
+                // Bundles should in principle have compoundCModel and not collectionCModel, however empty imported bundles do not seem to have compoundCModel...
                 // $has_compoundCModel = !empty($object->relationships->get(FEDORA_MODEL_URI, 'hasModel', 'islandora:compoundCModel'));
                 // Check that archived bundle has no active bundle node (i.e. is being updated)
 

@@ -1,0 +1,112 @@
+.flat-permissions-edit-permissions-form fieldset {
+    padding: 0.5em!important;
+}
+
+.flat-permissions-edit-permissions-form .rule-type-wrapper {
+    border: none!important;
+}
+
+.flat-permissions-edit-permissions-form .rule-type-wrapper .card-header {
+    display: none;
+}
+
+.flat-permissions-edit-permissions-form .rule-wrapper {
+    margin-bottom: 0.5em;
+}
+
+.flat-permissions-edit-permissions-form .tags-container {
+    margin-bottom: 5px;
+}
+
+.flat-permissions-edit-permissions-form button.btn:before {
+    font-family: "Font Awesome 5 Free";
+    font-weight: 600;
+    font-size: 15px;
+    vertical-align: top;
+}
+
+.flat-permissions-edit-permissions-form .add-button {
+    background-color: #007e33 !important;
+    border-color: #006b36 !important;
+
+}
+
+.flat-permissions-edit-permissions-form .add-button:hover {
+    background-color: #006b36 !important;
+}
+
+.flat-permissions-edit-permissions-form .add-button::before {
+    background-image: none;
+    content: "\2b" !important;
+}
+
+.flat-permissions-edit-permissions-form .remove-button {
+    margin-top: 5px;
+    background-color: #d91717 !important;
+    border-color: #b81414 !important;
+}
+
+.flat-permissions-edit-permissions-form .remove-button:hover {
+    background-color: #b81414 !important;
+}
+
+.flat-permissions-edit-permissions-form .remove-button::before {
+    background-image: none;
+    content: "\f2ed" !important;
+    margin-top: 1px;
+}
+
+div.effective-rules span.access-level {
+    font-size: 0.8em;
+    width: 80px;
+    }
+
+div.effective-rules span.access-level {
+     color: white;
+     padding: 4px 4px;
+     text-align: center;
+     text-decoration: none;
+     border-radius: 4px;
+     -webkit-border-radius: 4px;
+     -moz-border-radius: 4px;
+     -ms-border-radius: 4px;
+     -o-border-radius: 4px;
+     width: 120px;
+     margin: 3px;
+     display: inline-block;
+     font-size: 0.8em;
+ }
+
+ div.effective-rules span.anonymous {
+     background: #43ac6a;
+ }
+
+ div.effective-rules span.authenticated {
+     color: #82888e;
+     background: #fff12d;
+ }
+
+ div.effective-rules span.academic {
+     background: #46b8da;
+ }
+
+ div.effective-rules span.none {
+     background: #e99002;
+ }
+
+ div.effective-rules ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 5px;
+  }
+
+div.effective-rules li {
+    display: inline-block;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: #007bff;
+    border: 1px solid #005ec3;
+  }

@@ -33,6 +33,9 @@ class PermissionsManager
     /** @var array */
     const LEVELS      = ['anonymous' => 'Open', 'authenticated' => 'Registered Users', 'academic' => 'Academic Users', 'none' => 'Restricted'];
 
+    /** @var array */
+    const TYPES     = ['audio' => 'Audio', 'video' => 'Video', 'image' => 'Images', 'text'  => 'Written/Annotations'];
+
     /** Fetch the access policy for the given node, or go up the hierarchy if it doesn't have one
      *
      * @param string $nid
@@ -87,15 +90,20 @@ class PermissionsManager
         foreach ($rules as $rule) {
             if (property_exists($rule, 'roles')) {
                 if (in_array('anonymous', $rule->roles)) {
+                    $rule->effective_role = 'anonymous';
                     $rule->level = $this::LEVELS['anonymous'];
                 } elseif (in_array('authenticated', $rule->roles)) {
+                    $rule->effective_role = 'authenticated';
                     $rule->level = $this::LEVELS['authenticated'];
                 } elseif (in_array('academic', $rule->roles)) {
+                    $rule->effective_role = 'academic';
                     $rule->level = $this::LEVELS['academic'];
                 } else {
+                    $rule->effective_role = 'none';
                     $rule->level = $this::LEVELS['none'];
                 };
             } else {
+                $rule->effective_role = 'none';
                 $rule->level = 'Restricted';
             }
         }

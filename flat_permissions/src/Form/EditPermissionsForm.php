@@ -32,6 +32,14 @@ class EditPermissionsForm extends FormBase
 
     $nid = $node->id();
 
+    $content_type = $node->bundle();
+    $model = NULL;
+    if ($content_type === 'islandora_object') {
+        $model = $node->get('field_model')->referencedEntities()[0]->getName();
+    }
+
+    $is_collection = ($model === 'Collection');
+
     $manager = \Drupal::service('flat_permissions.permissions_manager');
     $policy = $manager->fetchAccessPolicy($nid);
 
@@ -64,6 +72,9 @@ class EditPermissionsForm extends FormBase
       <p>The nearest access rules that are defined in the collection hierarchy and that are applicable to files below this item.</p>',
       '#tag' => 'div',
       '#theme' => 'flat_permissions_policy',
+      '#attributes' => [
+        'class' => ['effective-rules'],
+      ],
       '#data' => $policy,
     ];
 
@@ -81,6 +92,9 @@ class EditPermissionsForm extends FormBase
 
     $form['rules']['all'] = [
       '#type' => 'fieldset',
+      '#attributes' => [
+        'class' => 'rule-type-wrapper',
+      ],
     ];
 
     $form['rules']['all']['radio'] = [
@@ -90,7 +104,17 @@ class EditPermissionsForm extends FormBase
       '#name' => 'radio',
     ];
 
-    $form['rules']['all']['level'] = [
+    $form['rules']['all']['fieldset'] = [
+      '#type' => 'fieldset',
+      '#tree' => true,
+      '#states' => [
+        'visible' => [
+          ':input[name="radio"]' => ['value' => 'all'],
+        ],
+      ],
+    ];
+
+    $form['rules']['all']['fieldset']['level'] = [
       '#type' => 'select',
       '#title' => t('Access level'),
       '#options' => $manager::LEVELS,
@@ -102,7 +126,7 @@ class EditPermissionsForm extends FormBase
       ],
     ];
 
-    $form['rules']['all']['users'] = [
+    $form['rules']['all']['fieldset']['users'] = [
       '#type' => 'textfield',
       '#title' => t('Specific users'),
       '#states' => [
@@ -111,15 +135,25 @@ class EditPermissionsForm extends FormBase
           [':input[name="all_level"]' => ['value' => 'academic']],
         ],
       ],
+      '#attributes' => [
+        'class' => ['multi-autocomplete'],
+        'data-autocomplete-url' => 'permissions/autocomplete/users',
+        'data-hidden-input-name' => 'hidden_users_field_all',
+      ],
     ];
+
+    $form['rules']['all']['fieldset']['hidden-users'] = $this->build_hidden_field('all', 'users', $form_state);
 
     $form['rules']['mimes'] = [
       '#type' => 'fieldset',
+      '#attributes' => [
+        'class' => ['rule-type-wrapper'],
+      ],
     ];
 
     $form['rules']['mimes']['radio'] = [
       '#type' => 'radio',
-      '#title' => 'Rule(s) for specific file types',
+      '#title' => 'Rule(s) for specific file and/or mime types',
       '#return_value' => 'mimes',
       '#name' => 'radio',
     ];
@@ -137,7 +171,7 @@ class EditPermissionsForm extends FormBase
     $form['rules']['mimes']['mime_fieldset']['fieldsets'] = [
       '#type' => 'container',
       '#tree' => true,
-      '#prefix' => '<div id="mimes-fieldsets-wrapper">',
+      '#prefix' => '<div id="mimes-fieldsets-wrapper" class="rules-wrapper">',
       '#suffix' => '</div>',
       '#states' => [
         'visible' => [
@@ -160,6 +194,9 @@ class EditPermissionsForm extends FormBase
       '#type' => 'submit',
       '#title' => t('Add rule'),
       '#value' => t('Add rule'),
+      '#attributes' => [
+        'class' => ['add-button'],
+      ],
       '#ajax' => [
         'callback' => '::mimesCallback',
         'wrapper' => 'mimes-fieldsets-wrapper',
@@ -168,41 +205,66 @@ class EditPermissionsForm extends FormBase
       '#limit_validation_errors' => [],
     ];
 
-    $form['rules']['files'] = [
-      '#type' => 'fieldset',
-    ];
+    if (!$is_collection) {
 
-    $form['rules']['files']['radio'] = [
-      '#type' => 'radio',
-      '#title' => 'Rule(s) for specific files',
-      '#return_value' => 'files',
-      '#name' => 'radio',
-    ];
-
-    $form['rules']['files']['level'] = [
-      '#type' => 'select',
-      '#title' => t('Access level'),
-      '#options' => $manager::LEVELS,
-      '#name' => 'files_level',
-      '#states' => [
-        'visible' => [
-          ':input[name="radio"]' => ['value' => 'files'],
+      $form['rules']['files'] = [
+        '#type' => 'fieldset',
+        '#attributes' => [
+          'class' => 'rule-type-wrapper',
         ],
-      ],
-    ];
+      ];
 
-    $form['rules']['files']['users'] = [
-      '#type' => 'textfield',
-      '#title' => t('Specific users'),
-      '#states' => [
-        'visible' => [
-          [':input[name="files_level"]' => ['value' => 'none']],
-          [':input[name="files_level"]' => ['value' => 'academic']],
+      $form['rules']['files']['radio'] = [
+        '#type' => 'radio',
+        '#title' => 'Rule(s) for specific files',
+        '#return_value' => 'files',
+        '#name' => 'radio',
+      ];
+
+      $form['rules']['files']['fieldset'] = [
+        '#type' => 'fieldset',
+        '#tree' => true,
+        '#states' => [
+          'visible' => [
+            ':input[name="radio"]' => ['value' => 'files'],
+          ],
         ],
-      ],
-    ];
+      ];
+
+      $form['rules']['files']['fieldset']['level'] = [
+        '#type' => 'select',
+        '#title' => t('Access level'),
+        '#options' => $manager::LEVELS,
+        '#name' => 'files_level',
+        '#states' => [
+          'visible' => [
+            ':input[name="radio"]' => ['value' => 'files'],
+          ],
+        ],
+      ];
+
+      $form['rules']['files']['fieldset']['users'] = [
+        '#type' => 'textfield',
+        '#title' => t('Specific users'),
+        '#states' => [
+          'visible' => [
+            [':input[name="files_level"]' => ['value' => 'none']],
+            [':input[name="files_level"]' => ['value' => 'academic']],
+          ],
+        ],
+        '#attributes' => [
+          'class' => ['multi-autocomplete'],
+          'data-autocomplete-url' => 'permissions/autocomplete/users',
+          'data-hidden-input-name' => 'hidden_users_field_files',
+        ],
+      ];
+
+      $form['rules']['files']['fieldset']['hidden-users'] = $this->build_hidden_field('files', 'users', $form_state);
+
+    }
 
     $form['#attached']['library'][] = 'flat_permissions/multivalue_autocomplete';
+    $form['#attached']['library'][] = 'flat_permissions/flat_permissions';
 
     return $form;
   }
@@ -288,19 +350,10 @@ class EditPermissionsForm extends FormBase
 
       '#tree'        => true,
       '#type'        => 'fieldset',
-      'mimes'        => [
-        '#type' => 'textfield',
-        '#title' => t('Add mime type'),
-        '#attributes' => [
-          'class' => ['multi-autocomplete'],
-          'data-autocomplete-url' => 'permissions/autocomplete/mime_type',
-          'data-hidden-input-name' => 'hidden_mimes_field_' . $i,
-        ],
-      ],
       'level'        => $this->build_levels($i, 'mimes', $levels, $form_state),
       'users'        => [
         '#type' => 'textfield',
-        '#title' => t('Add users'),
+        '#title' => t('Specific users'),
         '#states' => [
           'visible' => [
             [':input[name="mimes_level_' . $i . '"]' => ['value' => 'none']],
@@ -313,8 +366,26 @@ class EditPermissionsForm extends FormBase
           'data-hidden-input-name' => 'hidden_users_field_' . $i,
         ],
       ],
+      'types'        => [
+        '#type' => 'checkboxes',
+        '#title' => t('File type(s)'),
+        '#prefix' => '<span class="label">' . t('File type(s)') . '</span>',
+        '#options' => $manager::TYPES,
+      ],
+      'mimes'        => [
+        '#type' => 'textfield',
+        '#title' => t('Mime type(s)'),
+        '#attributes' => [
+          'class' => ['multi-autocomplete'],
+          'data-autocomplete-url' => 'permissions/autocomplete/mime_type',
+          'data-hidden-input-name' => 'hidden_mimes_field_' . $i,
+        ],
+      ],
       'hidden-mimes'       => $this->build_hidden_field($i, 'mimes', $form_state),
       'hidden-users'       => $this->build_hidden_field($i, 'users', $form_state),
+      '#attributes' => [
+        'class' => 'rule-wrapper',
+      ],
     ];
 
     if ($remove) {
@@ -371,6 +442,7 @@ class EditPermissionsForm extends FormBase
       '#options' => $levels,
       '#default_value' => $default_value,
       '#name' => $rule_type . '_level_' . $index,
+      '#attributes' => ['class' => ['custom-select']],
       '#states' => [
         'visible' => [
           ':input[name="radio"]' => ['value' => $rule_type],
@@ -420,6 +492,9 @@ class EditPermissionsForm extends FormBase
       '#ajax' => [
         'callback' => '::mimesCallback',
         'wrapper' => $rule_type . '-fieldsets-wrapper',
+      ],
+      '#attributes' => [
+        'class' => ['remove-button btn-danger'],
       ],
       '#submit' => ['::removeMimesFieldset'],
     ];

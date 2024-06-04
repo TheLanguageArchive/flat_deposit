@@ -20,6 +20,7 @@
     border-radius: 4px;
     display: inline-flex;
     align-items: center;
+    border: 1px solid #005ec3;
   }
 
   .remove-tag {

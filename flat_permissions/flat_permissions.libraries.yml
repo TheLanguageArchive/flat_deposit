@@ -1,3 +1,15 @@
+flat_permissions:
+  version: 1.x
+  js:
+    js/flat_permissions.js: {}
+  css:
+    theme:
+      css/flat_permissions.css: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+
 multivalue_autocomplete:
   version: 1.x
   js:
@@ -11,4 +23,4 @@ multivalue_autocomplete:
     - core/drupal.autocomplete
     - core/jquery.ui
     - core/jquery.ui.autocomplete
-    - core/once'
+    - core/once
