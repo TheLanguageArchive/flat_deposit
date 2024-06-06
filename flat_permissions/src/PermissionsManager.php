@@ -34,7 +34,7 @@ class PermissionsManager
     const LEVELS      = ['anonymous' => 'Open', 'authenticated' => 'Registered Users', 'academic' => 'Academic Users', 'none' => 'Restricted'];
 
     /** @var array */
-    const TYPES     = ['audio' => 'Audio', 'video' => 'Video', 'image' => 'Images', 'text'  => 'Written/Annotations'];
+    const TYPES     = ['audio' => 'Audio', 'video' => 'Video', 'image' => 'Images', 'text'  => 'Written/Annotations', 'other' => 'Other'];
 
     /** Fetch the access policy for the given node, or go up the hierarchy if it doesn't have one
      *
@@ -108,6 +108,46 @@ class PermissionsManager
             }
         }
         return $policy;
+    }
+
+    public function sortByEffectiveRole($policy)
+    {
+        usort($policy->read->mimes, array($this, 'compareEffectiveRoles'));
+        return ($policy);
+    }
+
+    public function compareEffectiveRoles($a, $b)
+    {
+        $roleOrder = array_keys($this::LEVELS);
+
+        $orderA = array_search($a->effective_role, $roleOrder);
+        $orderB = array_search($b->effective_role, $roleOrder);
+
+        $orderA = ($orderA !== false) ? $orderA : PHP_INT_MAX;
+        $orderB = ($orderB !== false) ? $orderB : PHP_INT_MAX;
+
+        if ($orderA == $orderB) {
+            return 0;
+        }
+        return ($orderA < $orderB) ? -1 : 1;
+    }
+
+    public function getMedia($nid)
+    {
+        $nodeStorage = \Drupal::entityTypeManager()->getStorage('node');
+        $node = $nodeStorage->load($nid);
+
+        $media = [];
+
+        if ($node) {
+            if ($node->hasField('field_media') && !$node->get('field_media')->isEmpty()) {
+                $media_references = $node->get('field_media')->referencedEntities();
+
+                foreach ($media_references as $media) {
+                    $media[] = $media->label();
+                }
+            }
+        }
     }
 
 

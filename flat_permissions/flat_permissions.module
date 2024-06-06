@@ -60,8 +60,8 @@ function flat_permissions_media_access(MediaInterface $media, $operation, Accoun
             }
 
             // Second, check if there are "mime" rules that apply to specific mime types
-            if (property_exists($read_rules, "mimes")) {
-                $mime_rules = $read_rules->mimes;
+            if (property_exists($read_rules, "mimetypes")) {
+                $mime_rules = $read_rules->mimetypes;
                 foreach ($mime_rules as $mime_rule) {
                     $mimes = $mime_rule->mimes;
                     $media_mime = $media->get('field_mime_type')->value;

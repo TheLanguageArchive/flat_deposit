@@ -45,6 +45,8 @@ class EditPermissionsForm extends FormBase
 
     $policy = $policy ? $manager->addLevels($policy) : null;
 
+    $policy = $policy ? $manager->sortByEffectiveRole($policy) : null;
+
     // Using Drupal tempstore to store the number of fieldsets
     $tempstore = \Drupal::service('tempstore.private');
 
@@ -206,6 +208,10 @@ class EditPermissionsForm extends FormBase
     ];
 
     if (!$is_collection) {
+
+      $media = $manager->getMedia($nid);
+
+      ddm($media);
 
       $form['rules']['files'] = [
         '#type' => 'fieldset',

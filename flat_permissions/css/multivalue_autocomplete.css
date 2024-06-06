@@ -21,6 +21,7 @@
     display: inline-flex;
     align-items: center;
     border: 1px solid #005ec3;
+    font-size: 0.8em;
   }
 
   .remove-tag {

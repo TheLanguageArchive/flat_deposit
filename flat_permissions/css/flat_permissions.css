@@ -1,9 +1,9 @@
 .flat-permissions-edit-permissions-form fieldset {
-    padding: 0.5em!important;
+    padding: 0.5em !important;
 }
 
 .flat-permissions-edit-permissions-form .rule-type-wrapper {
-    border: none!important;
+    border: none !important;
 }
 
 .flat-permissions-edit-permissions-form .rule-type-wrapper .card-header {
@@ -59,54 +59,72 @@
 div.effective-rules span.access-level {
     font-size: 0.8em;
     width: 80px;
-    }
+}
 
 div.effective-rules span.access-level {
-     color: white;
-     padding: 4px 4px;
-     text-align: center;
-     text-decoration: none;
-     border-radius: 4px;
-     -webkit-border-radius: 4px;
-     -moz-border-radius: 4px;
-     -ms-border-radius: 4px;
-     -o-border-radius: 4px;
-     width: 120px;
-     margin: 3px;
-     display: inline-block;
-     font-size: 0.8em;
- }
+    color: white;
+    padding: 4px 4px;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 4px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    -ms-border-radius: 4px;
+    -o-border-radius: 4px;
+    width: 120px;
+    margin: 3px;
+    display: inline-block;
+    font-size: 0.8em;
+}
 
- div.effective-rules span.anonymous {
-     background: #43ac6a;
- }
+div.effective-rules span.anonymous {
+    background: #43ac6a;
+    border: 1px solid #358f56;
+}
 
- div.effective-rules span.authenticated {
-     color: #82888e;
-     background: #fff12d;
- }
+div.effective-rules span.authenticated {
+    color: #82888e;
+    background: #fff12d;
+    border: 1px solid #d8cc24;
+}
 
- div.effective-rules span.academic {
-     background: #46b8da;
- }
+div.effective-rules span.academic {
+    background: #46b8da;
+    border: 1px solid #3694b1;
+}
 
- div.effective-rules span.none {
-     background: #e99002;
- }
+div.effective-rules span.none {
+    background: #e99002;
+    border: 1px solid #b77304;
+}
 
- div.effective-rules ul {
+div.effective-rules ul {
     list-style-type: none;
     padding: 0;
     margin: 0;
     display: flex;
     gap: 5px;
-  }
+}
 
 div.effective-rules li {
     display: inline-block;
     color: white;
-    padding: 5px 10px;
+    padding: 4px 10px;
     border-radius: 4px;
+    font-size: 0.8em;
+}
+
+div.effective-rules li.mimetype {
     background-color: #007bff;
     border: 1px solid #005ec3;
-  }
+}
+
+div.effective-rules li.filetype {
+    background-color: #d63384;
+    border: 1px solid #ac2367;
+}
+
+div.effective-rules li.user {
+    background-color: #6f42c1;
+    border: 1px solid #5b36a1;
+}

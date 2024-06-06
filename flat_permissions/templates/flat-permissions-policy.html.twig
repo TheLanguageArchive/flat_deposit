@@ -14,7 +14,7 @@
 					<p>Users</p>
 					<ul>
 						{% for user in all.users %}
-							<li>{{ user.username }}</li>
+							<li class="user">{{ user.username }}</li>
 						{% endfor %}
 					</ul>
 				{% endif %}
@@ -38,7 +38,7 @@
 								<p>Users:</p>
 								<ul>
 									{% for user in mime.users %}
-										<li>{{ user }}</li>
+										<li class="user">{{ user }}</li>
 									{% endfor %}
 								</ul>
 							{% endif %}
@@ -46,7 +46,7 @@
 								<p>File types:</p>
 								<ul>
 									{% for filetype in mime.filetypes|sort %}
-										<li>{{ filetype }}</li>
+										<li class="filetype">{{ filetype }}</li>
 									{% endfor %}
 								</ul>
 							{% endif %}
@@ -54,7 +54,7 @@
 								<p>Mime types:</p>
 								<ul>
 									{% for mimetype in mime.mimetypes|sort %}
-										<li>{{ mimetype }}</li>
+										<li class="mimetype">{{ mimetype }}</li>
 									{% endfor %}
 								</ul>
 							{% endif %}
@@ -81,7 +81,7 @@
 								<p>Users:</p>
 								<ul>
 									{% for user in file.users %}
-										<li>{{ user }}</li>
+										<li class="user">{{ user }}</li>
 									{% endfor %}
 								</ul>
 							{% endif %}
@@ -89,7 +89,7 @@
 								<p>Files:</p>
 								<ul>
 									{% for id in file.ids %}
-										<li>{{ id }}</li>
+										<li class="file">{{ id }}</li>
 									{% endfor %}
 								</ul>
 							{% endif %}
