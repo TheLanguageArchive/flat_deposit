@@ -132,22 +132,28 @@ class PermissionsManager
         return ($orderA < $orderB) ? -1 : 1;
     }
 
-    public function getMedia($nid)
+    /**
+     * Gets all "original file" media entities linked to a given node ID.
+     *
+     * @param int $nid
+     *   The node ID.
+     *
+     * @return \Drupal\media\MediaInterface[]
+     *   An array of media entities.
+     */
+    public function getMediaEntitiesByNodeId($nid)
     {
-        $nodeStorage = \Drupal::entityTypeManager()->getStorage('node');
-        $node = $nodeStorage->load($nid);
+        $entity_type_manager = \Drupal::entityTypeManager();
+        $entity_query = \Drupal::entityQuery('media');
 
-        $media = [];
+        $query = $entity_query->condition('field_media_of', $nid)
+            ->accessCheck(TRUE);
 
-        if ($node) {
-            if ($node->hasField('field_media') && !$node->get('field_media')->isEmpty()) {
-                $media_references = $node->get('field_media')->referencedEntities();
+        $mids = $query->execute();
 
-                foreach ($media_references as $media) {
-                    $media[] = $media->label();
-                }
-            }
-        }
+        $media_entities = $entity_type_manager->getStorage('media')->loadMultiple($mids);
+
+        return $media_entities;
     }
 
 

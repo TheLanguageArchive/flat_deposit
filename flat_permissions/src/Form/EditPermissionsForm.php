@@ -35,7 +35,7 @@ class EditPermissionsForm extends FormBase
     $content_type = $node->bundle();
     $model = NULL;
     if ($content_type === 'islandora_object') {
-        $model = $node->get('field_model')->referencedEntities()[0]->getName();
+      $model = $node->get('field_model')->referencedEntities()[0]->getName();
     }
 
     $is_collection = ($model === 'Collection');
@@ -52,18 +52,19 @@ class EditPermissionsForm extends FormBase
 
     $store = $tempstore->get('flat_permissions_collection');
 
-    $mime_fieldset_indexes = $store->get('mime_fieldset_indexes');
 
     // If tempstore value is not yet set or if the form is reloaded other than through an AJAX call, we set it to 0
     $request = \Drupal::request();
     $is_ajax = $request->isXmlHttpRequest();
 
-    if (!$mime_fieldset_indexes || !$is_ajax) {
-      $store->set('mime_fieldset_indexes', [1]);
-      $mime_fieldset_indexes = [1];
+    $mimes_fieldsets_indexes = $store->get('mimes_fieldsets_indexes');
+
+    if (!$mimes_fieldsets_indexes || !$is_ajax) {
+      $store->set('mimes_fieldsets_indexes', [1]);
+      $mimes_fieldsets_indexes = [1];
     }
 
-    $form_state->set('mime_fieldset_indexes', $mime_fieldset_indexes);
+    $form_state->set('mimes_fieldsets_indexes', $mimes_fieldsets_indexes);
 
     $form['#tree'] = true;
 
@@ -160,7 +161,7 @@ class EditPermissionsForm extends FormBase
       '#name' => 'radio',
     ];
 
-    $form['rules']['mimes']['mime_fieldset'] = [
+    $form['rules']['mimes']['mimes_fieldset'] = [
       '#type' => 'container',
       '#tree' => true,
       '#states' => [
@@ -170,7 +171,7 @@ class EditPermissionsForm extends FormBase
       ],
     ];
 
-    $form['rules']['mimes']['mime_fieldset']['fieldsets'] = [
+    $form['rules']['mimes']['mimes_fieldset']['fieldsets'] = [
       '#type' => 'container',
       '#tree' => true,
       '#prefix' => '<div id="mimes-fieldsets-wrapper" class="rules-wrapper">',
@@ -182,20 +183,22 @@ class EditPermissionsForm extends FormBase
       ],
     ];
 
-    foreach ($mime_fieldset_indexes as $i) {
+    foreach ($mimes_fieldsets_indexes as $i) {
       // we only need a "remove" button if there's more than one fieldset
-      if (sizeof($mime_fieldset_indexes) == 1) {
+      if (sizeof($mimes_fieldsets_indexes) == 1) {
         $remove = false;
       } else {
         $remove = true;
       }
-      $form['rules']['mimes']['mime_fieldset']['fieldsets'][$i] = $this->build_mimes_fieldset($i, $remove, $manager, $form_state);
+      $form['rules']['mimes']['mimes_fieldset']['fieldsets'][$i] = $this->build_mimes_fieldset($i, $remove, $manager, $form_state);
     }
 
-    $form['rules']['mimes']['mime_fieldset']['fieldsets']['add_more'] = [
+    $form['rules']['mimes']['mimes_fieldset']['fieldsets']['add_more'] = [
+      '#id' => 'mimes-fieldset-add',
+      '#name' => 'mimes_fieldset_add',
       '#type' => 'submit',
       '#title' => t('Add rule'),
-      '#value' => t('Add rule'),
+      '#value' => t('Add mimes rule'),
       '#attributes' => [
         'class' => ['add-button'],
       ],
@@ -209,9 +212,26 @@ class EditPermissionsForm extends FormBase
 
     if (!$is_collection) {
 
-      $media = $manager->getMedia($nid);
+      // not a collection, should have media in theory so we need to create a "files" rule
 
-      ddm($media);
+      $files_fieldsets_indexes = $store->get('files_fieldsets_indexes');
+
+      if (!$files_fieldsets_indexes || !$is_ajax) {
+        $store->set('files_fieldsets_indexes', [1]);
+        $files_fieldsets_indexes = [1];
+      }
+
+      $form_state->set('files_fieldsets_indexes', $files_fieldsets_indexes);
+
+      $media = $manager->getMediaEntitiesByNodeId($nid);
+
+      $options = [];
+
+      foreach ($media as $key => $m) {
+        $options[$key] = $m->get('name')->value;
+      }
+
+      asort($options);
 
       $form['rules']['files'] = [
         '#type' => 'fieldset',
@@ -227,8 +247,8 @@ class EditPermissionsForm extends FormBase
         '#name' => 'radio',
       ];
 
-      $form['rules']['files']['fieldset'] = [
-        '#type' => 'fieldset',
+      $form['rules']['files']['files_fieldset'] = [
+        '#type' => 'container',
         '#tree' => true,
         '#states' => [
           'visible' => [
@@ -237,11 +257,11 @@ class EditPermissionsForm extends FormBase
         ],
       ];
 
-      $form['rules']['files']['fieldset']['level'] = [
-        '#type' => 'select',
-        '#title' => t('Access level'),
-        '#options' => $manager::LEVELS,
-        '#name' => 'files_level',
+      $form['rules']['files']['files_fieldset']['fieldsets'] = [
+        '#type' => 'container',
+        '#tree' => true,
+        '#prefix' => '<div id="files-fieldsets-wrapper" class="rules-wrapper">',
+        '#suffix' => '</div>',
         '#states' => [
           'visible' => [
             ':input[name="radio"]' => ['value' => 'files'],
@@ -249,24 +269,32 @@ class EditPermissionsForm extends FormBase
         ],
       ];
 
-      $form['rules']['files']['fieldset']['users'] = [
-        '#type' => 'textfield',
-        '#title' => t('Specific users'),
-        '#states' => [
-          'visible' => [
-            [':input[name="files_level"]' => ['value' => 'none']],
-            [':input[name="files_level"]' => ['value' => 'academic']],
-          ],
-        ],
+      foreach ($files_fieldsets_indexes as $i) {
+        // we only need a "remove" button if there's more than one fieldset
+        if (sizeof($files_fieldsets_indexes) == 1) {
+          $remove = false;
+        } else {
+          $remove = true;
+        }
+        $form['rules']['files']['files_fieldset']['fieldsets'][$i] = $this->build_files_fieldset($i, $remove, $options, $manager, $form_state);
+      }
+
+      $form['rules']['files']['files_fieldset']['fieldsets']['add_more'] = [
+        '#id' => 'files-fieldset-add',
+        '#name' => 'files_fieldset_add',
+        '#type' => 'submit',
+        '#title' => t('Add rule'),
+        '#value' => t('Add rule'),
         '#attributes' => [
-          'class' => ['multi-autocomplete'],
-          'data-autocomplete-url' => 'permissions/autocomplete/users',
-          'data-hidden-input-name' => 'hidden_users_field_files',
+          'class' => ['add-button'],
         ],
+        '#ajax' => [
+          'callback' => '::filesCallback',
+          'wrapper' => 'files-fieldsets-wrapper',
+        ],
+        '#submit' => ['::addFilesFieldset'],
+        '#limit_validation_errors' => [],
       ];
-
-      $form['rules']['files']['fieldset']['hidden-users'] = $this->build_hidden_field('files', 'users', $form_state);
-
     }
 
     $form['#attached']['library'][] = 'flat_permissions/multivalue_autocomplete';
@@ -285,7 +313,28 @@ class EditPermissionsForm extends FormBase
    */
   public function mimesCallback(array &$form, FormStateInterface $form_state)
   {
-    return $form['rules']['mimes']['mime_fieldset']['fieldsets'];
+    $triggeringElement = $form_state->getTriggeringElement();
+    $triggeringElementName = $triggeringElement['#name'];
+    if (str_starts_with($triggeringElementName, 'mimes_fieldset')) {
+      return $form['rules']['mimes']['mimes_fieldset']['fieldsets'];
+    }
+  }
+
+
+  /**
+   * Ajax callback for updating the mime fieldsets after adding or removing a fieldset
+   *
+   * @param array &$form The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state The form state object.
+   * @return array The mime fieldsets element from the given form array.
+   */
+  public function filesCallback(array &$form, FormStateInterface $form_state)
+  {
+    $triggeringElement = $form_state->getTriggeringElement();
+    $triggeringElementName = $triggeringElement['#name'];
+    if (str_starts_with($triggeringElementName, 'files_fieldset')) {
+      return $form['rules']['files']['files_fieldset']['fieldsets'];
+    }
   }
 
   /**
@@ -298,13 +347,40 @@ class EditPermissionsForm extends FormBase
    */
   public function addMimesFieldset(array &$form, FormStateInterface $form_state)
   {
-    $form_state->setRebuild();
-    $tempstore = \Drupal::service('tempstore.private');
-    $store = $tempstore->get('flat_permissions_collection');
-    $indexes = $form_state->get('mime_fieldset_indexes');
-    $next_index = max($indexes) + 1;
-    $indexes[] = $next_index;
-    $store->set('mime_fieldset_indexes', $indexes);
+    $triggeringElement = $form_state->getTriggeringElement();
+    $triggeringElementName = $triggeringElement['#name'];
+    if (str_starts_with($triggeringElementName, 'mimes_fieldset_add')) {
+      $form_state->setRebuild();
+      $tempstore = \Drupal::service('tempstore.private');
+      $store = $tempstore->get('flat_permissions_collection');
+      $indexes = $form_state->get('mimes_fieldsets_indexes');
+      $next_index = max($indexes) + 1;
+      $indexes[] = $next_index;
+      $store->set('mimes_fieldsets_indexes', $indexes);
+    }
+  }
+
+  /**
+   * Adds a new value to the "indexes", thereby creating a new fieldset in the form and stores the new indexes in the temporary store.
+   *
+   * @param array &$form The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state The form state object.
+   *
+   * @return void
+   */
+  public function addFilesFieldset(array &$form, FormStateInterface $form_state)
+  {
+    $triggeringElement = $form_state->getTriggeringElement();
+    $triggeringElementName = $triggeringElement['#name'];
+    if (str_starts_with($triggeringElementName, 'files_fieldset_add')) {
+      $form_state->setRebuild();
+      $tempstore = \Drupal::service('tempstore.private');
+      $store = $tempstore->get('flat_permissions_collection');
+      $indexes = $form_state->get('files_fieldsets_indexes');
+      $next_index = max($indexes) + 1;
+      $indexes[] = $next_index;
+      $store->set('files_fieldsets_indexes', $indexes);
+    }
   }
 
   /**
@@ -317,23 +393,56 @@ class EditPermissionsForm extends FormBase
   public function removeMimesFieldset(array &$form, FormStateInterface $form_state)
   {
     $triggeringElement = $form_state->getTriggeringElement();
-    $triggeringElementId = $triggeringElement['#id'];
-    // getting the index of the fieldset to remove from the triggering element
-    $pattern = "/fieldsets-(\d+)/";
-    $match = preg_match($pattern, $triggeringElementId, $matches);
-    if ($match) {
-      $index = $matches[1];
-    } else {
-      return;
+    $triggeringElementName = $triggeringElement['#name'];
+    if (str_starts_with($triggeringElementName, 'mimes_fieldset_remove')) {
+      // getting the index of the fieldset to remove from the triggering element
+      $pattern = "/mimes_fieldset_remove_(\d+)/";
+      $match = preg_match($pattern, $triggeringElementName, $matches);
+      if ($match) {
+        $index = $matches[1];
+      } else {
+        return;
+      }
+      $tempstore = \Drupal::service('tempstore.private');
+      $store = $tempstore->get('flat_permissions_collection');
+      $indexes = $form_state->get('mimes_fieldsets_indexes');
+      if (($key = array_search($index, $indexes)) !== false) {
+        unset($indexes[$key]);
+      }
+      $store->set('mimes_fieldsets_indexes', $indexes);
+      $form_state->setRebuild();
     }
-    $tempstore = \Drupal::service('tempstore.private');
-    $store = $tempstore->get('flat_permissions_collection');
-    $indexes = $form_state->get('mime_fieldset_indexes');
-    if (($key = array_search($index, $indexes)) !== false) {
-      unset($indexes[$key]);
+  }
+
+  /**
+   * Removes a fieldset from the form based on the triggering element.
+   *
+   * @param array &$form The form array.
+   * @param FormStateInterface $form_state The current state of the form.
+   * @return void
+   */
+  public function removeFilesFieldset(array &$form, FormStateInterface $form_state)
+  {
+    $triggeringElement = $form_state->getTriggeringElement();
+    $triggeringElementName = $triggeringElement['#name'];
+    if (str_starts_with($triggeringElementName, 'files_fieldset_remove')) {
+      // getting the index of the fieldset to remove from the triggering element
+      $pattern = "/files_fieldset_remove_(\d+)/";
+      $match = preg_match($pattern, $triggeringElementName, $matches);
+      if ($match) {
+        $index = $matches[1];
+      } else {
+        return;
+      }
+      $tempstore = \Drupal::service('tempstore.private');
+      $store = $tempstore->get('flat_permissions_collection');
+      $indexes = $form_state->get('files_fieldsets_indexes');
+      if (($key = array_search($index, $indexes)) !== false) {
+        unset($indexes[$key]);
+      }
+      $store->set('files_fieldsets_indexes', $indexes);
+      $form_state->setRebuild();
     }
-    $store->set('mime_fieldset_indexes', $indexes);
-    $form_state->setRebuild();
   }
 
   /**
@@ -347,8 +456,6 @@ class EditPermissionsForm extends FormBase
    */
   public function build_mimes_fieldset($i, $remove, $manager, FormStateInterface $form_state)
   {
-
-    $mimes = [];
 
     $levels = $manager::LEVELS;
 
@@ -395,7 +502,58 @@ class EditPermissionsForm extends FormBase
     ];
 
     if ($remove) {
-      $fieldset['remove'] = $this->build_remove($i, 'mimes');
+      $fieldset['remove'] = $this->build_mimes_remove($i);
+    }
+
+    return $fieldset;
+  }
+
+  public function build_files_fieldset($i, $remove, $options, $manager, FormStateInterface $form_state)
+  {
+
+    $levels = $manager::LEVELS;
+
+    $fieldset = [
+
+      '#tree'        => true,
+      '#type'        => 'fieldset',
+      'level'        => $this->build_levels($i, 'files', $levels, $form_state),
+      'users'        => [
+        '#type' => 'textfield',
+        '#title' => t('Specific users'),
+        '#states' => [
+          'visible' => [
+            [':input[name="files_level_' . $i . '"]' => ['value' => 'none']],
+            [':input[name="files_level_' . $i . '"]' => ['value' => 'academic']],
+          ],
+        ],
+        '#attributes' => [
+          'class' => ['multi-autocomplete'],
+          'data-autocomplete-url' => 'permissions/autocomplete/users',
+          'data-hidden-input-name' => 'hidden_users_field_' . $i,
+        ],
+      ],
+
+      'files' => [
+        '#type' => 'checkboxes',
+        '#title' => t('Files'),
+        '#options' => $options,
+        '#name' => 'files_level',
+        '#states' => [
+          'visible' => [
+            ':input[name="radio"]' => ['value' => 'files'],
+          ],
+        ],
+      ],
+
+      'hidden-users'       => $this->build_hidden_field($i, 'users', $form_state),
+      '#attributes' => [
+        'class' => 'rule-wrapper',
+      ]
+    ];
+
+    if ($remove) {
+      $fieldset['remove'] = $this->build_files_remove($i, 'files');
     }
 
     return $fieldset;
@@ -483,26 +641,51 @@ class EditPermissionsForm extends FormBase
   }
 
   /**
-   * Builds a remove element for the mime fieldset.
+   * Builds a remove element for the mimes fieldset.
    *
    * @param int $index The index of the rule to be removed.
    * @return array The remove element with the specified index.
    */
-  public function build_remove($index, $rule_type)
+  public function build_mimes_remove($index)
   {
 
     $remove_element = [
       '#type' => 'submit',
       '#value' => t('Remove rule'),
-      '#name' => 'remove_' . $index,
+      '#name' => 'mimes_fieldset_remove_' . $index,
       '#ajax' => [
         'callback' => '::mimesCallback',
-        'wrapper' => $rule_type . '-fieldsets-wrapper',
+        'wrapper' => 'mimes-fieldsets-wrapper',
       ],
       '#attributes' => [
         'class' => ['remove-button btn-danger'],
       ],
       '#submit' => ['::removeMimesFieldset'],
+    ];
+    return $remove_element;
+  }
+
+  /**
+   * Builds a remove element for the files fieldset.
+   *
+   * @param int $index The index of the rule to be removed.
+   * @return array The remove element with the specified index.
+   */
+  public function build_files_remove($index)
+  {
+
+    $remove_element = [
+      '#type' => 'submit',
+      '#value' => t('Remove rule'),
+      '#name' => 'files_fieldset_remove_' . $index,
+      '#ajax' => [
+        'callback' => '::filesCallback',
+        'wrapper' => 'files-fieldsets-wrapper',
+      ],
+      '#attributes' => [
+        'class' => ['remove-button btn-danger'],
+      ],
+      '#submit' => ['::removeFilesFieldset'],
     ];
     return $remove_element;
   }
