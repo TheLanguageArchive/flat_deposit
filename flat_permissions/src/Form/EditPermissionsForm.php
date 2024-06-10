@@ -81,22 +81,18 @@ class EditPermissionsForm extends FormBase
       '#data' => $policy,
     ];
 
-    $form['hidden'] = [
-      '#type' => 'container',
-      '#prefix' => '<div id="hidden-fields-wrapper">',
-      '#suffix' => '</div>',
-    ];
-
     $form['rules'] = [
       '#type' => 'container',
+      '#tree' => true,
       '#prefix' => '<h3>Define Access Rules</h3>
       <p>Define access rules that will apply to files below this item. Defining a rule here will override any rule in the parent collection(s).</p>',
     ];
 
     $form['rules']['all'] = [
       '#type' => 'fieldset',
+      '#tree' => true,
       '#attributes' => [
-        'class' => 'rule-type-wrapper',
+        'class' => ['rule-type-wrapper'],
       ],
     ];
 
@@ -107,7 +103,7 @@ class EditPermissionsForm extends FormBase
       '#name' => 'radio',
     ];
 
-    $form['rules']['all']['fieldset'] = [
+    $form['rules']['all']['all_fieldset'] = [
       '#type' => 'fieldset',
       '#tree' => true,
       '#states' => [
@@ -117,10 +113,11 @@ class EditPermissionsForm extends FormBase
       ],
     ];
 
-    $form['rules']['all']['fieldset']['level'] = [
+    $form['rules']['all']['all_fieldset']['level'] = [
       '#type' => 'select',
       '#title' => t('Access level'),
       '#options' => $manager::LEVELS,
+      '#default_value' => array_slice($manager::LEVELS, 0, 1, true),
       '#name' => 'all_level',
       '#states' => [
         'visible' => [
@@ -129,7 +126,7 @@ class EditPermissionsForm extends FormBase
       ],
     ];
 
-    $form['rules']['all']['fieldset']['users'] = [
+    $form['rules']['all']['all_fieldset']['users'] = [
       '#type' => 'textfield',
       '#title' => t('Specific users'),
       '#states' => [
@@ -145,7 +142,7 @@ class EditPermissionsForm extends FormBase
       ],
     ];
 
-    $form['rules']['all']['fieldset']['hidden-users'] = $this->build_hidden_field('all', 'users', $form_state);
+    $form['rules']['all']['all_fieldset']['hidden-users'] = $this->build_hidden_field('all', 'users', $form_state);
 
     $form['rules']['mimes'] = [
       '#type' => 'fieldset',
@@ -207,7 +204,7 @@ class EditPermissionsForm extends FormBase
         'wrapper' => 'mimes-fieldsets-wrapper',
       ],
       '#submit' => ['::addMimesFieldset'],
-      '#limit_validation_errors' => [],
+      //'#limit_validation_errors' => [],
     ];
 
     if (!$is_collection) {
@@ -228,7 +225,8 @@ class EditPermissionsForm extends FormBase
       $options = [];
 
       foreach ($media as $key => $m) {
-        $options[$key] = $m->get('name')->value;
+        $name = $m->get('name')->value;
+        $options[$key] = ['filename' => $name];
       }
 
       asort($options);
@@ -293,9 +291,14 @@ class EditPermissionsForm extends FormBase
           'wrapper' => 'files-fieldsets-wrapper',
         ],
         '#submit' => ['::addFilesFieldset'],
-        '#limit_validation_errors' => [],
+        //'#limit_validation_errors' => [],
       ];
     }
+
+    $form['submit'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Save'),
+    ];
 
     $form['#attached']['library'][] = 'flat_permissions/multivalue_autocomplete';
     $form['#attached']['library'][] = 'flat_permissions/flat_permissions';
@@ -535,8 +538,10 @@ class EditPermissionsForm extends FormBase
       ],
 
       'files' => [
-        '#type' => 'checkboxes',
+        '#type' => 'tableselect',
+        '#header' => ['filename' => t('Filename')],
         '#title' => t('Files'),
+        '#id' => 'select_files_' . $i,
         '#options' => $options,
         '#name' => 'files_level',
         '#states' => [
@@ -606,7 +611,6 @@ class EditPermissionsForm extends FormBase
       '#options' => $levels,
       '#default_value' => $default_value,
       '#name' => $rule_type . '_level_' . $index,
-      '#attributes' => ['class' => ['custom-select']],
       '#states' => [
         'visible' => [
           ':input[name="radio"]' => ['value' => $rule_type],
@@ -1082,14 +1086,20 @@ class EditPermissionsForm extends FormBase
    */
   public function validateForm(array &$form, FormStateInterface $form_state)
   {
+    ddm($form_state->getValue(['rules']));
+    //ddm($form_state);
     //$owner = $form_state->getValue(['owner']);
   }
 
 
   public function submitForm(array &$form, FormStateInterface $form_state)
   {
+    //ddm($form_state->getValues());
+    //ddm($form_state->getValue(['rules', 'all', 'radio']));
+    //ddm($form_state);
 
-    $node = \Drupal::routeMatch()->getParameter('node');
-    $nid = $node->id();
+
+    //$node = \Drupal::routeMatch()->getParameter('node');
+    //$nid = $node->id();
   }
 }
