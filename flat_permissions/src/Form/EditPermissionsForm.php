@@ -113,26 +113,17 @@ class EditPermissionsForm extends FormBase
       ],
     ];
 
-    $form['rules']['all']['all_fieldset']['level'] = [
-      '#type' => 'select',
-      '#title' => t('Access level'),
-      '#options' => $manager::LEVELS,
-      '#default_value' => array_slice($manager::LEVELS, 0, 1, true),
-      '#name' => 'all_level',
-      '#states' => [
-        'visible' => [
-          ':input[name="radio"]' => ['value' => 'all'],
-        ],
-      ],
-    ];
+    $levels = $manager::LEVELS;
+
+    $form['rules']['all']['all_fieldset']['level'] = $this->build_levels('1', 'all', $levels, $form_state);
 
     $form['rules']['all']['all_fieldset']['users'] = [
       '#type' => 'textfield',
       '#title' => t('Specific users'),
       '#states' => [
         'visible' => [
-          [':input[name="all_level"]' => ['value' => 'none']],
-          [':input[name="all_level"]' => ['value' => 'academic']],
+          [':input[name="all_level_1"]' => ['value' => 'none']],
+          [':input[name="all_level_1"]' => ['value' => 'academic']],
         ],
       ],
       '#attributes' => [
@@ -190,7 +181,7 @@ class EditPermissionsForm extends FormBase
       $form['rules']['mimes']['mimes_fieldset']['fieldsets'][$i] = $this->build_mimes_fieldset($i, $remove, $manager, $form_state);
     }
 
-    $form['rules']['mimes']['mimes_fieldset']['fieldsets']['add_more'] = [
+    $form['rules']['mimes']['mimes_fieldset']['add_more'] = [
       '#id' => 'mimes-fieldset-add',
       '#name' => 'mimes_fieldset_add',
       '#type' => 'submit',
@@ -277,7 +268,7 @@ class EditPermissionsForm extends FormBase
         $form['rules']['files']['files_fieldset']['fieldsets'][$i] = $this->build_files_fieldset($i, $remove, $options, $manager, $form_state);
       }
 
-      $form['rules']['files']['files_fieldset']['fieldsets']['add_more'] = [
+      $form['rules']['files']['files_fieldset']['add_more'] = [
         '#id' => 'files-fieldset-add',
         '#name' => 'files_fieldset_add',
         '#type' => 'submit',
@@ -462,11 +453,30 @@ class EditPermissionsForm extends FormBase
 
     $levels = $manager::LEVELS;
 
+    $user_input = $form_state->getUserInput();
+    if (isset($user_input['mimes_level_' . $i])) {
+      $default_value = $user_input['mimes_level_' . $i];
+    } else {
+      $default_value = '';
+    }
+
     $fieldset = [
 
       '#tree'        => true,
       '#type'        => 'fieldset',
-      'level'        => $this->build_levels($i, 'mimes', $levels, $form_state),
+      //'level'        => $this->build_levels($i, 'mimes', $levels, $form_state),
+      'level'        =>  [
+        '#type' => 'select',
+        '#title' => t('Access level'),
+        '#options' => $levels,
+        '#default_value' => $default_value,
+        '#name' => 'mimes_level_' . $i,
+        '#states' => [
+          'visible' => [
+            ':input[name="radio"]' => ['value' => 'mimes'],
+          ],
+        ],
+      ],
       'users'        => [
         '#type' => 'textfield',
         '#title' => t('Specific users'),
@@ -482,13 +492,13 @@ class EditPermissionsForm extends FormBase
           'data-hidden-input-name' => 'hidden_users_field_' . $i,
         ],
       ],
-      'types'        => [
+      'filetypes'        => [
         '#type' => 'checkboxes',
         '#title' => t('File type(s)'),
         '#prefix' => '<span class="label">' . t('File type(s)') . '</span>',
         '#options' => $manager::TYPES,
       ],
-      'mimes'        => [
+      'mimetypes'        => [
         '#type' => 'textfield',
         '#title' => t('Mime type(s)'),
         '#attributes' => [
@@ -1086,7 +1096,8 @@ class EditPermissionsForm extends FormBase
    */
   public function validateForm(array &$form, FormStateInterface $form_state)
   {
-    ddm($form_state->getValue(['rules']));
+    //ddm($form_state->getValue(['rules']));
+
     //ddm($form_state);
     //$owner = $form_state->getValue(['owner']);
   }
@@ -1094,6 +1105,33 @@ class EditPermissionsForm extends FormBase
 
   public function submitForm(array &$form, FormStateInterface $form_state)
   {
+    $manager = \Drupal::service('flat_permissions.permissions_manager');
+    $output_rules = [];
+    $rules = $form_state->getValue(['rules']);
+    $user_input = $form_state->getUserInput();
+    $rule_type = $user_input['radio'];
+    if ($rule_type === 'all') {
+      $read_rule_output['all'] = $manager->fieldsetToRule($rules['all']['all_fieldset']);
+    }
+    if ($rule_type === 'mimes') {
+      $mime_rules = $rules['mimes']['mimes_fieldset']['fieldsets'];
+      ddm($mime_rules);
+      foreach ($mime_rules as $mime_rule) {
+        $read_rule = $manager->fieldsetToRule($mime_rule);
+        $read_rule_output['mimes'][] = $read_rule;
+      }
+      if ($rule_type === 'files') {
+        $file_rules = $rules['files'];
+        foreach ($file_rules as $file_rule) {
+          $read_rule = $manager->fieldsetToRule($file_rule);
+          $read_rule_output['files'][] = $read_rule;
+        }
+      }
+    }
+    $output['read'] = $read_rule_output;
+    $output_json = json_encode($output);
+    ddm($output_json);
+
     //ddm($form_state->getValues());
     //ddm($form_state->getValue(['rules', 'all', 'radio']));
     //ddm($form_state);

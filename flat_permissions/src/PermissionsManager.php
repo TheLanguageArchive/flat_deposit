@@ -156,6 +156,46 @@ class PermissionsManager
         return $media_entities;
     }
 
+    public function fieldsetToRule($fieldset)
+    {
+        ddm($fieldset);
+        $rule = [];
+        $level = $fieldset['level'];
+        $roles = $this->levelToRoles($level);
+        $rule['roles'] = $roles;
+        if ($level === 'academic' || $level === 'none') {
+            if (array_key_exists('hidden-users', $fieldset)) {
+                $rule['users'] = $fieldset['hidden-users'];
+            }
+        }
+        if (array_key_exists('filetypes', $fieldset)) {
+            $rule['filetypes'] = array_keys(array_filter($fieldset['filetypes']));
+        }
+        if (array_key_exists('hidden-mimes', $fieldset)) {
+            $rule['mimetypes'] = $fieldset['hidden-mimes'];
+        }
+        if (array_key_exists('files', $fieldset)) {
+            $rule['files'] = $fieldset['files'];
+        }
+        if (array_key_exists('visible', $fieldset)) {
+            $rule['visible'] = $fieldset['visible'];
+        }
+        return $rule;
+    }
+
+    public function levelToRoles($level)
+    {
+        if ($level === 'anonymous') {
+            return ['anonymous'];
+        } elseif ($level === 'authenticated') {
+            return ['anonymous', 'authenticated'];
+        } elseif ($level === 'academic') {
+            return ['anonymous', 'authenticated', 'academic'];
+        } else {
+            return [];
+        }
+    }
+
 
     /**
      * Get current permissions grouped by users and roles
