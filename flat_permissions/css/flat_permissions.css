@@ -78,24 +78,25 @@ div.effective-rules span.access-level {
 }
 
 div.effective-rules span.anonymous {
-    background: #43ac6a;
-    border: 1px solid #358f56;
+    background: #007e33;
+    border: 1px solid #006b36;
 }
 
 div.effective-rules span.authenticated {
-    color: #82888e;
+    color: #262626;
     background: #fff12d;
     border: 1px solid #d8cc24;
 }
 
 div.effective-rules span.academic {
-    background: #46b8da;
-    border: 1px solid #3694b1;
+    background: #007da3;
+    border: 1px solid #02607d;
 }
 
 div.effective-rules span.none {
-    background: #e99002;
-    border: 1px solid #b77304;
+    color: #262626;
+    background: #fc9d03;
+    border: 1px solid #d58400;
 }
 
 div.effective-rules ul {
@@ -115,8 +116,8 @@ div.effective-rules li {
 }
 
 div.effective-rules li.mimetype {
-    background-color: #007bff;
-    border: 1px solid #005ec3;
+    background-color: #0d73e0;
+    border: 1px solid #00448e;
 }
 
 div.effective-rules li.filetype {

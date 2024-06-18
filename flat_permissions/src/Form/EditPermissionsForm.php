@@ -47,6 +47,13 @@ class EditPermissionsForm extends FormBase
 
     $policy = $policy ? $manager->sortByEffectiveRole($policy) : null;
 
+    $user_input = $form_state->getUserInput();
+    if (array_key_exists('radio', $user_input)) {
+      $radio_value = $user_input['radio'];
+    } else {
+      $radio_value = NULL;
+    }
+
     // Using Drupal tempstore to store the number of fieldsets
     $tempstore = \Drupal::service('tempstore.private');
 
@@ -57,22 +64,26 @@ class EditPermissionsForm extends FormBase
     $request = \Drupal::request();
     $is_ajax = $request->isXmlHttpRequest();
 
-    $mimes_fieldsets_indexes = $store->get('mimes_fieldsets_indexes');
+    $types_fieldsets_indexes = $store->get('types_fieldsets_indexes');
 
-    if (!$mimes_fieldsets_indexes || !$is_ajax) {
-      $store->set('mimes_fieldsets_indexes', [1]);
-      $mimes_fieldsets_indexes = [1];
+    if (!$types_fieldsets_indexes || !$is_ajax) {
+      $store->set('types_fieldsets_indexes', [1]);
+      $types_fieldsets_indexes = [1];
     }
 
-    $form_state->set('mimes_fieldsets_indexes', $mimes_fieldsets_indexes);
+    $form_state->set('types_fieldsets_indexes', $types_fieldsets_indexes);
+
+    $form['#cache'] = ['max-age' => 0];
 
     $form['#tree'] = true;
 
+    // the effective access rules from higher up in the hierarch will be displayed in this info section, if any
+    // rendering is done with the flat-permissions-policy twig template
     $form['info'] = [
       '#type' => 'html_tag',
       '#title' => 'Effective Access Rules',
-      '#prefix' => '<h3>Effective Access Rules</h3>
-      <p>The nearest access rules that are defined in the collection hierarchy and that are applicable to files below this item.</p>',
+      '#prefix' => '<h2>Effective Access Rules</h2>
+      <p>The nearest access rules that are defined in the collection hierarchy and that are applicable to this item.</p>',
       '#tag' => 'div',
       '#theme' => 'flat_permissions_policy',
       '#attributes' => [
@@ -84,8 +95,8 @@ class EditPermissionsForm extends FormBase
     $form['rules'] = [
       '#type' => 'container',
       '#tree' => true,
-      '#prefix' => '<h3>Define Access Rules</h3>
-      <p>Define access rules that will apply to files below this item. Defining a rule here will override any rule in the parent collection(s).</p>',
+      '#prefix' => '<h2>Define Read Access</h2>
+      <p>Define read rules that will apply to this item and anything below it. Defining a rule here will override any rule in the parent collection(s). Read rules defined anywhere lower in the hiearchy will however take precedence over rules defined here.</p>',
     ];
 
     $form['rules']['all'] = [
@@ -101,6 +112,7 @@ class EditPermissionsForm extends FormBase
       '#title' => 'Rule for all files',
       '#return_value' => 'all',
       '#name' => 'radio',
+      '#default_value' => $radio_value === 'all' ? 'all' : NULL,
     ];
 
     $form['rules']['all']['all_fieldset'] = [
@@ -135,67 +147,68 @@ class EditPermissionsForm extends FormBase
 
     $form['rules']['all']['all_fieldset']['hidden-users'] = $this->build_hidden_field('all', 'users', $form_state);
 
-    $form['rules']['mimes'] = [
+    $form['rules']['types'] = [
       '#type' => 'fieldset',
       '#attributes' => [
         'class' => ['rule-type-wrapper'],
       ],
     ];
 
-    $form['rules']['mimes']['radio'] = [
+    $form['rules']['types']['radio'] = [
       '#type' => 'radio',
       '#title' => 'Rule(s) for specific file and/or mime types',
-      '#return_value' => 'mimes',
+      '#return_value' => 'types',
       '#name' => 'radio',
+      '#default_value' => $radio_value === 'types' ? 'types' : NULL,
     ];
 
-    $form['rules']['mimes']['mimes_fieldset'] = [
+    $form['rules']['types']['types_fieldset'] = [
       '#type' => 'container',
       '#tree' => true,
       '#states' => [
         'visible' => [
-          ':input[name="radio"]' => ['value' => 'mimes'],
+          ':input[name="radio"]' => ['value' => 'types'],
         ],
       ],
     ];
 
-    $form['rules']['mimes']['mimes_fieldset']['fieldsets'] = [
+    $form['rules']['types']['types_fieldset']['fieldsets'] = [
       '#type' => 'container',
       '#tree' => true,
-      '#prefix' => '<div id="mimes-fieldsets-wrapper" class="rules-wrapper">',
+      '#prefix' => '<div id="types-fieldsets-wrapper" class="rules-wrapper">',
       '#suffix' => '</div>',
       '#states' => [
         'visible' => [
-          ':input[name="radio"]' => ['value' => 'mimes'],
+          ':input[name="radio"]' => ['value' => 'types'],
         ],
       ],
     ];
 
-    foreach ($mimes_fieldsets_indexes as $i) {
+    foreach ($types_fieldsets_indexes as $i) {
       // we only need a "remove" button if there's more than one fieldset
-      if (sizeof($mimes_fieldsets_indexes) == 1) {
+      if (sizeof($types_fieldsets_indexes) == 1) {
         $remove = false;
       } else {
         $remove = true;
       }
-      $form['rules']['mimes']['mimes_fieldset']['fieldsets'][$i] = $this->build_mimes_fieldset($i, $remove, $manager, $form_state);
+      $form['rules']['types']['types_fieldset']['fieldsets'][$i] = $this->build_types_fieldset($i, $remove, $manager, $form_state);
     }
 
-    $form['rules']['mimes']['mimes_fieldset']['add_more'] = [
-      '#id' => 'mimes-fieldset-add',
-      '#name' => 'mimes_fieldset_add',
+    $form['rules']['types']['types_fieldset']['add_more'] = [
+      '#id' => 'types-fieldset-add',
+      '#name' => 'types_fieldset_add',
       '#type' => 'submit',
       '#title' => t('Add rule'),
-      '#value' => t('Add mimes rule'),
+      '#value' => t('Add rule'),
       '#attributes' => [
         'class' => ['add-button'],
       ],
       '#ajax' => [
-        'callback' => '::mimesCallback',
-        'wrapper' => 'mimes-fieldsets-wrapper',
+        'callback' => '::typesCallback',
+        'wrapper' => 'types-fieldsets-wrapper',
       ],
-      '#submit' => ['::addMimesFieldset'],
-      //'#limit_validation_errors' => [],
+      '#submit' => ['::addTypesFieldset'],
+      '#limit_validation_errors' => [],
     ];
 
     if (!$is_collection) {
@@ -234,6 +247,7 @@ class EditPermissionsForm extends FormBase
         '#title' => 'Rule(s) for specific files',
         '#return_value' => 'files',
         '#name' => 'radio',
+        '#default_value' => $radio_value === 'files' ? 'files' : NULL,
       ];
 
       $form['rules']['files']['files_fieldset'] = [
@@ -282,9 +296,28 @@ class EditPermissionsForm extends FormBase
           'wrapper' => 'files-fieldsets-wrapper',
         ],
         '#submit' => ['::addFilesFieldset'],
-        //'#limit_validation_errors' => [],
+        '#limit_validation_errors' => [],
       ];
     }
+
+    $form['write'] = [
+      '#type' => 'container',
+      '#tree' => true,
+      '#prefix' => '<h2>Define Write Access</h2>
+      <p>Define which users have write access to this item and anything below it. Defining write access here will override any write permissions defined in the parent collection(s). Write access defined anywhere lower in the hierarchy will however take precedence over rules defined here.</p>',
+    ];
+
+    $form['write']['users'] = [
+      '#type' => 'textfield',
+      '#title' => t('Users'),
+      '#attributes' => [
+        'class' => ['multi-autocomplete'],
+        'data-autocomplete-url' => 'permissions/autocomplete/users',
+        'data-hidden-input-name' => 'hidden_users_field_write',
+      ],
+    ];
+
+    $form['write']['hidden-users'] = $this->build_hidden_field('write', 'users', $form_state);
 
     $form['submit'] = [
       '#type' => 'submit',
@@ -305,12 +338,12 @@ class EditPermissionsForm extends FormBase
    * @param \Drupal\Core\Form\FormStateInterface $form_state The form state object.
    * @return array The mime fieldsets element from the given form array.
    */
-  public function mimesCallback(array &$form, FormStateInterface $form_state)
+  public function typesCallback(array &$form, FormStateInterface $form_state)
   {
     $triggeringElement = $form_state->getTriggeringElement();
     $triggeringElementName = $triggeringElement['#name'];
-    if (str_starts_with($triggeringElementName, 'mimes_fieldset')) {
-      return $form['rules']['mimes']['mimes_fieldset']['fieldsets'];
+    if (str_starts_with($triggeringElementName, 'types_fieldset')) {
+      return $form['rules']['types']['types_fieldset']['fieldsets'];
     }
   }
 
@@ -339,18 +372,18 @@ class EditPermissionsForm extends FormBase
    *
    * @return void
    */
-  public function addMimesFieldset(array &$form, FormStateInterface $form_state)
+  public function addTypesFieldset(array &$form, FormStateInterface $form_state)
   {
     $triggeringElement = $form_state->getTriggeringElement();
     $triggeringElementName = $triggeringElement['#name'];
-    if (str_starts_with($triggeringElementName, 'mimes_fieldset_add')) {
+    if (str_starts_with($triggeringElementName, 'types_fieldset_add')) {
       $form_state->setRebuild();
       $tempstore = \Drupal::service('tempstore.private');
       $store = $tempstore->get('flat_permissions_collection');
-      $indexes = $form_state->get('mimes_fieldsets_indexes');
+      $indexes = $form_state->get('types_fieldsets_indexes');
       $next_index = max($indexes) + 1;
       $indexes[] = $next_index;
-      $store->set('mimes_fieldsets_indexes', $indexes);
+      $store->set('types_fieldsets_indexes', $indexes);
     }
   }
 
@@ -384,11 +417,11 @@ class EditPermissionsForm extends FormBase
    * @param FormStateInterface $form_state The current state of the form.
    * @return void
    */
-  public function removeMimesFieldset(array &$form, FormStateInterface $form_state)
+  public function removeTypesFieldset(array &$form, FormStateInterface $form_state)
   {
     $triggeringElement = $form_state->getTriggeringElement();
     $triggeringElementName = $triggeringElement['#name'];
-    if (str_starts_with($triggeringElementName, 'mimes_fieldset_remove')) {
+    if (str_starts_with($triggeringElementName, 'types_fieldset_remove')) {
       // getting the index of the fieldset to remove from the triggering element
       $pattern = "/mimes_fieldset_remove_(\d+)/";
       $match = preg_match($pattern, $triggeringElementName, $matches);
@@ -399,11 +432,11 @@ class EditPermissionsForm extends FormBase
       }
       $tempstore = \Drupal::service('tempstore.private');
       $store = $tempstore->get('flat_permissions_collection');
-      $indexes = $form_state->get('mimes_fieldsets_indexes');
+      $indexes = $form_state->get('types_fieldsets_indexes');
       if (($key = array_search($index, $indexes)) !== false) {
         unset($indexes[$key]);
       }
-      $store->set('mimes_fieldsets_indexes', $indexes);
+      $store->set('types_fieldsets_indexes', $indexes);
       $form_state->setRebuild();
     }
   }
@@ -440,7 +473,7 @@ class EditPermissionsForm extends FormBase
   }
 
   /**
-   * Builds a fieldset for adding mime types.
+   * Builds a fieldset for adding file and/or mime type rules.
    *
    * @param int $i The index of the fieldset.
    * @param bool $remove Whether to include a remove button.
@@ -448,14 +481,14 @@ class EditPermissionsForm extends FormBase
    * @param \Drupal\Core\Form\FormStateInterface $form_state The form state object.
    * @return array The fieldset array.
    */
-  public function build_mimes_fieldset($i, $remove, $manager, FormStateInterface $form_state)
+  public function build_types_fieldset($i, $remove, $manager, FormStateInterface $form_state)
   {
 
     $levels = $manager::LEVELS;
 
     $user_input = $form_state->getUserInput();
-    if (isset($user_input['mimes_level_' . $i])) {
-      $default_value = $user_input['mimes_level_' . $i];
+    if (isset($user_input['types_level_' . $i])) {
+      $default_value = $user_input['types_level_' . $i];
     } else {
       $default_value = '';
     }
@@ -470,10 +503,10 @@ class EditPermissionsForm extends FormBase
         '#title' => t('Access level'),
         '#options' => $levels,
         '#default_value' => $default_value,
-        '#name' => 'mimes_level_' . $i,
+        '#name' => 'types_level_' . $i,
         '#states' => [
           'visible' => [
-            ':input[name="radio"]' => ['value' => 'mimes'],
+            ':input[name="radio"]' => ['value' => 'types'],
           ],
         ],
       ],
@@ -482,8 +515,8 @@ class EditPermissionsForm extends FormBase
         '#title' => t('Specific users'),
         '#states' => [
           'visible' => [
-            [':input[name="mimes_level_' . $i . '"]' => ['value' => 'none']],
-            [':input[name="mimes_level_' . $i . '"]' => ['value' => 'academic']],
+            [':input[name="types_level_' . $i . '"]' => ['value' => 'none']],
+            [':input[name="types_level_' . $i . '"]' => ['value' => 'academic']],
           ],
         ],
         '#attributes' => [
@@ -515,7 +548,7 @@ class EditPermissionsForm extends FormBase
     ];
 
     if ($remove) {
-      $fieldset['remove'] = $this->build_mimes_remove($i);
+      $fieldset['remove'] = $this->build_types_remove($i);
     }
 
     return $fieldset;
@@ -660,21 +693,21 @@ class EditPermissionsForm extends FormBase
    * @param int $index The index of the rule to be removed.
    * @return array The remove element with the specified index.
    */
-  public function build_mimes_remove($index)
+  public function build_types_remove($index)
   {
 
     $remove_element = [
       '#type' => 'submit',
       '#value' => t('Remove rule'),
-      '#name' => 'mimes_fieldset_remove_' . $index,
+      '#name' => 'types_fieldset_remove_' . $index,
       '#ajax' => [
-        'callback' => '::mimesCallback',
-        'wrapper' => 'mimes-fieldsets-wrapper',
+        'callback' => '::typesCallback',
+        'wrapper' => 'types-fieldsets-wrapper',
       ],
       '#attributes' => [
         'class' => ['remove-button btn-danger'],
       ],
-      '#submit' => ['::removeMimesFieldset'],
+      '#submit' => ['::removeTypesFieldset'],
     ];
     return $remove_element;
   }
@@ -1045,44 +1078,52 @@ class EditPermissionsForm extends FormBase
   {
   }
 
-  /**
-   * @param array $form
-   * @param FormStateInterface $form_state
-   *
-   * @return array
-   */
-  public function flat_permissions_form_add_mime_js(array &$form, FormStateInterface $form_state)
+  private function findDuplicateValuesInMultipleArrays($arrays)
   {
-
-    $count = 0;
-    $mime  = '';
-
-    foreach ($form['rules']['mimes']['mimes']['delete'] as $field) {
-
-      if ($field['#type'] === 'checkbox') {
-
-        $count += 1;
-        $mime   = $field['#return_value'];
+    $valueCounts = [];
+    foreach ($arrays as $array) {
+      $uniqueValues = array_unique($array);
+      foreach ($uniqueValues as $value) {
+        if ($value !== '' and $value !== 0) {
+          if (!isset($valueCounts[$value])) {
+            $valueCounts[$value] = 0;
+          }
+          $valueCounts[$value]++;
+        }
+      }
+    }
+    $duplicateValuesInMultipleArrays = [];
+    foreach ($valueCounts as $value => $count) {
+      if ($count > 1) {
+        $duplicateValuesInMultipleArrays[] = $value;
       }
     }
 
-    unset($form['rules']['mimes']['mimes']['delete'][$count]['#title']);
-
-    return [
-
-      '#type'     => 'ajax',
-      '#commands' => [
-
-        ajax_command_invoke(null, 'onAddMime', [
-
-          $mime,
-          drupal_render($form['rules']['mimes']['mimes']['delete'][$count]),
-          drupal_render($form['rules']['mimes']['mimes']['hidden'][$count]),
-          $form_state['rebuild']
-        ]),
-      ],
-    ];
+    return $duplicateValuesInMultipleArrays;
   }
+
+  private function findValuesOccurringMoreThanOnce($array)
+  {
+
+    $valueCounts = array_count_values($array);
+    $multipleValues = array_filter($valueCounts, function ($count) {
+      return $count > 1;
+    });
+    $valuesWithMultipleOccurrences = array_keys($multipleValues);
+
+    return $valuesWithMultipleOccurrences;
+  }
+
+  private function checkboxesAreChecked(array $checkboxes_values)
+  {
+    foreach ($checkboxes_values as $value) {
+      if (!empty($value)) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
 
   /**
    * Instead of using validateForm, which is called every time either ajax or form requests
@@ -1096,41 +1137,173 @@ class EditPermissionsForm extends FormBase
    */
   public function validateForm(array &$form, FormStateInterface $form_state)
   {
-    //ddm($form_state->getValue(['rules']));
+    $manager = \Drupal::service('flat_permissions.permissions_manager');
+    $errors = [];
+    $level_options = $manager::LEVELS;
+    $rules = $form_state->getValue(['rules']);
+    // for some reason, form_state values are not present for some of the dynamically added fields,
+    // whereas the user input array does have them, so we'll get them from there.
+    $user_input = $form_state->getUserInput();
+    if (array_key_exists('radio', $user_input)) {
+      $rule_type = $user_input['radio'];
+      if ($rule_type === 'types') {
+        // check for empty rules and duplicate filetype and mimetype values
+        $types_rules = $rules['types']['types_fieldset']['fieldsets'];
+        foreach ($types_rules as $key => $type_rule) {
+          $types = $type_rule['filetypes'];
+          $empty_checkboxes = !$this->checkboxesAreChecked($types);
+          $type_options = $form['rules']['types']['types_fieldset']['fieldsets'][$key]['filetypes']['#options'];
+          $types_rules_types[] = $types;
+          $hidden_mimes = $user_input['hidden_mimes_field_' . $key];
+          if ($empty_checkboxes && empty($hidden_mimes)) {
+            $errors[] = 'You have created a rule with no file or mime types selected.';
+          }
+          $types_rules_mimes[] = explode(',', $hidden_mimes);
+          $rule_levels[] = $user_input['types_level_' . $key];
+          $rule_users[] = $user_input['hidden_users_field_' . $key];
+        }
+        $type_duplicates = $this->findDuplicateValuesInMultipleArrays($types_rules_types);
+        foreach ($type_duplicates as $key => $value) {
+          $type_duplicate_names[] = $type_options[$value];
+        }
+        $mime_duplicates = $this->findDuplicateValuesInMultipleArrays($types_rules_mimes);
+        if (!empty($type_duplicates)) {
+          $errors[] = 'You have used the same file type(s) in more than one rule: ' . implode(', ', $type_duplicate_names);
+        }
+        if (!empty($mime_duplicates)) {
+          $errors[] = 'You have used the same mime type(s) in more than one rule: ' . implode(', ', $mime_duplicates);
+        }
+      }
 
-    //ddm($form_state);
-    //$owner = $form_state->getValue(['owner']);
+
+      if ($rule_type === 'files') {
+        // check for empty rules andduplicate file values
+        $files_rules = $rules['files']['files_fieldset']['fieldsets'];
+        foreach ($files_rules as $key => $file_rule) {
+          $files = $file_rule['files'];
+          $file_options = $form['rules']['files']['files_fieldset']['fieldsets'][$key]['files']['#options'];
+          $files_rules_files[] = $files;
+          $rule_levels[] = $user_input['files_level_' . $key];
+          $rule_users[] = $user_input['hidden_users_field_' . $key];
+        }
+        $file_duplicates = $this->findDuplicateValuesInMultipleArrays($files_rules_files);
+        foreach ($file_duplicates as $key => $value) {
+          $file_duplicate_names[] = $file_options[$value]['filename'];
+        }
+        if (!empty($file_duplicate_names)) {
+          $errors[] = 'You have used the same file(s) in more than one rule: ' . implode(', ', $file_duplicate_names);
+        }
+      }
+
+      if ($rule_type !== 'all') {
+        // check whether there are multiple rules with the same access level.
+        // in case of academic or restricted (none) access, that is OK as long as the users are distinct
+        $level_duplicates = $this->findValuesOccurringMoreThanOnce($rule_levels);
+        if (!empty($level_duplicates)) {
+          $no_users_duplicate_levels = array_intersect(array_values($level_duplicates), ['anonymous', 'authenticated']);
+          if (!empty($no_users_duplicate_levels)) {
+            foreach ($no_users_duplicate_levels as $key => $value) {
+              $no_users_duplicate_level_names[] = $level_options[$value];
+            }
+            $errors[] = 'You have used these access level(s) for more than one rule: ' . implode(', ', $no_users_duplicate_level_names) . '.
+            Please create a single rule for them.';
+          }
+          $users_duplicate_levels = array_intersect(array_values($level_duplicates), ['academic', 'none']);
+          if (!empty($users_duplicate_levels)) {
+            $unique_users = array_unique($rule_users);
+            if (sizeof($unique_users) === 1) {
+              foreach ($users_duplicate_levels as $key => $value) {
+                $users_duplicate_level_names[] = $level_options[$value];
+              }
+              $errors[] = 'You have used the the same access level(s) in more than one rule with (some of) the same users: ' . implode(', ', $users_duplicate_level_names) . '.
+              Please create a single rule for these levels or make sure that theusers are distinct for each rule.';
+            }
+          }
+        }
+      }
+    } else {
+      $write_users = $user_input['hidden_users_field_write'];
+      if (empty($write_users)) {
+        // no write users defined and no read rules defined
+        $errors[] = 'No Read or Write access has been defined.';
+      }
+    }
+    if (!empty($errors)) {
+      if (count($errors) > 1) {
+        $errors = [
+          '#theme' => 'item_list',
+          '#type' => 'ul',
+          '#attributes' => ['class' => 'mylist'],
+          '#items' => $errors,
+          '#prefix' => '<h4>There are some conflicts in your access rules:</h4>',
+        ];
+      } else {
+        $errors = $errors[0];
+      }
+      $form_state->setErrorByName('', $errors);
+      return $form;
+    }
   }
 
 
   public function submitForm(array &$form, FormStateInterface $form_state)
   {
     $manager = \Drupal::service('flat_permissions.permissions_manager');
-    $output_rules = [];
+    $read_rule_output = [];
+    $write_rule_output = [];
     $rules = $form_state->getValue(['rules']);
+    // for some reason, form_state values are not present for some of the dynamically added fields,
+    // whereas the user input array does have them, so we'll get them from there.
     $user_input = $form_state->getUserInput();
-    $rule_type = $user_input['radio'];
-    if ($rule_type === 'all') {
-      $read_rule_output['all'] = $manager->fieldsetToRule($rules['all']['all_fieldset']);
-    }
-    if ($rule_type === 'mimes') {
-      $mime_rules = $rules['mimes']['mimes_fieldset']['fieldsets'];
-      ddm($mime_rules);
-      foreach ($mime_rules as $mime_rule) {
-        $read_rule = $manager->fieldsetToRule($mime_rule);
-        $read_rule_output['mimes'][] = $read_rule;
+    if (array_key_exists('radio', $user_input)) {
+      $rule_type = $user_input['radio'];
+      if ($rule_type === 'all') {
+        $read_rule_output['all'] = $manager->fieldsetToRule($rules['all']['all_fieldset']);
+      }
+      if ($rule_type === 'types') {
+        $mime_rules = $rules['types']['types_fieldset']['fieldsets'];
+        foreach ($mime_rules as $key => $mime_rule) {
+          $level = $user_input['types_level_' . $key];
+          $mime_rule['level'] = $level;
+          $hidden_mimes = $user_input['hidden_mimes_field_' . $key];
+          $mime_rule['hidden-mimes'] = explode(',', $hidden_mimes);
+          $hidden_users = $user_input['hidden_users_field_' . $key];
+          $mime_rule['hidden-users'] = explode(',', $hidden_users);
+          $read_rule = $manager->fieldsetToRule($mime_rule);
+          $read_rule_output['types'][] = $read_rule;
+        }
       }
       if ($rule_type === 'files') {
-        $file_rules = $rules['files'];
-        foreach ($file_rules as $file_rule) {
+        $file_rules = $rules['files']['files_fieldset']['fieldsets'];
+        foreach ($file_rules as $key => $file_rule) {
+          $level = $user_input['files_level_' . $key];
+          $file_rule['level'] = $level;
+          $hidden_users = $user_input['hidden_users_field_' . $key];
+          $mime_rule['hidden-users'] = explode(',', $hidden_users);
           $read_rule = $manager->fieldsetToRule($file_rule);
           $read_rule_output['files'][] = $read_rule;
         }
       }
     }
-    $output['read'] = $read_rule_output;
-    $output_json = json_encode($output);
-    ddm($output_json);
+    if (array_key_exists('hidden_users_field_write', $user_input)) {
+      $write_users = $user_input['hidden_users_field_write'];
+      if (!empty($write_users)) {
+        $write_rule_output['users'] = explode(',', $write_users);
+      }
+    }
+    if (!empty($read_rule_output)) {
+      $output['read'] = $read_rule_output;
+    }
+    if (!empty($write_rule_output)) {
+      $output['write'] = $write_rule_output;
+    }
+    if (!empty($output)) {
+      $output_json = json_encode($output);
+      ddm($output_json);
+    }
+
+    \Drupal::messenger()->addMessage('Your access rules have been saved.');
+
 
     //ddm($form_state->getValues());
     //ddm($form_state->getValue(['rules', 'all', 'radio']));

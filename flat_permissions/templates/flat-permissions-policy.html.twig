@@ -4,7 +4,7 @@
 		{% set all = read.all %}
 		<fieldset class="form-wrapper card rule-type-wrapper">
 			<div class="fieldset-wrapper">
-				<p>Rule for all files:</p>
+				<h3>Read Access rule for all files:</h3>
 				{% if all.level is defined %}
 					<p>Access level:
 						<span class="{{ all.effective_role }} access-level">{{ all.level }}</span>
@@ -25,7 +25,7 @@
 		{% set mimes = read.mimes %}
 		<fieldset class="form-wrapper card rule-type-wrapper">
 			<div class="fieldset-wrapper">
-				<p>Rule(s) for specific file types:</p>
+				<h3>Read Access rule(s) for specific file or mime types:</h3>
 				{% for mime in mimes %}
 					<fieldset class="form-wrapper card rule-wrapper">
 						<div class="fieldset-wrapper">
@@ -68,8 +68,8 @@
 		{% set files = read.files %}
 		<fieldset class="form-wrapper card rule-type-wrapper">
 			<div class="fieldset-wrapper">
-				<p>Rule(s) for specific files:</p>
-				{% for file in files %}
+				<h3>Read Access rule(s) for specific files:</h3>
+					{% for file in files %}
 					<fieldset class="form-wrapper card rule-wrapper">
 						<div class="fieldset-wrapper">
 							{% if file.level is defined %}
@@ -101,5 +101,23 @@
 	{% endif %}
 
 {% else %}
-	<p>No access rules defined</p>
+	<p>No read rules defined</p>
 {% endif %}
+
+{% if data.write is defined %}
+	{% set write = data.write %}
+	<fieldset class="form-wrapper card rule-type-wrapper">
+		<div class="fieldset-wrapper">
+			<h4>Write Access</h4>
+			{% if write.users is defined %}
+			<p>Users:</p>
+			<ul>
+				{% for user in write.users %}
+					<li class="user">{{ user }}</li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+		</div>
+	</fieldset>
+{% endif %}
+
