@@ -41,18 +41,35 @@ class EditPermissionsForm extends FormBase
     $is_collection = ($model === 'Collection');
 
     $manager = \Drupal::service('flat_permissions.permissions_manager');
+
+    // fetch access policy for the current node
     $policy = $manager->fetchAccessPolicy($nid);
 
-    $policy = $policy ? $manager->addLevels($policy) : null;
+    if ($policy) {
+      // current node has an access policy, we need to use it to set the default values of the form
+      $defaults = $policy;
+    } else {
+      // current node has no access policy, find the effective policy up the hierarchy for displaying it in the form
+      $policy = $manager->fetchEffectiveAccessPolicy($nid);
+      $defaults = NULL;
+    }
 
+    // add levels to policy and sort by effective role
+    $policy = $policy ? $manager->addLevels($policy) : null;
     $policy = $policy ? $manager->sortByEffectiveRole($policy) : null;
 
     $user_input = $form_state->getUserInput();
     if (array_key_exists('radio', $user_input)) {
       $radio_value = $user_input['radio'];
+    } elseif ($defaults) {
+      if (property_exists($defaults, 'read')) {
+        $radio_value = array_keys((array)$defaults->read)[0];
+      }
     } else {
       $radio_value = NULL;
     }
+
+    ddm($radio_value);
 
     // Using Drupal tempstore to store the number of fieldsets
     $tempstore = \Drupal::service('tempstore.private');

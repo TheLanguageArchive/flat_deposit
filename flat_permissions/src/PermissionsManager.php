@@ -42,7 +42,7 @@ class PermissionsManager
      * @return object | null
      *      access policy object
      */
-    public function fetchAccessPolicy($nid): ?stdClass
+    public function fetchEffectiveAccessPolicy($nid): ?stdClass
     {
         $nodeStorage = \Drupal::entityTypeManager()->getStorage('node');
         $node = $nodeStorage->load($nid);
@@ -58,10 +58,33 @@ class PermissionsManager
         if ($node && $node->hasField('field_member_of')) {
             $parentNodes = $node->get('field_member_of')->referencedEntities();
             if ($parentNodes) {
-                $policy = $this->fetchAccessPolicy($parentNodes[0]->id());
+                $policy = $this->fetchEffectiveAccessPolicy($parentNodes[0]->id());
                 if ($policy) {
                     return $policy;
                 }
+            }
+        }
+
+        return null;
+    }
+
+
+    /** Fetch the access policy for the given node
+     *
+     * @param string $nid
+     * @return object | null
+     *      access policy object
+     */
+    public function fetchAccessPolicy($nid): ?stdClass
+    {
+        $nodeStorage = \Drupal::entityTypeManager()->getStorage('node');
+        $node = $nodeStorage->load($nid);
+
+        if ($node && $node->hasField('field_access_policy')) {
+            $accessPolicyField = $node->get('field_access_policy');
+            if ($accessPolicyField->value) {
+                $policy_json = $accessPolicyField->value;
+                return json_decode($policy_json);
             }
         }
 
@@ -81,8 +104,8 @@ class PermissionsManager
         if (property_exists($read, 'all')) {
             $rules[] = $read->all;
         };
-        if (property_exists($read, 'mimes')) {
-            $rules = $read->mimes;
+        if (property_exists($read, 'types')) {
+            $rules = $read->types;
         };
         if (property_exists($read, 'files')) {
             $rules = $read->files;
@@ -112,7 +135,8 @@ class PermissionsManager
 
     public function sortByEffectiveRole($policy)
     {
-        usort($policy->read->mimes, array($this, 'compareEffectiveRoles'));
+        $key = array_keys((array)$policy->read)[0];
+        usort($policy->read->{$key}, array($this, 'compareEffectiveRoles'));
         return ($policy);
     }
 
@@ -194,5 +218,4 @@ class PermissionsManager
             return [];
         }
     }
-
 }

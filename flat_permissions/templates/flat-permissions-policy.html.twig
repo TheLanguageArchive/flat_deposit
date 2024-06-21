@@ -21,39 +21,39 @@
 			</div>
 		</fieldset>
 	{% endif %}
-	{% if read.mimes is defined %}
-		{% set mimes = read.mimes %}
+	{% if read.types is defined %}
+		{% set types = read.types %}
 		<fieldset class="form-wrapper card rule-type-wrapper">
 			<div class="fieldset-wrapper">
 				<h3>Read Access rule(s) for specific file or mime types:</h3>
-				{% for mime in mimes %}
+				{% for type in types %}
 					<fieldset class="form-wrapper card rule-wrapper">
 						<div class="fieldset-wrapper">
-							{% if mime.level is defined %}
+							{% if type.level is defined %}
 								<p>Access level:
-									<span class="{{ mime.effective_role }} access-level">{{ mime.level }}</span>
+									<span class="{{ type.effective_role }} access-level">{{ type.level }}</span>
 								</p>
 							{% endif %}
-							{% if mime.users is defined %}
+							{% if type.users is defined %}
 								<p>Users:</p>
 								<ul>
-									{% for user in mime.users %}
+									{% for user in type.users %}
 										<li class="user">{{ user }}</li>
 									{% endfor %}
 								</ul>
 							{% endif %}
-							{% if mime.filetypes is defined %}
+							{% if type.filetypes is defined %}
 								<p>File types:</p>
 								<ul>
-									{% for filetype in mime.filetypes|sort %}
+									{% for filetype in type.filetypes|sort %}
 										<li class="filetype">{{ filetype }}</li>
 									{% endfor %}
 								</ul>
 							{% endif %}
-							{% if mime.mimetypes is defined %}
+							{% if type.mimetypes is defined %}
 								<p>Mime types:</p>
 								<ul>
-									{% for mimetype in mime.mimetypes|sort %}
+									{% for mimetype in type.mimetypes|sort %}
 										<li class="mimetype">{{ mimetype }}</li>
 									{% endfor %}
 								</ul>
@@ -69,7 +69,7 @@
 		<fieldset class="form-wrapper card rule-type-wrapper">
 			<div class="fieldset-wrapper">
 				<h3>Read Access rule(s) for specific files:</h3>
-					{% for file in files %}
+				{% for file in files %}
 					<fieldset class="form-wrapper card rule-wrapper">
 						<div class="fieldset-wrapper">
 							{% if file.level is defined %}
@@ -110,14 +110,13 @@
 		<div class="fieldset-wrapper">
 			<h4>Write Access</h4>
 			{% if write.users is defined %}
-			<p>Users:</p>
-			<ul>
-				{% for user in write.users %}
-					<li class="user">{{ user }}</li>
-				{% endfor %}
-			</ul>
-		{% endif %}
+				<p>Users:</p>
+				<ul>
+					{% for user in write.users %}
+						<li class="user">{{ user }}</li>
+					{% endfor %}
+				</ul>
+			{% endif %}
 		</div>
 	</fieldset>
 {% endif %}
-
