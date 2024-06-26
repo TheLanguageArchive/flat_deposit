@@ -136,8 +136,12 @@ class PermissionsManager
     public function sortByEffectiveRole($policy)
     {
         $key = array_keys((array)$policy->read)[0];
-        usort($policy->read->{$key}, array($this, 'compareEffectiveRoles'));
-        return ($policy);
+        if (!array_key_exists('effective_role', (array)$policy->read->{$key})) {
+            return ($policy);
+        } else {
+            usort($policy->read->{$key}, array($this, 'compareEffectiveRoles'));
+            return ($policy);
+        }
     }
 
     public function compareEffectiveRoles($a, $b)
@@ -192,10 +196,12 @@ class PermissionsManager
             }
         }
         if (array_key_exists('filetypes', $fieldset)) {
-            $rule['filetypes'] = array_keys(array_filter($fieldset['filetypes']));
+            if (!empty($fieldset['filetypes'])) {
+                $rule['filetypes'] = array_keys(array_filter($fieldset['filetypes']));
+            }
         }
-        if (array_key_exists('hidden-mimes', $fieldset)) {
-            $rule['mimetypes'] = $fieldset['hidden-mimes'];
+        if (array_key_exists('hidden-mimetypes', $fieldset)) {
+            $rule['mimetypes'] = $fieldset['hidden-mimetypes'];
         }
         if (array_key_exists('files', $fieldset)) {
             $rule['files'] = $fieldset['files'];
@@ -209,13 +215,21 @@ class PermissionsManager
     public function levelToRoles($level)
     {
         if ($level === 'anonymous') {
-            return ['anonymous'];
-        } elseif ($level === 'authenticated') {
             return ['anonymous', 'authenticated'];
+        } elseif ($level === 'authenticated') {
+            return ['authenticated'];
         } elseif ($level === 'academic') {
-            return ['anonymous', 'authenticated', 'academic'];
-        } else {
-            return [];
+            return ['academic'];
+        } elseif ($level === 'none') {
+            return ['none'];
         }
+    }
+
+    public function storeAccessPolicy($nid, $policy)
+    {
+        $nodeStorage = \Drupal::entityTypeManager()->getStorage('node');
+        $node = $nodeStorage->load($nid);
+        $node->set('field_access_policy', $policy);
+        $node->save();
     }
 }
