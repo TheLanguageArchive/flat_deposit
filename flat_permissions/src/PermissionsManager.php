@@ -136,7 +136,7 @@ class PermissionsManager
     public function sortByEffectiveRole($policy)
     {
         $key = array_keys((array)$policy->read)[0];
-        if (!array_key_exists('effective_role', (array)$policy->read->{$key})) {
+        if (!array_key_exists('effective_role', (array)$policy->read->{$key}[0])) {
             return ($policy);
         } else {
             usort($policy->read->{$key}, array($this, 'compareEffectiveRoles'));
