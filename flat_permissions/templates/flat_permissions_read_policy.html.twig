@@ -1,7 +1,6 @@
-{% if data.read is defined %}
-	{% set read = data.read %}
-	{% if read.all is defined %}
-		{% set all = read.all %}
+{% if data is defined %}
+	{% if data.all is defined %}
+		{% set all = data.all %}
 		<fieldset class="form-wrapper card rule-type-wrapper">
 			<div class="fieldset-wrapper">
 				<h3>Read Access rule for all files:</h3>
@@ -21,8 +20,8 @@
 			</div>
 		</fieldset>
 	{% endif %}
-	{% if read.types is defined %}
-		{% set types = read.types %}
+	{% if data.types is defined %}
+		{% set types = data.types %}
 		<fieldset class="form-wrapper card rule-type-wrapper">
 			<div class="fieldset-wrapper">
 				<h3>Read Access rule(s) for specific file or mime types:</h3>
@@ -64,8 +63,8 @@
 			</div>
 		</fieldset>
 	{% endif %}
-	{% if read.files is defined %}
-		{% set files = read.files %}
+	{% if data.files is defined %}
+		{% set files = data.files %}
 		<fieldset class="form-wrapper card rule-type-wrapper">
 			<div class="fieldset-wrapper">
 				<h3>Read Access rule(s) for specific files:</h3>
@@ -99,24 +98,6 @@
 			</div>
 		</fieldset>
 	{% endif %}
-
 {% else %}
 	<p>No read rules defined</p>
-{% endif %}
-
-{% if data.write is defined %}
-	{% set write = data.write %}
-	<fieldset class="form-wrapper card rule-type-wrapper">
-		<div class="fieldset-wrapper">
-			<h4>Write Access</h4>
-			{% if write.users is defined %}
-				<p>Users:</p>
-				<ul>
-					{% for user in write.users %}
-						<li class="user">{{ user }}</li>
-					{% endfor %}
-				</ul>
-			{% endif %}
-		</div>
-	</fieldset>
 {% endif %}

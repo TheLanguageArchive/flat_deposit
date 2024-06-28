@@ -42,13 +42,19 @@ class PermissionsManager
      * @return object | null
      *      access policy object
      */
-    public function fetchEffectiveAccessPolicy($nid): ?stdClass
+    public function fetchEffectiveAccessPolicy($nid, $class): ?stdClass
     {
+        if ($class === 'read') {
+            $field = 'field_read_access_policy';
+        } elseif ($class === 'write') {
+            $field = 'field_write_access_policy';
+        }
+
         $nodeStorage = \Drupal::entityTypeManager()->getStorage('node');
         $node = $nodeStorage->load($nid);
 
-        if ($node && $node->hasField('field_access_policy')) {
-            $accessPolicyField = $node->get('field_access_policy');
+        if ($node && $node->hasField($field)) {
+            $accessPolicyField = $node->get($field);
             if ($accessPolicyField->value) {
                 $policy_json = $accessPolicyField->value;
                 return json_decode($policy_json);
@@ -58,7 +64,7 @@ class PermissionsManager
         if ($node && $node->hasField('field_member_of')) {
             $parentNodes = $node->get('field_member_of')->referencedEntities();
             if ($parentNodes) {
-                $policy = $this->fetchEffectiveAccessPolicy($parentNodes[0]->id());
+                $policy = $this->fetchEffectiveAccessPolicy($parentNodes[0]->id(), $class);
                 if ($policy) {
                     return $policy;
                 }
@@ -75,13 +81,19 @@ class PermissionsManager
      * @return object | null
      *      access policy object
      */
-    public function fetchAccessPolicy($nid): ?stdClass
+    public function fetchAccessPolicy($nid, $class): ?stdClass
     {
+        if ($class === 'read') {
+            $field = 'field_read_access_policy';
+        } elseif ($class === 'write') {
+            $field = 'field_write_access_policy';
+        }
+
         $nodeStorage = \Drupal::entityTypeManager()->getStorage('node');
         $node = $nodeStorage->load($nid);
 
-        if ($node && $node->hasField('field_access_policy')) {
-            $accessPolicyField = $node->get('field_access_policy');
+        if ($node && $node->hasField($field)) {
+            $accessPolicyField = $node->get($field);
             if ($accessPolicyField->value) {
                 $policy_json = $accessPolicyField->value;
                 return json_decode($policy_json);
@@ -100,15 +112,14 @@ class PermissionsManager
     public function addLevels($policy)
     {
         $rules = [];
-        $read = $policy->read;
-        if (property_exists($read, 'all')) {
-            $rules[] = $read->all;
+        if (property_exists($policy, 'all')) {
+            $rules[] = $policy->all;
         };
-        if (property_exists($read, 'types')) {
-            $rules = $read->types;
+        if (property_exists($policy, 'types')) {
+            $rules = $policy->types;
         };
-        if (property_exists($read, 'files')) {
-            $rules = $read->files;
+        if (property_exists($policy, 'files')) {
+            $rules = $policy->files;
         };
         foreach ($rules as $rule) {
             if (property_exists($rule, 'roles')) {
@@ -135,11 +146,11 @@ class PermissionsManager
 
     public function sortByEffectiveRole($policy)
     {
-        $key = array_keys((array)$policy->read)[0];
-        if (!array_key_exists('effective_role', (array)$policy->read->{$key}[0])) {
+        $key = array_keys((array)$policy)[0];
+        if (!array_key_exists('effective_role', (array)$policy->{$key}[0])) {
             return ($policy);
         } else {
-            usort($policy->read->{$key}, array($this, 'compareEffectiveRoles'));
+            usort($policy->{$key}, array($this, 'compareEffectiveRoles'));
             return ($policy);
         }
     }
@@ -225,11 +236,16 @@ class PermissionsManager
         }
     }
 
-    public function storeAccessPolicy($nid, $policy)
+    public function storeAccessPolicy($nid, $policy, $class)
     {
+        if ($class === 'read') {
+            $field = 'field_read_access_policy';
+        } elseif ($class === 'write') {
+            $field = 'field_write_access_policy';
+        }
         $nodeStorage = \Drupal::entityTypeManager()->getStorage('node');
         $node = $nodeStorage->load($nid);
-        $node->set('field_access_policy', $policy);
+        $node->set($field, $policy);
         $node->save();
     }
 }

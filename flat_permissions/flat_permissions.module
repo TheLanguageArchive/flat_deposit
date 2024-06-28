@@ -177,8 +177,13 @@ function flat_permissions_write_access($nid, AccountInterface $account)
 function flat_permissions_theme()
 {
     return [
-        'flat_permissions_policy' => [
+        'flat_permissions_read_policy' => [
             'variables' => ['data' => null],
+            'template' => 'flat_permissions_read_policy',
+        ],
+        'flat_permissions_write_policy' => [
+            'variables' => ['data' => null],
+            'template' => 'flat_permissions_write_policy',
         ],
     ];
 }

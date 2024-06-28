@@ -43,26 +43,28 @@ class EditPermissionsForm extends FormBase
     $manager = \Drupal::service('flat_permissions.permissions_manager');
 
     // fetch access policy for the current node
-    $policy = $manager->fetchAccessPolicy($nid);
+    $read_policy = $manager->fetchAccessPolicy($nid, 'read');
 
-    if ($policy) {
+    if ($read_policy) {
       // current node has an access policy, we need to use it to set the default values of the form
-      $defaults = $policy;
+      $defaults = $read_policy;
+      $action = "Modify";
     } else {
       // current node has no access policy, find the effective policy up the hierarchy for displaying it in the form
-      $policy = $manager->fetchEffectiveAccessPolicy($nid);
+      $read_policy = $manager->fetchEffectiveAccessPolicy($nid, 'read');
       $defaults = NULL;
+      $action = "Define";
     }
 
     // add levels to policy and sort by effective role
-    $policy = $policy ? $manager->addLevels($policy) : null;
-    $policy = $policy ? $manager->sortByEffectiveRole($policy) : null;
+    $read_policy = $read_policy ? $manager->addLevels($read_policy) : null;
+    $read_policy = $read_policy ? $manager->sortByEffectiveRole($read_policy) : null;
 
     $user_input = $form_state->getUserInput();
     if (array_key_exists('radio', $user_input)) {
       $radio_value = $user_input['radio'];
-    } elseif ($this->objectAndPropertiesExist($defaults, 'read')) {
-      $radio_value = array_keys((array)$defaults->read)[0];
+    } elseif ($defaults) {
+      $radio_value = array_keys((array)$defaults)[0];
     } else {
       $radio_value = NULL;
     }
@@ -80,8 +82,8 @@ class EditPermissionsForm extends FormBase
     $types_fieldsets_indexes = $store->get('types_fieldsets_indexes');
 
     if (!$types_fieldsets_indexes || !$is_ajax) {
-      if ($this->objectAndPropertiesExist($defaults, 'read->types')) {
-        $num_fieldsets = count($defaults->read->types);
+      if ($this->objectAndPropertiesExist($defaults, 'types')) {
+        $num_fieldsets = count($defaults->types);
         $types_fieldsets_indexes = range(0, ($num_fieldsets - 1));
       } else {
         $types_fieldsets_indexes = [0];
@@ -103,17 +105,17 @@ class EditPermissionsForm extends FormBase
       '#prefix' => '<h2>Effective Access Rules</h2>
       <p>The nearest access rules that are defined in the collection hierarchy and that are applicable to this item.</p>',
       '#tag' => 'div',
-      '#theme' => 'flat_permissions_policy',
+      '#theme' => 'flat_permissions_read_policy',
       '#attributes' => [
         'class' => ['effective-rules'],
       ],
-      '#data' => $policy,
+      '#data' => $read_policy,
     ];
 
     $form['rules'] = [
       '#type' => 'container',
       '#tree' => true,
-      '#prefix' => '<h2>Define Read Access</h2>
+      '#prefix' => '<h2>' . $action . ' Read Access</h2>
       <p>Define read rules that will apply to this item and anything below it. Defining a rule here will override any rule in the parent collection(s). Read rules defined anywhere lower in the hiearchy will however take precedence over rules defined here.</p>',
     ];
 
@@ -519,9 +521,9 @@ class EditPermissionsForm extends FormBase
     $user_input = $form_state->getUserInput();
     if (isset($user_input['types_level_' . $i])) {
       $default_level_value = $user_input['types_level_' . $i];
-    } elseif ($this->objectAndPropertiesExist($defaults, 'read->types')) {
-      if (array_key_exists(($i), $defaults->read->types)) {
-        $default_level_value = array_search($defaults->read->types[$i]->level, $manager::LEVELS);
+    } elseif ($this->objectAndPropertiesExist($defaults, 'types')) {
+      if (array_key_exists(($i), $defaults->types)) {
+        $default_level_value = array_search($defaults->types[$i]->level, $manager::LEVELS);
       } else {
         $default_level_value = '';
       }
@@ -531,9 +533,9 @@ class EditPermissionsForm extends FormBase
 
     if (isset($user_input['types_filetypes_' . $i])) {
       $default_filetypes_value = $user_input['types_filetypes_' . $i];
-    } elseif ($this->objectAndPropertiesExist($defaults, 'read->types')) {
-      if (array_key_exists(($i), $defaults->read->types)) {
-        $default_filetypes_value = property_exists($defaults->read->types[$i], 'filetypes') ? $defaults->read->types[$i]->filetypes : [];
+    } elseif ($this->objectAndPropertiesExist($defaults, 'types')) {
+      if (array_key_exists(($i), $defaults->types)) {
+        $default_filetypes_value = property_exists($defaults->types[$i], 'filetypes') ? $defaults->types[$i]->filetypes : [];
       } else {
         $default_filetypes_value = [];
       }
@@ -632,8 +634,8 @@ class EditPermissionsForm extends FormBase
     if (isset($user_input['types_level_' . $i])) {
       $default_level_value = $user_input['files_level_' . $i];
     } else {
-      if ($this->objectAndPropertiesExist($defaults, 'read->files')) {
-        $default_level_value = array_search($defaults->read->files[$i]->level, $manager::LEVELS);
+      if ($this->objectAndPropertiesExist($defaults, 'files')) {
+        $default_level_value = array_search($defaults->files[$i]->level, $manager::LEVELS);
       } else {
         $default_level_value = '';
       }
@@ -712,9 +714,9 @@ class EditPermissionsForm extends FormBase
       $default_value = $user_input['hidden_' . $rule_type . '_' . $field_type . '_field_' . $index];
     } elseif ($this->objectAndPropertiesExist($defaults, "{$rule_type}->users")) {
       $default_value = implode(',', $defaults->{$rule_type}->users);
-    } elseif ($this->objectAndPropertiesExist($defaults, "read->{$rule_type}")) {
-      if (array_key_exists(($index), $defaults->read->{$rule_type})) {
-        $default_value = property_exists($defaults->read->{$rule_type}[$index], $field_type) ? implode(',', $defaults->read->{$rule_type}[$index]->{$field_type}) : '';
+    } elseif ($this->objectAndPropertiesExist($defaults, "{$rule_type}")) {
+      if (array_key_exists(($index), $defaults->{$rule_type})) {
+        $default_value = property_exists($defaults->{$rule_type}[$index], $field_type) ? implode(',', $defaults->{$rule_type}[$index]->{$field_type}) : '';
       } else {
         $default_value = '';
       }
@@ -1153,16 +1155,13 @@ class EditPermissionsForm extends FormBase
       }
     }
     if (!empty($read_rule_output)) {
-      $output['read'] = $read_rule_output;
+      $read_output_json = json_encode($read_rule_output);
+      $manager->storeAccessPolicy($nid, $read_output_json, 'read');
     }
     if (!empty($write_rule_output)) {
-      $output['write'] = $write_rule_output;
+      $write_output_json = json_encode($write_rule_output);
+      $manager->storeAccessPolicy($nid, $write_output_json, 'write');
     }
-    if (!empty($output)) {
-      $output_json = json_encode($output);
-    }
-
-    $manager->storeAccessPolicy($nid, $output_json);
 
     \Drupal::messenger()->addMessage('Your access rules have been saved.');
   }
