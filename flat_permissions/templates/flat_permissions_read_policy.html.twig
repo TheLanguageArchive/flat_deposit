@@ -1,103 +1,104 @@
-{% if data is defined %}
-	{% if data.all is defined %}
+<fieldset class="form-wrapper card rule-type-wrapper">
+	<div class="fieldset-wrapper">
+		<h4>Read Access</h4>
+		{% if data.all is defined %}
 		{% set all = data.all %}
 		<fieldset class="form-wrapper card rule-type-wrapper">
 			<div class="fieldset-wrapper">
-				<h3>Read Access rule for all files:</h3>
+				<h5>Read Access rule for all files:</h5>
 				{% if all.level is defined %}
-					<p>Access level:
-						<span class="{{ all.effective_role }} access-level">{{ all.level }}</span>
-					</p>
+				<p>Access level:
+					<span class="{{ all.effective_role }} access-level">{{ all.level }}</span>
+				</p>
 				{% endif %}
 				{% if all.users is defined %}
-					<p>Users</p>
-					<ul>
-						{% for user in all.users %}
-							<li class="user">{{ user.username }}</li>
-						{% endfor %}
-					</ul>
+				<p>Users</p>
+				<ul>
+					{% for user in all.users %}
+					<li class="user">{{ user }}</li>
+					{% endfor %}
+				</ul>
 				{% endif %}
 			</div>
 		</fieldset>
-	{% endif %}
-	{% if data.types is defined %}
+		{% elseif data.types is defined %}
 		{% set types = data.types %}
 		<fieldset class="form-wrapper card rule-type-wrapper">
 			<div class="fieldset-wrapper">
-				<h3>Read Access rule(s) for specific file or mime types:</h3>
+				<h5>Read Access rule(s) for specific file or mime types:</h5>
 				{% for type in types %}
-					<fieldset class="form-wrapper card rule-wrapper">
-						<div class="fieldset-wrapper">
-							{% if type.level is defined %}
-								<p>Access level:
-									<span class="{{ type.effective_role }} access-level">{{ type.level }}</span>
-								</p>
-							{% endif %}
-							{% if type.users is defined %}
-								<p>Users:</p>
-								<ul>
-									{% for user in type.users %}
-										<li class="user">{{ user }}</li>
-									{% endfor %}
-								</ul>
-							{% endif %}
-							{% if type.filetypes is defined %}
-								<p>File types:</p>
-								<ul>
-									{% for filetype in type.filetypes|sort %}
-										<li class="filetype">{{ filetype }}</li>
-									{% endfor %}
-								</ul>
-							{% endif %}
-							{% if type.mimetypes is defined %}
-								<p>Mime types:</p>
-								<ul>
-									{% for mimetype in type.mimetypes|sort %}
-										<li class="mimetype">{{ mimetype }}</li>
-									{% endfor %}
-								</ul>
-							{% endif %}
-						</div>
-					</fieldset>
+				<fieldset class="form-wrapper card rule-wrapper">
+					<div class="fieldset-wrapper">
+						{% if type.level is defined %}
+						<p>Access level:
+							<span class="{{ type.effective_role }} access-level">{{ type.level }}</span>
+						</p>
+						{% endif %}
+						{% if type.users is defined %}
+						<p>Users:</p>
+						<ul>
+							{% for user in type.users %}
+							<li class="user">{{ user }}</li>
+							{% endfor %}
+						</ul>
+						{% endif %}
+						{% if type.filetypes is defined %}
+						<p>File types:</p>
+						<ul>
+							{% for filetype in type.filetypes|sort %}
+							<li class="filetype">{{ filetype }}</li>
+							{% endfor %}
+						</ul>
+						{% endif %}
+						{% if type.mimetypes is defined %}
+						<p>Mime types:</p>
+						<ul>
+							{% for mimetype in type.mimetypes|sort %}
+							<li class="mimetype">{{ mimetype }}</li>
+							{% endfor %}
+						</ul>
+						{% endif %}
+					</div>
+				</fieldset>
 				{% endfor %}
 			</div>
 		</fieldset>
-	{% endif %}
-	{% if data.files is defined %}
+		{% elseif data.files is defined %}
 		{% set files = data.files %}
 		<fieldset class="form-wrapper card rule-type-wrapper">
 			<div class="fieldset-wrapper">
-				<h3>Read Access rule(s) for specific files:</h3>
+				<h5>Read Access rule(s) for specific files:</h5>
 				{% for file in files %}
-					<fieldset class="form-wrapper card rule-wrapper">
-						<div class="fieldset-wrapper">
-							{% if file.level is defined %}
-								<p>Access level:
-									<span class="{{ file.effective_role }} access-level">{{ file.level }}</span>
-								</p>
-							{% endif %}
-							{% if file.users is defined %}
-								<p>Users:</p>
-								<ul>
-									{% for user in file.users %}
-										<li class="user">{{ user }}</li>
-									{% endfor %}
-								</ul>
-							{% endif %}
-							{% if file.ids is defined %}
-								<p>Files:</p>
-								<ul>
-									{% for id in file.ids %}
-										<li class="file">{{ id }}</li>
-									{% endfor %}
-								</ul>
-							{% endif %}
-						</div>
-					</fieldset>
+				<fieldset class="form-wrapper card rule-wrapper">
+					<div class="fieldset-wrapper">
+						{% if file.level is defined %}
+						<p>Access level:
+							<span class="{{ file.effective_role }} access-level">{{ file.level }}</span>
+						</p>
+						{% endif %}
+						{% if file.users is defined %}
+						<p>Users:</p>
+						<ul>
+							{% for user in file.users %}
+							<li class="user">{{ user }}</li>
+							{% endfor %}
+						</ul>
+						{% endif %}
+						{% if file.ids is defined %}
+						<p>Files:</p>
+						<ul>
+							{% for id in file.ids %}
+							<li class="file">{{ id }}</li>
+							{% endfor %}
+						</ul>
+						{% endif %}
+					</div>
+				</fieldset>
 				{% endfor %}
 			</div>
 		</fieldset>
-	{% endif %}
-{% else %}
-	<p>No read rules defined</p>
-{% endif %}
+		{% else %}
+		<p>No read access defined on this item or any of its parents</p>
+		{% endif %}
+	</div>
+</fieldset>

@@ -1,15 +1,15 @@
-{% if data is defined %}
-	<fieldset class="form-wrapper card rule-type-wrapper">
-		<div class="fieldset-wrapper">
-			<h4>Write Access</h4>
-			{% if data.users is defined %}
-				<p>Users:</p>
-				<ul>
-					{% for user in data.users %}
-						<li class="user">{{ user }}</li>
-					{% endfor %}
-				</ul>
-			{% endif %}
-		</div>
-	</fieldset>
-{% endif %}
+<fieldset class="form-wrapper card rule-type-wrapper">
+	<div class="fieldset-wrapper">
+		<h4>Write Access</h4>
+		{% if data.users is defined %}
+			<p>Users:</p>
+			<ul>
+				{% for user in data.users %}
+					<li class="user">{{ user }}</li>
+				{% endfor %}
+			</ul>
+		{% else %}
+			<p>No write access defined on this item or any of its parents</p>
+		{% endif %}
+	</div>
+</fieldset>

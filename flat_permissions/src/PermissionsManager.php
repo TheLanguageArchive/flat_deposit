@@ -146,6 +146,9 @@ class PermissionsManager
 
     public function sortByEffectiveRole($policy)
     {
+        if (property_exists($policy, 'all')) {
+            return ($policy);
+        }
         $key = array_keys((array)$policy)[0];
         if (!array_key_exists('effective_role', (array)$policy->{$key}[0])) {
             return ($policy);
@@ -246,6 +249,21 @@ class PermissionsManager
         $nodeStorage = \Drupal::entityTypeManager()->getStorage('node');
         $node = $nodeStorage->load($nid);
         $node->set($field, $policy);
+        $node->save();
+    }
+
+    public function deleteAccessPolicy($nid, $class)
+    {
+        if ($class === 'read') {
+            $field = 'field_read_access_policy';
+        } elseif ($class === 'write') {
+            $field = 'field_write_access_policy';
+        }
+        $nodeStorage = \Drupal::entityTypeManager()->getStorage('node');
+        $node = $nodeStorage->load($nid);
+        if ($node && $node->hasField($field)) {
+            $node->set($field, NULL);
+        }
         $node->save();
     }
 }

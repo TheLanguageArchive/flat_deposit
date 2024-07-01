@@ -42,18 +42,30 @@ class EditPermissionsForm extends FormBase
 
     $manager = \Drupal::service('flat_permissions.permissions_manager');
 
-    // fetch access policy for the current node
+    // fetch access policies for the current node
     $read_policy = $manager->fetchAccessPolicy($nid, 'read');
+    $write_policy = $manager->fetchAccessPolicy($nid, 'write');
 
     if ($read_policy) {
-      // current node has an access policy, we need to use it to set the default values of the form
+      // current node has a read access policy, we need to use it to set the default values of the form
       $defaults = $read_policy;
       $action = "Modify";
     } else {
-      // current node has no access policy, find the effective policy up the hierarchy for displaying it in the form
+      // current node has no read access policy, find the effective policy up the hierarchy for displaying it in the form
       $read_policy = $manager->fetchEffectiveAccessPolicy($nid, 'read');
       $defaults = NULL;
       $action = "Define";
+    }
+
+    if ($write_policy) {
+      // current node has a write access policy, we need to use it to set the default values of the form
+      $write_defaults = $write_policy;
+      $write_action = "Modify";
+    } else {
+      // current node has no write access policy, find the effective policy up the hierarchy for displaying it in the form
+      $write_policy = $manager->fetchEffectiveAccessPolicy($nid, 'write');
+      $write_defaults = NULL;
+      $write_action = "Define";
     }
 
     // add levels to policy and sort by effective role
@@ -97,13 +109,18 @@ class EditPermissionsForm extends FormBase
 
     $form['#tree'] = true;
 
-    // the effective access rules from higher up in the hierarch will be displayed in this info section, if any
+    // the effective access rules from higher up in the hierarch will be displayed in this info section, if any.
     // rendering is done with the flat-permissions-policy twig template
     $form['info'] = [
-      '#type' => 'html_tag',
+      '#type' => 'container',
       '#title' => 'Effective Access Rules',
       '#prefix' => '<h2>Effective Access Rules</h2>
       <p>The nearest access rules that are defined in the collection hierarchy and that are applicable to this item.</p>',
+    ];
+
+    $form['info']['read'] = [
+      '#type' => 'html_tag',
+      '#title' => 'Effective Read Access Rules',
       '#tag' => 'div',
       '#theme' => 'flat_permissions_read_policy',
       '#attributes' => [
@@ -112,11 +129,22 @@ class EditPermissionsForm extends FormBase
       '#data' => $read_policy,
     ];
 
+    $form['info']['write'] = [
+      '#type' => 'html_tag',
+      '#title' => 'Effective Write Access Rules',
+      '#tag' => 'div',
+      '#theme' => 'flat_permissions_write_policy',
+      '#attributes' => [
+        'class' => ['effective-rules'],
+      ],
+      '#data' => $write_policy,
+    ];
+
     $form['rules'] = [
       '#type' => 'container',
       '#tree' => true,
       '#prefix' => '<h2>' . $action . ' Read Access</h2>
-      <p>Define read rules that will apply to this item and anything below it. Defining a rule here will override any rule in the parent collection(s). Read rules defined anywhere lower in the hiearchy will however take precedence over rules defined here.</p>',
+      <p>' . ucfirst($action) . ' read rules that will apply to this item and anything below it. Defined read rules here will override any read rule in the parent collection(s). Read rules defined anywhere lower in the hiearchy will take precedence over read rules defined here.</p>',
     ];
 
     $form['rules']['all'] = [
@@ -320,11 +348,23 @@ class EditPermissionsForm extends FormBase
       ];
     }
 
+    ddm($read_policy);
+
+    $form['rules']['delete'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Delete read rules'),
+      '#submit' => ['::deleteReadPolicy'],
+      '#disabled' => empty($read_policy) ? true : false,
+      '#attributes' => [
+        'class' => ['btn-danger'],
+      ],
+    ];
+
     $form['write'] = [
       '#type' => 'container',
       '#tree' => true,
-      '#prefix' => '<h2>Define Write Access</h2>
-      <p>Define which users have write access to this item and anything below it. Defining write access here will override any write permissions defined in the parent collection(s). Write access defined anywhere lower in the hierarchy will however take precedence over rules defined here.</p>',
+      '#prefix' => '<h2>'. $write_action . ' Write Access</h2>
+      <p>' . $write_action . ' which users have write access to this item and anything below it. Defined write rules here will override any write rule in the parent collection(s). Write rules defined anywhere lower in the hiearchy will take precedence over write rules defined here.</p>',
     ];
 
     $form['write']['users'] = [
@@ -337,11 +377,21 @@ class EditPermissionsForm extends FormBase
       ],
     ];
 
-    $form['write']['hidden-users'] = $this->build_hidden_field('write', 'write', 'users', $form_state, $defaults);
+    $form['write']['hidden-users'] = $this->build_hidden_field('write', 'write', 'users', $form_state, $write_defaults);
 
     $form['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save'),
+    ];
+
+    $form['delete'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Delete write rules'),
+      '#submit' => ['::deleteWritePolicy'],
+      '#disabled' => empty($write_policy) ? true : false,
+      '#attributes' => [
+        'class' => ['btn-danger'],
+      ],
     ];
 
     $form['#attached']['library'][] = 'flat_permissions/multivalue_autocomplete';
@@ -714,11 +764,21 @@ class EditPermissionsForm extends FormBase
       $default_value = $user_input['hidden_' . $rule_type . '_' . $field_type . '_field_' . $index];
     } elseif ($this->objectAndPropertiesExist($defaults, "{$rule_type}->users")) {
       $default_value = implode(',', $defaults->{$rule_type}->users);
-    } elseif ($this->objectAndPropertiesExist($defaults, "{$rule_type}")) {
-      if (array_key_exists(($index), $defaults->{$rule_type})) {
-        $default_value = property_exists($defaults->{$rule_type}[$index], $field_type) ? implode(',', $defaults->{$rule_type}[$index]->{$field_type}) : '';
-      } else {
-        $default_value = '';
+    } elseif ($this->objectAndPropertiesExist($defaults, "users")) {
+      // Write rule only has users
+      $default_value = implode(',', $defaults->users);
+    } elseif ($this->objectAndPropertiesExist($defaults, $rule_type)) {
+      if (is_array($defaults->{$rule_type})) {
+        // "type" and "file" rules are in an array as there can be more than one
+        if (array_key_exists(($index), $defaults->{$rule_type})) {
+          $default_value = property_exists($defaults->{$rule_type}[$index], $field_type) ? implode(',', $defaults->{$rule_type}[$index]->{$field_type}) : '';
+        } else {
+          $default_value = '';
+        }
+      }
+      else {
+        // "all" rule is only in a single object
+        $default_value = property_exists($defaults->{$rule_type}, $field_type) ? implode(',', $defaults->{$rule_type}->{$field_type}) : '';
       }
     } else {
       $default_value = '';
@@ -747,6 +807,17 @@ class EditPermissionsForm extends FormBase
     $user_input = $form_state->getUserInput();
     if (isset($user_input[$rule_type . '_level_' . $index])) {
       $default_value = $user_input[$rule_type . '_level_' . $index];
+    } elseif ($this->objectAndPropertiesExist($defaults, $rule_type)) {
+      if (is_array($defaults->{$rule_type})) {
+        if (array_key_exists(($index), $defaults->types)) {
+          $default_value = array_search($defaults->types[$index]->level, $levels);
+        } else {
+          $default_value = '';
+        }
+      }
+      else {
+        $default_value = array_search($defaults->{$rule_type}->level, $levels);
+      }
     } else {
       $default_value = '';
     }
@@ -1095,7 +1166,16 @@ class EditPermissionsForm extends FormBase
     if (array_key_exists('radio', $user_input)) {
       $rule_type = $user_input['radio'];
       if ($rule_type === 'all') {
-        $read_rule_output['all'] = $manager->fieldsetToRule($rules['all']['all_fieldset']);
+        $level = $user_input['all_level_1'];
+        $all_rule_output['level'] = $level;
+        $hidden_all_users = $user_input['hidden_all_users_field_all'];
+        if (!empty($hidden_all_users)) {
+          $all_rule_output['hidden-users'] = explode(',', $hidden_all_users);
+        } else {
+          unset($all_rule_output['hidden-users']);
+        }
+        $read_rule = $manager->fieldsetToRule($all_rule_output);
+        $read_rule_output['all'] = $read_rule;
       }
       if ($rule_type === 'types') {
         $types_rules = $rules['types']['types_fieldset']['fieldsets'];
@@ -1109,15 +1189,15 @@ class EditPermissionsForm extends FormBase
           } else {
             unset($types_rule_output['filetypes']);
           }
-          $hidden_mimes = $user_input['hidden_types_mimetypes_field_' . $key];
-          if (!empty($hidden_mimes)) {
-            $types_rule_output['hidden-mimetypes'] = explode(',', $hidden_mimes);
+          $hidden_types_mimetypes = $user_input['hidden_types_mimetypes_field_' . $key];
+          if (!empty($hidden_types_mimetypes)) {
+            $types_rule_output['hidden-mimetypes'] = explode(',', $hidden_types_mimetypes);
           } else {
             unset($types_rule_output['hidden-mimetypes']);
           }
-          $hidden_users = $user_input['hidden_types_users_field_' . $key];
-          if (!empty($hidden_users)) {
-            $types_rule_output['hidden-users'] = explode(',', $hidden_users);
+          $hidden_types_users = $user_input['hidden_types_users_field_' . $key];
+          if (!empty($hidden_types_users)) {
+            $types_rule_output['hidden-users'] = explode(',', $hidden_types_users);
           } else {
             unset($types_rule_output['hidden-users']);
           }
@@ -1137,9 +1217,9 @@ class EditPermissionsForm extends FormBase
           } else {
             unset($files_rule_output['files']);
           }
-          $hidden_users = $user_input['hidden_files_users_field_' . $key];
-          if (!empty($hidden_users)) {
-            $files_rule_output['hidden-users'] = explode(',', $hidden_users);
+          $hidden_files_users = $user_input['hidden_files_users_field_' . $key];
+          if (!empty($hidden_files_users)) {
+            $files_rule_output['hidden-users'] = explode(',', $hidden_files_users);
           } else {
             unset($files_rule_output['hidden-users']);
           }
@@ -1163,6 +1243,21 @@ class EditPermissionsForm extends FormBase
       $manager->storeAccessPolicy($nid, $write_output_json, 'write');
     }
 
-    \Drupal::messenger()->addMessage('Your access rules have been saved.');
+    \Drupal::messenger()->addMessage('Your access rules have been saved.', 'status');
+  }
+
+  public function deleteReadPolicy() {
+    $nid = \Drupal::routeMatch()->getParameter('node')->id();
+    $manager = \Drupal::service('flat_permissions.permissions_manager');
+    $manager->deleteAccessPolicy($nid, 'read');
+    \Drupal::messenger()->addMessage('Your read access rules have been deleted.', 'status');
+
+  }
+
+  public function deleteWritePolicy() {
+    $nid = \Drupal::routeMatch()->getParameter('node')->id();
+    $manager = \Drupal::service('flat_permissions.permissions_manager');
+    $manager->deleteAccessPolicy($nid, 'write');
+    \Drupal::messenger()->addMessage('Your write access rule has been deleted.', 'status');
   }
 }
