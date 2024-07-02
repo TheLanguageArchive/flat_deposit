@@ -11,6 +11,8 @@ namespace Drupal\flat_permissions\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
 
 class EditPermissionsForm extends FormBase
 {
@@ -42,6 +44,9 @@ class EditPermissionsForm extends FormBase
 
     $manager = \Drupal::service('flat_permissions.permissions_manager');
 
+    $read_parent = NULL;
+    $write_parent = NULL;
+
     // fetch access policies for the current node
     $read_policy = $manager->fetchAccessPolicy($nid, 'read');
     $write_policy = $manager->fetchAccessPolicy($nid, 'write');
@@ -49,10 +54,15 @@ class EditPermissionsForm extends FormBase
     if ($read_policy) {
       // current node has a read access policy, we need to use it to set the default values of the form
       $defaults = $read_policy;
+      $read_parent = NULL;
       $action = "Modify";
     } else {
       // current node has no read access policy, find the effective policy up the hierarchy for displaying it in the form
-      $read_policy = $manager->fetchEffectiveAccessPolicy($nid, 'read');
+      $effective_read_policy = $manager->fetchEffectiveAccessPolicy($nid, 'read');
+      if ($effective_read_policy) {
+        $read_policy = $effective_read_policy['policy'];
+        $read_parent = $effective_read_policy['nid'];
+      }
       $defaults = NULL;
       $action = "Define";
     }
@@ -63,7 +73,11 @@ class EditPermissionsForm extends FormBase
       $write_action = "Modify";
     } else {
       // current node has no write access policy, find the effective policy up the hierarchy for displaying it in the form
-      $write_policy = $manager->fetchEffectiveAccessPolicy($nid, 'write');
+      $effective_write_policy = $manager->fetchEffectiveAccessPolicy($nid, 'write');
+      if ($effective_write_policy) {
+        $write_policy = $effective_write_policy['policy'];
+        $write_parent = $effective_write_policy['nid'];
+      }
       $write_defaults = NULL;
       $write_action = "Define";
     }
@@ -85,7 +99,6 @@ class EditPermissionsForm extends FormBase
     $tempstore = \Drupal::service('tempstore.private');
 
     $store = $tempstore->get('flat_permissions_collection');
-
 
     // If tempstore value is not yet set or if the form is reloaded other than through an AJAX call, we set it to 0
     $request = \Drupal::request();
@@ -109,13 +122,48 @@ class EditPermissionsForm extends FormBase
 
     $form['#tree'] = true;
 
+    // Create an info message for the effective access rules, either inherited from the parents or defined on the current item
+    $info_message =  'The nearest access rules that are defined in the collection hierarchy and that are applicable to this item.';
+
+    $suffix = '/permissions';
+
+    if ($read_parent) {
+      $read_parent_node = \Drupal::entityTypeManager()->getStorage('node')->load($read_parent);
+      if ($node instanceof \Drupal\node\NodeInterface) {
+        $read_parent_name = $read_parent_node->getTitle();
+        $read_parent_url = Url::fromRoute('entity.node.canonical', ['node' => $read_parent]);
+        $read_parent_path = $read_parent_url->getInternalPath() . $suffix;
+        $read_parent_url = Url::fromUserInput('/' . $read_parent_path);
+        $read_parent_link = Link::fromTextAndUrl($read_parent_name, $read_parent_url)->toString();
+        $info_message .= '<br/>Read access is defined on ' . $read_parent_link . '.';
+      }
+    }
+    elseif ($read_policy) {
+      $info_message .= '<br/>Read access is defined on the current item.';
+    }
+
+    if ($write_parent) {
+      $write_parent_node = \Drupal::entityTypeManager()->getStorage('node')->load($write_parent);
+      if ($node instanceof \Drupal\node\NodeInterface) {
+        $write_parent_name = $write_parent_node->getTitle();
+        $write_parent_url = Url::fromRoute('entity.node.canonical', ['node' => $write_parent]);
+        $write_parent_path = $write_parent_url->getInternalPath() . $suffix;
+        $write_parent_url = Url::fromUserInput('/' . $write_parent_path);
+        $write_parent_link = Link::fromTextAndUrl($write_parent_name, $write_parent_url)->toString();
+        $info_message .= '<br/>Write access is defined on ' . $write_parent_link . '.';
+      }
+    }
+    elseif ($write_policy) {
+      $info_message .= '<br/>Write access is defined on the current item.';
+    }
+
     // the effective access rules from higher up in the hierarch will be displayed in this info section, if any.
     // rendering is done with the flat-permissions-policy twig template
     $form['info'] = [
       '#type' => 'container',
       '#title' => 'Effective Access Rules',
       '#prefix' => '<h2>Effective Access Rules</h2>
-      <p>The nearest access rules that are defined in the collection hierarchy and that are applicable to this item.</p>',
+      <p>'. $info_message . '</p>',
     ];
 
     $form['info']['read'] = [
@@ -348,13 +396,19 @@ class EditPermissionsForm extends FormBase
       ];
     }
 
-    ddm($read_policy);
+    //ddm($read_policy);
+
+    $form['rules']['submit_read'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Save Read Rules'),
+      '#submit' => ['::submitReadPolicy'],
+    ];
 
     $form['rules']['delete'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Delete read rules'),
+      '#value' => $this->t('Delete Read Rules'),
       '#submit' => ['::deleteReadPolicy'],
-      '#disabled' => empty($read_policy) ? true : false,
+      '#disabled' => $defaults ? false : true,
       '#attributes' => [
         'class' => ['btn-danger'],
       ],
@@ -363,7 +417,7 @@ class EditPermissionsForm extends FormBase
     $form['write'] = [
       '#type' => 'container',
       '#tree' => true,
-      '#prefix' => '<h2>'. $write_action . ' Write Access</h2>
+      '#prefix' => '<h2>' . $write_action . ' Write Access</h2>
       <p>' . $write_action . ' which users have write access to this item and anything below it. Defined write rules here will override any write rule in the parent collection(s). Write rules defined anywhere lower in the hiearchy will take precedence over write rules defined here.</p>',
     ];
 
@@ -379,16 +433,17 @@ class EditPermissionsForm extends FormBase
 
     $form['write']['hidden-users'] = $this->build_hidden_field('write', 'write', 'users', $form_state, $write_defaults);
 
-    $form['submit'] = [
+    $form['write']['submit_write'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Save'),
+      '#value' => $this->t('Save Write Rule'),
+      '#submit' => ['::submitWritePolicy'],
     ];
 
-    $form['delete'] = [
+    $form['write']['delete'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Delete write rules'),
+      '#value' => $this->t('Delete write rule'),
       '#submit' => ['::deleteWritePolicy'],
-      '#disabled' => empty($write_policy) ? true : false,
+      '#disabled' => $write_defaults ? false : true,
       '#attributes' => [
         'class' => ['btn-danger'],
       ],
@@ -541,7 +596,6 @@ class EditPermissionsForm extends FormBase
       $form_state->setRebuild();
     }
   }
-
 
   /**
    * Builds a fieldset for adding file and/or mime type rules.
@@ -775,8 +829,7 @@ class EditPermissionsForm extends FormBase
         } else {
           $default_value = '';
         }
-      }
-      else {
+      } else {
         // "all" rule is only in a single object
         $default_value = property_exists($defaults->{$rule_type}, $field_type) ? implode(',', $defaults->{$rule_type}->{$field_type}) : '';
       }
@@ -814,8 +867,7 @@ class EditPermissionsForm extends FormBase
         } else {
           $default_value = '';
         }
-      }
-      else {
+      } else {
         $default_value = array_search($defaults->{$rule_type}->level, $levels);
       }
     } else {
@@ -1012,7 +1064,6 @@ class EditPermissionsForm extends FormBase
     return true;
   }
 
-
   /**
    * Form validation to check whether access rules are valid
    *  - no empty rules
@@ -1027,99 +1078,111 @@ class EditPermissionsForm extends FormBase
    */
   public function validateForm(array &$form, FormStateInterface $form_state)
   {
-    $manager = \Drupal::service('flat_permissions.permissions_manager');
-    $errors = [];
-    $level_options = $manager::LEVELS;
-    $rules = $form_state->getValue(['rules']);
-    // for some reason, form_state values are not present for some of the dynamically added fields,
-    // whereas the user input array does have them, so we'll get them from there.
+    $triggering_element = $form_state->getTriggeringElement();
+    $parents = $triggering_element['#parents'];
     $user_input = $form_state->getUserInput();
-    if (array_key_exists('radio', $user_input)) {
-      $rule_type = $user_input['radio'];
-      if ($rule_type === 'types') {
-        // check for empty rules and duplicate filetype and mimetype values
-        $types_rules = $rules['types']['types_fieldset']['fieldsets'];
-        foreach ($types_rules as $key => $type_rule) {
-          $filetypes = $type_rule['filetypes'];
-          $empty_checkboxes = !$this->checkboxesAreChecked($filetypes);
-          $type_options = $form['rules']['types']['types_fieldset']['fieldsets'][$key]['filetypes']['#options'];
-          $types_rules_filetypes[] = $filetypes;
-          $hidden_mimetypes = $user_input['hidden_types_mimetypes_field_' . $key];
-          if ($empty_checkboxes && empty($hidden_mimetypes)) {
-            $errors[] = 'You have created a rule with no file or mime types selected.';
-          }
-          $types_rules_mimetypes[] = explode(',', $hidden_mimetypes);
-          $rule_levels[] = $user_input['types_level_' . $key];
-          $rule_users[] = $user_input['hidden_types_users_field_' . $key];
-        }
-        $type_duplicates = $this->findDuplicateValuesInMultipleArrays($types_rules_filetypes);
-        foreach ($type_duplicates as $key => $value) {
-          $type_duplicate_names[] = $type_options[$value];
-        }
-        $mime_duplicates = $this->findDuplicateValuesInMultipleArrays($types_rules_mimetypes);
-        if (!empty($type_duplicates)) {
-          $errors[] = 'You have used the same file type(s) in more than one rule: ' . implode(', ', $type_duplicate_names);
-        }
-        if (!empty($mime_duplicates)) {
-          $errors[] = 'You have used the same mime type(s) in more than one rule: ' . implode(', ', $mime_duplicates);
-        }
-      }
 
+    if (in_array('submit_read', $parents)) {
 
-      if ($rule_type === 'files') {
-        // check for empty rules and duplicate file values
-        $files_rules = $rules['files']['files_fieldset']['fieldsets'];
-        foreach ($files_rules as $key => $file_rule) {
-          $files = $file_rule['files'];
-          $empty_checkboxes = !$this->checkboxesAreChecked($files);
-          if ($empty_checkboxes) {
-            $errors[] = 'You have created a rule for specific files with no files selected';
-          }
-          $file_options = $form['rules']['files']['files_fieldset']['fieldsets'][$key]['files']['#options'];
-          $files_rules_files[] = $files;
-          $rule_levels[] = $user_input['files_level_' . $key];
-          $rule_users[] = $user_input['hidden_files_users_field_' . $key];
-        }
-        $file_duplicates = $this->findDuplicateValuesInMultipleArrays($files_rules_files);
-        foreach ($file_duplicates as $key => $value) {
-          $file_duplicate_names[] = $file_options[$value]['filename'];
-        }
-        if (!empty($file_duplicate_names)) {
-          $errors[] = 'You have used the same file(s) in more than one rule: ' . implode(', ', $file_duplicate_names);
-        }
-      }
-
-      if ($rule_type !== 'all') {
-        // check whether there are multiple rules with the same access level.
-        // in case of academic or restricted (none) access, that is OK as long as the users are distinct
-        $level_duplicates = $this->findValuesOccurringMoreThanOnce($rule_levels);
-        if (!empty($level_duplicates)) {
-          $no_users_duplicate_levels = array_intersect(array_values($level_duplicates), ['anonymous', 'authenticated']);
-          if (!empty($no_users_duplicate_levels)) {
-            foreach ($no_users_duplicate_levels as $key => $value) {
-              $no_users_duplicate_level_names[] = $level_options[$value];
+      $manager = \Drupal::service('flat_permissions.permissions_manager');
+      $errors = [];
+      $level_options = $manager::LEVELS;
+      $rules = $form_state->getValue(['rules']);
+      // for some reason, form_state values are not present for some of the dynamically added fields,
+      // whereas the user input array does have them, so we'll get them from there.
+      if (array_key_exists('radio', $user_input)) {
+        $rule_type = $user_input['radio'];
+        if ($rule_type === 'types') {
+          // check for empty rules and duplicate filetype and mimetype values
+          $types_rules = $rules['types']['types_fieldset']['fieldsets'];
+          foreach ($types_rules as $key => $type_rule) {
+            $filetypes = $type_rule['filetypes'];
+            $empty_checkboxes = !$this->checkboxesAreChecked($filetypes);
+            $type_options = $form['rules']['types']['types_fieldset']['fieldsets'][$key]['filetypes']['#options'];
+            $types_rules_filetypes[] = $filetypes;
+            $hidden_mimetypes = $user_input['hidden_types_mimetypes_field_' . $key];
+            if ($empty_checkboxes && empty($hidden_mimetypes)) {
+              $errors[] = 'You have created a rule with no file or mime types selected.';
             }
-            $errors[] = 'You have used these access level(s) for more than one rule: ' . implode(', ', $no_users_duplicate_level_names) . '.
-            Please create a single rule for them.';
+            $hidden_mime_types_array = explode(',', $hidden_mimetypes);
+            $types_rules_mimetypes[] = $hidden_mime_types_array;
+            $types_from_mimes = $this->typesFromMimes($hidden_mime_types_array);
+            $types_rules_mimetypes[] =
+              $rule_levels[] = $user_input['types_level_' . $key];
+            $rule_users[] = $user_input['hidden_types_users_field_' . $key];
           }
-          $users_duplicate_levels = array_intersect(array_values($level_duplicates), ['academic', 'none']);
-          if (!empty($users_duplicate_levels)) {
-            $unique_users = array_unique($rule_users);
-            if (sizeof($unique_users) === 1) {
-              foreach ($users_duplicate_levels as $key => $value) {
-                $users_duplicate_level_names[] = $level_options[$value];
+          $type_duplicates = $this->findDuplicateValuesInMultipleArrays($types_rules_filetypes);
+          foreach ($type_duplicates as $key => $value) {
+            $type_duplicate_names[] = $type_options[$value];
+          }
+          $mime_duplicates = $this->findDuplicateValuesInMultipleArrays($types_rules_mimetypes);
+          if (!empty($type_duplicates)) {
+            $errors[] = 'You have used the same file type(s) in more than one rule: ' . implode(', ', $type_duplicate_names);
+          }
+          if (!empty($mime_duplicates)) {
+            $errors[] = 'You have used the same mime type(s) in more than one rule: ' . implode(', ', $mime_duplicates);
+          }
+        }
+
+
+        if ($rule_type === 'files') {
+          // check for empty rules and duplicate file values
+          $files_rules = $rules['files']['files_fieldset']['fieldsets'];
+          foreach ($files_rules as $key => $file_rule) {
+            $files = $file_rule['files'];
+            $empty_checkboxes = !$this->checkboxesAreChecked($files);
+            if ($empty_checkboxes) {
+              $errors[] = 'You have created a rule for specific files with no files selected';
+            }
+            $file_options = $form['rules']['files']['files_fieldset']['fieldsets'][$key]['files']['#options'];
+            $files_rules_files[] = $files;
+            $rule_levels[] = $user_input['files_level_' . $key];
+            $rule_users[] = $user_input['hidden_files_users_field_' . $key];
+          }
+          $file_duplicates = $this->findDuplicateValuesInMultipleArrays($files_rules_files);
+          foreach ($file_duplicates as $key => $value) {
+            $file_duplicate_names[] = $file_options[$value]['filename'];
+          }
+          if (!empty($file_duplicate_names)) {
+            $errors[] = 'You have used the same file(s) in more than one rule: ' . implode(', ', $file_duplicate_names);
+          }
+        }
+
+        if ($rule_type !== 'all') {
+          // check whether there are multiple rules with the same access level.
+          // in case of academic or restricted (none) access, that is OK as long as the users are distinct
+          $level_duplicates = $this->findValuesOccurringMoreThanOnce($rule_levels);
+          if (!empty($level_duplicates)) {
+            $no_users_duplicate_levels = array_intersect(array_values($level_duplicates), ['anonymous', 'authenticated']);
+            if (!empty($no_users_duplicate_levels)) {
+              foreach ($no_users_duplicate_levels as $key => $value) {
+                $no_users_duplicate_level_names[] = $level_options[$value];
               }
-              $errors[] = 'You have used the the same access level(s) in more than one rule with (some of) the same users: ' . implode(', ', $users_duplicate_level_names) . '.
-              Please create a single rule for these levels or make sure that theusers are distinct for each rule.';
+              $errors[] = 'You have used these access level(s) for more than one rule: ' . implode(', ', $no_users_duplicate_level_names) . '.
+            Please create a single rule for them.';
+            }
+            $users_duplicate_levels = array_intersect(array_values($level_duplicates), ['academic', 'none']);
+            if (!empty($users_duplicate_levels)) {
+              $unique_users = array_unique($rule_users);
+              if (sizeof($unique_users) === 1) {
+                foreach ($users_duplicate_levels as $key => $value) {
+                  $users_duplicate_level_names[] = $level_options[$value];
+                }
+                $errors[] = 'You have used the the same access level(s) in more than one rule with (some of) the same users: ' . implode(', ', $users_duplicate_level_names) . '.
+              Please create a single rule for these levels or make sure that the users are distinct for each rule.';
+              }
             }
           }
         }
+      } else {
+        $errors[] = 'You have not created a Read Access Rule.';
       }
-    } else {
+    }
+    if (in_array('submit_write', $parents)) {
       $write_users = $user_input['hidden_write_users_field_write'];
       if (empty($write_users)) {
         // no write users defined and no read rules defined
-        $errors[] = 'No Read or Write access has been defined.';
+        $errors[] = 'The Write Access rule contains no users.';
       }
     }
     if (!empty($errors)) {
@@ -1129,7 +1192,7 @@ class EditPermissionsForm extends FormBase
           '#type' => 'ul',
           '#attributes' => ['class' => 'mylist'],
           '#items' => $errors,
-          '#prefix' => '<h4>There are some conflicts in your access rules:</h4>',
+          '#prefix' => '<h4>There are some conflicts in your Read Access rules:</h4>',
         ];
       } else {
         $errors = $errors[0];
@@ -1139,6 +1202,9 @@ class EditPermissionsForm extends FormBase
     }
   }
 
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+
+  }
 
   /**
    * Form submit handler that transforms the form data into a json structure, which is saved in the Access Policy
@@ -1149,16 +1215,13 @@ class EditPermissionsForm extends FormBase
    * @throws None
    * @return void
    */
-  public function submitForm(array &$form, FormStateInterface $form_state)
+  public function submitReadPolicy(array &$form, FormStateInterface $form_state)
   {
     $manager = \Drupal::service('flat_permissions.permissions_manager');
 
-    $node = \Drupal::routeMatch()->getParameter('node');
-
-    $nid = $node->id();
+    $nid = \Drupal::routeMatch()->getParameter('node')->id();
 
     $read_rule_output = [];
-    $write_rule_output = [];
     $rules = $form_state->getValue(['rules']);
     // for some reason, form_state values are not present for some of the dynamically added fields,
     // whereas the user input array does have them, so we'll get them from there.
@@ -1228,36 +1291,52 @@ class EditPermissionsForm extends FormBase
         }
       }
     }
+
+    if (!empty($read_rule_output)) {
+      $read_output_json = json_encode($read_rule_output);
+      $manager->storeAccessPolicy($nid, $read_output_json, 'read');
+      \Drupal::messenger()->addMessage('Your Read Access Policy has been saved.');
+    }
+
+  }
+
+  public function submitWritePolicy(array &$form, FormStateInterface $form_state)
+  {
+
+    $manager = \Drupal::service('flat_permissions.permissions_manager');
+
+    $user_input = $form_state->getUserInput();
+    $nid = \Drupal::routeMatch()->getParameter('node')->id();
+
+    $write_rule_output = [];
+
     if (array_key_exists('hidden_write_users_field_write', $user_input)) {
       $write_users = $user_input['hidden_write_users_field_write'];
       if (!empty($write_users)) {
         $write_rule_output['users'] = explode(',', $write_users);
       }
     }
-    if (!empty($read_rule_output)) {
-      $read_output_json = json_encode($read_rule_output);
-      $manager->storeAccessPolicy($nid, $read_output_json, 'read');
-    }
+
     if (!empty($write_rule_output)) {
       $write_output_json = json_encode($write_rule_output);
       $manager->storeAccessPolicy($nid, $write_output_json, 'write');
+      \Drupal::messenger()->addMessage('Your Write Access Policy has been saved.');
     }
-
-    \Drupal::messenger()->addMessage('Your access rules have been saved.', 'status');
   }
 
-  public function deleteReadPolicy() {
+  public function deleteReadPolicy()
+  {
     $nid = \Drupal::routeMatch()->getParameter('node')->id();
     $manager = \Drupal::service('flat_permissions.permissions_manager');
     $manager->deleteAccessPolicy($nid, 'read');
-    \Drupal::messenger()->addMessage('Your read access rules have been deleted.', 'status');
-
+    \Drupal::messenger()->addMessage('Your Read Access Policy has been deleted.');
   }
 
-  public function deleteWritePolicy() {
+  public function deleteWritePolicy()
+  {
     $nid = \Drupal::routeMatch()->getParameter('node')->id();
     $manager = \Drupal::service('flat_permissions.permissions_manager');
     $manager->deleteAccessPolicy($nid, 'write');
-    \Drupal::messenger()->addMessage('Your write access rule has been deleted.', 'status');
+    \Drupal::messenger()->addMessage('Your Write Access Policy has been deleted.');
   }
 }

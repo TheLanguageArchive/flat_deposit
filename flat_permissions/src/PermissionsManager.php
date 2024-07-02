@@ -42,7 +42,7 @@ class PermissionsManager
      * @return object | null
      *      access policy object
      */
-    public function fetchEffectiveAccessPolicy($nid, $class): ?stdClass
+    public function fetchEffectiveAccessPolicy($nid, $class): ?array
     {
         if ($class === 'read') {
             $field = 'field_read_access_policy';
@@ -57,7 +57,7 @@ class PermissionsManager
             $accessPolicyField = $node->get($field);
             if ($accessPolicyField->value) {
                 $policy_json = $accessPolicyField->value;
-                return json_decode($policy_json);
+                return ['nid' => $nid,  'policy' => json_decode($policy_json)];
             }
         }
         // If node doesn't have an access policy, go up the hierarchy
