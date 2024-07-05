@@ -107,7 +107,7 @@ class EditPermissionsForm extends FormBase
     $types_fieldsets_indexes = $store->get('types_fieldsets_indexes');
 
     if (!$types_fieldsets_indexes || !$is_ajax) {
-      if ($this->objectAndPropertiesExist($defaults, 'types')) {
+      if ($manager->objectAndPropertiesExist($defaults, 'types')) {
         $num_fieldsets = count($defaults->types);
         $types_fieldsets_indexes = range(0, ($num_fieldsets - 1));
       } else {
@@ -137,8 +137,7 @@ class EditPermissionsForm extends FormBase
         $read_parent_link = Link::fromTextAndUrl($read_parent_name, $read_parent_url)->toString();
         $info_message .= '<br/>Read access is defined on ' . $read_parent_link . '.';
       }
-    }
-    elseif ($read_policy) {
+    } elseif ($read_policy) {
       $info_message .= '<br/>Read access is defined on the current item.';
     }
 
@@ -152,8 +151,7 @@ class EditPermissionsForm extends FormBase
         $write_parent_link = Link::fromTextAndUrl($write_parent_name, $write_parent_url)->toString();
         $info_message .= '<br/>Write access is defined on ' . $write_parent_link . '.';
       }
-    }
-    elseif ($write_policy) {
+    } elseif ($write_policy) {
       $info_message .= '<br/>Write access is defined on the current item.';
     }
 
@@ -163,7 +161,7 @@ class EditPermissionsForm extends FormBase
       '#type' => 'container',
       '#title' => 'Effective Access Rules',
       '#prefix' => '<h2>Effective Access Rules</h2>
-      <p>'. $info_message . '</p>',
+      <p>' . $info_message . '</p>',
     ];
 
     $form['info']['read'] = [
@@ -192,9 +190,10 @@ class EditPermissionsForm extends FormBase
       '#type' => 'container',
       '#tree' => true,
       '#prefix' => '<h2>' . $action . ' Read Access</h2>
-      <p>' . ucfirst($action) . ' read rules that will apply to this item and anything below it. Defined read rules here will override any read rule in the parent collection(s). Read rules defined anywhere lower in the hiearchy will take precedence over read rules defined here.</p>',
+      <p>' . $action . ' read rules that will apply to this item and anything below it. Defined read rules here will override any read rule in the parent collection(s). Read rules defined anywhere lower in the hiearchy will take precedence over read rules defined here.</p>',
     ];
 
+    // Read rules that apply to all files
     $form['rules']['all'] = [
       '#type' => 'fieldset',
       '#tree' => true,
@@ -241,8 +240,28 @@ class EditPermissionsForm extends FormBase
       ],
     ];
 
-    $form['rules']['all']['all_fieldset']['hidden-users'] = $this->build_hidden_field('all', 'all', 'users', $form_state, $defaults);
+    if (isset($user_input['rules']['all']['all_fieldset']['visibility'])) {
+      $default_visibility_value = isset($user_input['rules']['all']['all_fieldset']['visibility']);
+    } elseif ($manager->objectAndPropertiesExist($defaults, 'all')) {
+      $default_visibility_value = property_exists($defaults->all, 'visible') ? isset($defaults->all->visible) : 0;
+    } else {
+      $default_visibility_value = 0;
+    }
 
+    $form['rules']['all']['all_fieldset']['visibility'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Invisible'),
+      '#states' => [
+        'visible' => [
+          [':input[name="all_level_1"]' => ['value' => 'none']],
+        ],
+        '#default_value' => $default_visibility_value,
+      ],
+    ];
+
+    $form['rules']['all']['all_fieldset']['hidden-users'] = $this->build_hidden_field('all', 'all', 'users', $manager, $form_state, $defaults);
+
+    // Read rules that apply to specific file and/or types
     $form['rules']['types'] = [
       '#type' => 'fieldset',
       '#attributes' => [
@@ -252,7 +271,7 @@ class EditPermissionsForm extends FormBase
 
     $form['rules']['types']['radio'] = [
       '#type' => 'radio',
-      '#title' => 'Rule(s) for specific file and/or mime types',
+      '#title' => 'Rule(s) for specific file and/or MIME types',
       '#return_value' => 'types',
       '#name' => 'radio',
       '#default_value' => $radio_value === 'types' ? 'types' : NULL,
@@ -309,8 +328,7 @@ class EditPermissionsForm extends FormBase
 
     if (!$is_collection) {
 
-      // not a collection, should have media in theory so we need to create a "files" rule
-
+      // not a collection, should have media and files (in theory) so we need to create the fields for rules that apply to specific files
       $files_fieldsets_indexes = $store->get('files_fieldsets_indexes');
 
       if (!$files_fieldsets_indexes || !$is_ajax) {
@@ -396,8 +414,6 @@ class EditPermissionsForm extends FormBase
       ];
     }
 
-    //ddm($read_policy);
-
     $form['rules']['submit_read'] = [
       '#type' => 'submit',
       '#value' => $this->t('Save Read Rules'),
@@ -411,6 +427,7 @@ class EditPermissionsForm extends FormBase
       '#disabled' => $defaults ? false : true,
       '#attributes' => [
         'class' => ['btn-danger'],
+        'onclick' => 'if(!confirm("Really delete the read rules?")){return false;}',
       ],
     ];
 
@@ -431,7 +448,7 @@ class EditPermissionsForm extends FormBase
       ],
     ];
 
-    $form['write']['hidden-users'] = $this->build_hidden_field('write', 'write', 'users', $form_state, $write_defaults);
+    $form['write']['hidden-users'] = $this->build_hidden_field('write', 'write', 'users', $manager, $form_state, $write_defaults);
 
     $form['write']['submit_write'] = [
       '#type' => 'submit',
@@ -441,11 +458,12 @@ class EditPermissionsForm extends FormBase
 
     $form['write']['delete'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Delete write rule'),
+      '#value' => $this->t('Delete Write Rule'),
       '#submit' => ['::deleteWritePolicy'],
       '#disabled' => $write_defaults ? false : true,
       '#attributes' => [
         'class' => ['btn-danger'],
+        'onclick' => 'if(!confirm("Really delete the write rule?")){return false;}',
       ],
     ];
 
@@ -454,7 +472,6 @@ class EditPermissionsForm extends FormBase
 
     return $form;
   }
-
 
   /**
    * Ajax callback for updating the mime fieldsets after adding or removing a fieldset
@@ -471,7 +488,6 @@ class EditPermissionsForm extends FormBase
       return $form['rules']['types']['types_fieldset']['fieldsets'];
     }
   }
-
 
   /**
    * Ajax callback for updating the mime fieldsets after adding or removing a fieldset
@@ -602,7 +618,7 @@ class EditPermissionsForm extends FormBase
    *
    * @param int $i The index of the fieldset.
    * @param bool $remove Whether to include a remove button.
-   * @param string $manager The manager class.
+   * @param object $manager The manager object.
    * @param \Drupal\Core\Form\FormStateInterface $form_state The form state object.
    * @param mixed $defaults The default values for the fieldset.
    * @return array The built fieldset.
@@ -625,7 +641,7 @@ class EditPermissionsForm extends FormBase
     $user_input = $form_state->getUserInput();
     if (isset($user_input['types_level_' . $i])) {
       $default_level_value = $user_input['types_level_' . $i];
-    } elseif ($this->objectAndPropertiesExist($defaults, 'types')) {
+    } elseif ($manager->objectAndPropertiesExist($defaults, 'types')) {
       if (array_key_exists(($i), $defaults->types)) {
         $default_level_value = array_search($defaults->types[$i]->level, $manager::LEVELS);
       } else {
@@ -637,7 +653,7 @@ class EditPermissionsForm extends FormBase
 
     if (isset($user_input['types_filetypes_' . $i])) {
       $default_filetypes_value = $user_input['types_filetypes_' . $i];
-    } elseif ($this->objectAndPropertiesExist($defaults, 'types')) {
+    } elseif ($manager->objectAndPropertiesExist($defaults, 'types')) {
       if (array_key_exists(($i), $defaults->types)) {
         $default_filetypes_value = property_exists($defaults->types[$i], 'filetypes') ? $defaults->types[$i]->filetypes : [];
       } else {
@@ -645,6 +661,18 @@ class EditPermissionsForm extends FormBase
       }
     } else {
       $default_filetypes_value = [];
+    }
+
+    if (isset($user_input['rules']['types']['types_fieldset']['fieldsets'][$i]['visibility'])) {
+      $default_visibility_value = isset($user_input['rules']['types']['types_fieldset']['fieldsets'][$i]['visibility']);
+    } elseif ($manager->objectAndPropertiesExist($defaults, 'types')) {
+      if (array_key_exists(($i), $defaults->types)) {
+        $default_visibility_value = property_exists($defaults->types[$i], 'visible') ? isset($defaults->types[$i]->visible) : 0;
+      } else {
+        $default_visibility_value = 0;
+      }
+    } else {
+      $default_visibility_value = 0;
     }
 
     $fieldset = [
@@ -678,6 +706,16 @@ class EditPermissionsForm extends FormBase
           'data-hidden-input-name' => 'hidden_types_users_field_' . $i,
         ],
       ],
+      'visibility' => [
+        '#type' => 'checkbox',
+        '#title' => t('Invisible'),
+        '#states' => [
+          'visible' => [
+            [':input[name="types_level_' . $i . '"]' => ['value' => 'none']],
+          ],
+        ],
+        '#default_value' => $default_visibility_value,
+      ],
       'filetypes'        => [
         '#type' => 'checkboxes',
         '#title' => t('File type(s)'),
@@ -687,15 +725,15 @@ class EditPermissionsForm extends FormBase
       ],
       'mimetypes'        => [
         '#type' => 'textfield',
-        '#title' => t('Mime type(s)'),
+        '#title' => t('MIME type(s)'),
         '#attributes' => [
           'class' => ['multi-autocomplete'],
           'data-autocomplete-url' => 'permissions/autocomplete/mime_type',
           'data-hidden-input-name' => 'hidden_types_mimetypes_field_' . $i,
         ],
       ],
-      'hidden-mimes'       => $this->build_hidden_field($i, 'types', 'mimetypes', $form_state, $defaults),
-      'hidden-users'       => $this->build_hidden_field($i, 'types', 'users', $form_state, $defaults),
+      'hidden-mimes'       => $this->build_hidden_field($i, 'types', 'mimetypes', $manager, $form_state, $defaults),
+      'hidden-users'       => $this->build_hidden_field($i, 'types', 'users', $manager, $form_state, $defaults),
       '#attributes' => [
         'class' => 'rule-wrapper',
       ],
@@ -714,7 +752,7 @@ class EditPermissionsForm extends FormBase
    * @param int $i The index of the fieldset.
    * @param bool $remove Whether to include a remove button.
    * @param array $options The options for the files fieldset.
-   * @param string $manager The manager class.
+   * @param object $manager The manager object.
    * @param \Drupal\Core\Form\FormStateInterface $form_state The form state object.
    * @param mixed $defaults The default values for the fieldset.
    * @return array The fieldset array.
@@ -738,11 +776,23 @@ class EditPermissionsForm extends FormBase
     if (isset($user_input['types_level_' . $i])) {
       $default_level_value = $user_input['files_level_' . $i];
     } else {
-      if ($this->objectAndPropertiesExist($defaults, 'files')) {
+      if ($manager->objectAndPropertiesExist($defaults, 'files')) {
         $default_level_value = array_search($defaults->files[$i]->level, $manager::LEVELS);
       } else {
         $default_level_value = '';
       }
+    }
+
+    if (isset($user_input['rules']['files']['files_fieldset']['fieldsets'][$i]['visibility'])) {
+      $default_visibility_value = isset($user_input['rules']['files']['files_fieldset']['fieldsets'][$i]['visibility']);
+    } elseif ($manager->objectAndPropertiesExist($defaults, 'files')) {
+      if (array_key_exists(($i), $defaults->files)) {
+        $default_visibility_value = property_exists($defaults->files[$i], 'visible') ? isset($defaults->files[$i]->visible) : 0;
+      } else {
+        $default_visibility_value = 0;
+      }
+    } else {
+      $default_visibility_value = 0;
     }
 
     $fieldset = [
@@ -760,7 +810,8 @@ class EditPermissionsForm extends FormBase
             ':input[name="radio"]' => ['value' => 'files'],
           ],
         ],
-      ],      'users'        => [
+      ],
+      'users' => [
         '#type' => 'textfield',
         '#title' => t('Specific users'),
         '#states' => [
@@ -775,7 +826,16 @@ class EditPermissionsForm extends FormBase
           'data-hidden-input-name' => 'hidden_files_users_field_' . $i,
         ],
       ],
-
+      'visibility' => [
+        '#type' => 'checkbox',
+        '#title' => t('Invisible'),
+        '#states' => [
+          'visible' => [
+            [':input[name="files_level_' . $i . '"]' => ['value' => 'none']],
+          ],
+        ],
+        '#default_value' => $default_visibility_value,
+      ],
       'files' => [
         '#type' => 'tableselect',
         '#header' => ['filename' => t('Filename')],
@@ -790,7 +850,7 @@ class EditPermissionsForm extends FormBase
         ],
       ],
 
-      'hidden-users'       => $this->build_hidden_field($i, 'files', 'users', $form_state, $defaults),
+      'hidden-users'       => $this->build_hidden_field($i, 'files', 'users', $manager, $form_state, $defaults),
       '#attributes' => [
         'class' => 'rule-wrapper',
       ]
@@ -810,18 +870,20 @@ class EditPermissionsForm extends FormBase
    * @param \Drupal\Core\Form\FormStateInterface $form_state The form state object.
    * @return array The hidden field array.
    */
-  public function build_hidden_field($index, $rule_type, $field_type, FormStateInterface $form_state, $defaults)
+  public function build_hidden_field($index, $rule_type, $field_type, $manager, FormStateInterface $form_state, $defaults)
   {
+    $manager = \Drupal::service('flat_permissions.permissions_manager');
+
     $user_input = $form_state->getUserInput();
     // Determine the default value, either from the form_state user input, or from the stored json permissions (passed via $defaults).
     if (isset($user_input['hidden_' . $rule_type . '_' . $field_type . '_field_' . $index])) {
       $default_value = $user_input['hidden_' . $rule_type . '_' . $field_type . '_field_' . $index];
-    } elseif ($this->objectAndPropertiesExist($defaults, "{$rule_type}->users")) {
+    } elseif ($manager->objectAndPropertiesExist($defaults, "{$rule_type}->users")) {
       $default_value = implode(',', $defaults->{$rule_type}->users);
-    } elseif ($this->objectAndPropertiesExist($defaults, "users")) {
+    } elseif ($manager->objectAndPropertiesExist($defaults, "users")) {
       // Write rule only has users
       $default_value = implode(',', $defaults->users);
-    } elseif ($this->objectAndPropertiesExist($defaults, $rule_type)) {
+    } elseif ($manager->objectAndPropertiesExist($defaults, $rule_type)) {
       if (is_array($defaults->{$rule_type})) {
         // "type" and "file" rules are in an array as there can be more than one
         if (array_key_exists(($index), $defaults->{$rule_type})) {
@@ -857,10 +919,13 @@ class EditPermissionsForm extends FormBase
    */
   public function build_levels($index, $rule_type, $levels, FormStateInterface $form_state, $defaults)
   {
+
+    $manager = \Drupal::service('flat_permissions.permissions_manager');
+
     $user_input = $form_state->getUserInput();
     if (isset($user_input[$rule_type . '_level_' . $index])) {
       $default_value = $user_input[$rule_type . '_level_' . $index];
-    } elseif ($this->objectAndPropertiesExist($defaults, $rule_type)) {
+    } elseif ($manager->objectAndPropertiesExist($defaults, $rule_type)) {
       if (is_array($defaults->{$rule_type})) {
         if (array_key_exists(($index), $defaults->types)) {
           $default_value = array_search($defaults->types[$index]->level, $levels);
@@ -940,130 +1005,6 @@ class EditPermissionsForm extends FormBase
     return $remove_element;
   }
 
-
-  /**
-   * Visibility checkbox fieldset
-   *
-   * @return array
-   */
-  public function build_visibility_fieldset($visibility)
-  {
-
-    return [
-
-      '#type'      => 'fieldset',
-      '#title'     => 'Visibility',
-      'visibility' => [
-
-        '#type'          => 'checkbox',
-        '#title'         => 'Invisible',
-        '#default_value' => $visibility,
-        '#attributes'    => [
-          'data-role' => 'visibility',
-        ],
-      ],
-    ];
-  }
-
-  /**
-   * Finds duplicate values in multiple arrays.
-   *
-   * This function takes an array of arrays as input and returns an array of values
-   * that occur more than once in any of the input arrays. It iterates over each
-   * array, removes duplicate values, and keeps track of the count of each value.
-   * Finally, it filters out values that occur only once and returns the remaining
-   * values.
-   *
-   * @param array[] $arrays The array of arrays to search for duplicate values.
-   * @return array The array of duplicate values.
-   */
-  private function findDuplicateValuesInMultipleArrays($arrays)
-  {
-    $valueCounts = [];
-    foreach ($arrays as $array) {
-      $uniqueValues = array_unique($array);
-      foreach ($uniqueValues as $value) {
-        if ($value !== '' and $value !== 0) {
-          if (!isset($valueCounts[$value])) {
-            $valueCounts[$value] = 0;
-          }
-          $valueCounts[$value]++;
-        }
-      }
-    }
-    $duplicateValuesInMultipleArrays = [];
-    foreach ($valueCounts as $value => $count) {
-      if ($count > 1) {
-        $duplicateValuesInMultipleArrays[] = $value;
-      }
-    }
-
-    return $duplicateValuesInMultipleArrays;
-  }
-
-  /**
-   * Finds values occurring more than once in the given array.
-   *
-   * @param array $array The input array to search for duplicate values.
-   * @return array The array of values that occur more than once.
-   */
-  private function findValuesOccurringMoreThanOnce($array)
-  {
-
-    $valueCounts = array_count_values($array);
-    $multipleValues = array_filter($valueCounts, function ($count) {
-      return $count > 1;
-    });
-    $valuesWithMultipleOccurrences = array_keys($multipleValues);
-
-    return $valuesWithMultipleOccurrences;
-  }
-
-  /**
-   * Checks if any of the checkboxes in the given array have a non-empty value.
-   *
-   * @param array $checkboxes_values An array of checkbox values.
-   * @return bool Returns TRUE if any of the checkboxes have a non-empty value, FALSE otherwise.
-   */
-  private function checkboxesAreChecked(array $checkboxes_values)
-  {
-    foreach ($checkboxes_values as $value) {
-      if (!empty($value)) {
-        return TRUE;
-      }
-    }
-    return FALSE;
-  }
-
-  /**
-   * Helper function that checks if the given object and its nested properties exist.
-   *
-   * @param mixed $object The object to check.
-   * @param string $propertyPath The property path to check, separated by '->'.
-   * @return bool Returns true if the object and all its nested properties exist, false otherwise.
-   */
-  public function objectAndPropertiesExist($object, $propertyPath)
-  {
-    // Check if the initial object itself is null
-    if ($object === null) {
-      return false;
-    }
-
-    // Split the property path into an array of properties
-    $properties = explode('->', $propertyPath);
-
-    foreach ($properties as $property) {
-      // If the object is null or the property does not exist, return false
-      if ($object === null || !is_object($object) || !property_exists($object, $property)) {
-        return false;
-      }
-      // Move to the next nested property
-      $object = $object->$property;
-    }
-
-    return true;
-  }
-
   /**
    * Form validation to check whether access rules are valid
    *  - no empty rules
@@ -1081,11 +1022,11 @@ class EditPermissionsForm extends FormBase
     $triggering_element = $form_state->getTriggeringElement();
     $parents = $triggering_element['#parents'];
     $user_input = $form_state->getUserInput();
+    $errors = [];
 
     if (in_array('submit_read', $parents)) {
-
+      // validate read rules
       $manager = \Drupal::service('flat_permissions.permissions_manager');
-      $errors = [];
       $level_options = $manager::LEVELS;
       $rules = $form_state->getValue(['rules']);
       // for some reason, form_state values are not present for some of the dynamically added fields,
@@ -1097,30 +1038,44 @@ class EditPermissionsForm extends FormBase
           $types_rules = $rules['types']['types_fieldset']['fieldsets'];
           foreach ($types_rules as $key => $type_rule) {
             $filetypes = $type_rule['filetypes'];
-            $empty_checkboxes = !$this->checkboxesAreChecked($filetypes);
+            $empty_checkboxes = !$manager->checkboxesAreChecked($filetypes);
             $type_options = $form['rules']['types']['types_fieldset']['fieldsets'][$key]['filetypes']['#options'];
             $types_rules_filetypes[] = $filetypes;
             $hidden_mimetypes = $user_input['hidden_types_mimetypes_field_' . $key];
             if ($empty_checkboxes && empty($hidden_mimetypes)) {
-              $errors[] = 'You have created a rule with no file or mime types selected.';
+              $errors[] = 'You have created a rule with no file or MIME types selected.';
             }
             $hidden_mime_types_array = explode(',', $hidden_mimetypes);
             $types_rules_mimetypes[] = $hidden_mime_types_array;
-            $types_from_mimes = $this->typesFromMimes($hidden_mime_types_array);
-            $types_rules_mimetypes[] =
-              $rule_levels[] = $user_input['types_level_' . $key];
+            $rule_levels[] = $user_input['types_level_' . $key];
             $rule_users[] = $user_input['hidden_types_users_field_' . $key];
           }
-          $type_duplicates = $this->findDuplicateValuesInMultipleArrays($types_rules_filetypes);
+          $type_duplicates = $manager->findDuplicateValuesInMultipleArrays($types_rules_filetypes);
           foreach ($type_duplicates as $key => $value) {
             $type_duplicate_names[] = $type_options[$value];
           }
-          $mime_duplicates = $this->findDuplicateValuesInMultipleArrays($types_rules_mimetypes);
+          $mime_duplicates = $manager->findDuplicateValuesInMultipleArrays($types_rules_mimetypes);
           if (!empty($type_duplicates)) {
             $errors[] = 'You have used the same file type(s) in more than one rule: ' . implode(', ', $type_duplicate_names);
           }
           if (!empty($mime_duplicates)) {
-            $errors[] = 'You have used the same mime type(s) in more than one rule: ' . implode(', ', $mime_duplicates);
+            $errors[] = 'You have used the same MIME type(s) in more than one rule: ' . implode(', ', $mime_duplicates);
+          }
+          $mime_and_type_overlaps = [];
+          foreach ($types_rules_mimetypes as $type_rule_mimetypes) {
+            $overlap = $manager->findMimeAndTypeOverlaps($type_rule_mimetypes, $types_rules_filetypes);
+            if (!empty($overlap)) {
+              $mime_and_type_overlaps[] = $overlap;
+            }
+          }
+          if (!empty($mime_and_type_overlaps)) {
+            $result = '';
+            foreach ($mime_and_type_overlaps as $mime_and_type_overlap) {
+              foreach ($mime_and_type_overlap as $key => $value) {
+                $result .= $key . ': ' . implode(', ', $value) . '. ';
+              }
+            }
+            $errors[] = 'You have selected file type(s) that overlap with selected MIME type(s): ' . $result . 'Please use either the file type(s) or the MIME type(s).';
           }
         }
 
@@ -1130,7 +1085,7 @@ class EditPermissionsForm extends FormBase
           $files_rules = $rules['files']['files_fieldset']['fieldsets'];
           foreach ($files_rules as $key => $file_rule) {
             $files = $file_rule['files'];
-            $empty_checkboxes = !$this->checkboxesAreChecked($files);
+            $empty_checkboxes = !$manager->checkboxesAreChecked($files);
             if ($empty_checkboxes) {
               $errors[] = 'You have created a rule for specific files with no files selected';
             }
@@ -1139,7 +1094,7 @@ class EditPermissionsForm extends FormBase
             $rule_levels[] = $user_input['files_level_' . $key];
             $rule_users[] = $user_input['hidden_files_users_field_' . $key];
           }
-          $file_duplicates = $this->findDuplicateValuesInMultipleArrays($files_rules_files);
+          $file_duplicates = $manager->findDuplicateValuesInMultipleArrays($files_rules_files);
           foreach ($file_duplicates as $key => $value) {
             $file_duplicate_names[] = $file_options[$value]['filename'];
           }
@@ -1151,7 +1106,7 @@ class EditPermissionsForm extends FormBase
         if ($rule_type !== 'all') {
           // check whether there are multiple rules with the same access level.
           // in case of academic or restricted (none) access, that is OK as long as the users are distinct
-          $level_duplicates = $this->findValuesOccurringMoreThanOnce($rule_levels);
+          $level_duplicates = $manager->findValuesOccurringMoreThanOnce($rule_levels);
           if (!empty($level_duplicates)) {
             $no_users_duplicate_levels = array_intersect(array_values($level_duplicates), ['anonymous', 'authenticated']);
             if (!empty($no_users_duplicate_levels)) {
@@ -1179,6 +1134,7 @@ class EditPermissionsForm extends FormBase
       }
     }
     if (in_array('submit_write', $parents)) {
+      // validate write rule
       $write_users = $user_input['hidden_write_users_field_write'];
       if (empty($write_users)) {
         // no write users defined and no read rules defined
@@ -1186,24 +1142,21 @@ class EditPermissionsForm extends FormBase
       }
     }
     if (!empty($errors)) {
-      if (count($errors) > 1) {
-        $errors = [
-          '#theme' => 'item_list',
-          '#type' => 'ul',
-          '#attributes' => ['class' => 'mylist'],
-          '#items' => $errors,
-          '#prefix' => '<h4>There are some conflicts in your Read Access rules:</h4>',
-        ];
-      } else {
-        $errors = $errors[0];
-      }
+      $errors = [
+        '#theme' => 'item_list',
+        '#type' => 'ul',
+        '#attributes' => ['class' => 'mylist'],
+        '#items' => $errors,
+        '#prefix' => '<h5>There are some conflicts in your Read Access rules:</h5>',
+      ];
       $form_state->setErrorByName('', $errors);
       return $form;
     }
   }
 
-  public function submitForm(array &$form, FormStateInterface $form_state) {
 
+  public function submitForm(array &$form, FormStateInterface $form_state)
+  {
   }
 
   /**
@@ -1237,6 +1190,8 @@ class EditPermissionsForm extends FormBase
         } else {
           unset($all_rule_output['hidden-users']);
         }
+        $visibility = $rules['all']['all_fieldset']['visibility'] ? FALSE : TRUE;
+        $all_rule_output['visible'] = $visibility;
         $read_rule = $manager->fieldsetToRule($all_rule_output);
         $read_rule_output['all'] = $read_rule;
       }
@@ -1246,7 +1201,7 @@ class EditPermissionsForm extends FormBase
           $level = $user_input['types_level_' . $key];
           $types_rule_output['level'] = $level;
           $filetypes = $types_rule['filetypes'];
-          $empty_checkboxes = !$this->checkboxesAreChecked($filetypes);
+          $empty_checkboxes = !$manager->checkboxesAreChecked($filetypes);
           if (!$empty_checkboxes) {
             $types_rule_output['filetypes'] = $filetypes;
           } else {
@@ -1264,6 +1219,8 @@ class EditPermissionsForm extends FormBase
           } else {
             unset($types_rule_output['hidden-users']);
           }
+          $visibility = $types_rule['visibility'] ? FALSE : TRUE;
+          $types_rule_output['visible'] = $visibility;
           $read_rule = $manager->fieldsetToRule($types_rule_output);
           $read_rule_output['types'][] = $read_rule;
         }
@@ -1273,8 +1230,10 @@ class EditPermissionsForm extends FormBase
         foreach ($files_rules as $key => $files_rule) {
           $level = $user_input['files_level_' . $key];
           $files_rule_output['level'] = $level;
+          $visibility = $user_input['files_visibility_' . $key] ? FALSE : TRUE;
+          $files_rule_output['visible'] = $visibility;
           $files = $files_rule['files'];
-          $empty_checkboxes = !$this->checkboxesAreChecked($files);
+          $empty_checkboxes = !$manager->checkboxesAreChecked($files);
           if (!$empty_checkboxes) {
             $files_rule_output['files'] = $files;
           } else {
@@ -1286,18 +1245,22 @@ class EditPermissionsForm extends FormBase
           } else {
             unset($files_rule_output['hidden-users']);
           }
+          $visibility = $files_rule['visibility'] ? FALSE : TRUE;
+          $files_rule_output['visible'] = $visibility;
           $read_rule = $manager->fieldsetToRule($files_rule_output);
           $read_rule_output['files'][] = $read_rule;
         }
       }
     }
 
+    ddm($user_input);
+
     if (!empty($read_rule_output)) {
       $read_output_json = json_encode($read_rule_output);
+      ddm($read_output_json);
       $manager->storeAccessPolicy($nid, $read_output_json, 'read');
       \Drupal::messenger()->addMessage('Your Read Access Policy has been saved.');
     }
-
   }
 
   public function submitWritePolicy(array &$form, FormStateInterface $form_state)

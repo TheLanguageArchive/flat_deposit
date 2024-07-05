@@ -36,6 +36,9 @@ class PermissionsManager
     /** @var array */
     const TYPES     = ['audio' => 'Audio', 'video' => 'Video', 'image' => 'Images', 'text'  => 'Written/Annotations', 'other' => 'Other'];
 
+    /** @var array */
+    const WRITTEN_MIMETYPES = ['text/plain', 'application/pdf', 'text/html', 'application/xml'];
+
     /** Fetch the access policy for the given node, or go up the hierarchy if it doesn't have one
      *
      * @param string $nid
@@ -101,6 +104,21 @@ class PermissionsManager
         }
 
         return null;
+    }
+
+    public function hasChildrenWithPolicies($nid, $class)
+    {
+
+        if ($class === 'read') {
+            $field = 'field_read_access_policy';
+        } elseif ($class === 'write') {
+            $field = 'field_write_access_policy';
+        }
+
+        // TODO, implement check whether any of the children have an access policy, to display a warning.
+        // Best to do this once indexing of the collection hierarchy is implemented, otherwise
+        // this is a very expensive operation for large collections
+
     }
 
     /**
@@ -237,6 +255,136 @@ class PermissionsManager
         } elseif ($level === 'none') {
             return ['none'];
         }
+    }
+
+    /**
+     * Finds duplicate values in multiple arrays.
+     *
+     * This function takes an array of arrays as input and returns an array of values
+     * that occur more than once in any of the input arrays. It iterates over each
+     * array, removes duplicate values, and keeps track of the count of each value.
+     * Finally, it filters out values that occur only once and returns the remaining
+     * values.
+     *
+     * @param array[] $arrays The array of arrays to search for duplicate values.
+     * @return array The array of duplicate values.
+     */
+    private function findDuplicateValuesInMultipleArrays($arrays)
+    {
+        $valueCounts = [];
+        foreach ($arrays as $array) {
+            $uniqueValues = array_unique($array);
+            foreach ($uniqueValues as $value) {
+                if ($value !== '' and $value !== 0) {
+                    if (!isset($valueCounts[$value])) {
+                        $valueCounts[$value] = 0;
+                    }
+                    $valueCounts[$value]++;
+                }
+            }
+        }
+        $duplicateValuesInMultipleArrays = [];
+        foreach ($valueCounts as $value => $count) {
+            if ($count > 1) {
+                $duplicateValuesInMultipleArrays[] = $value;
+            }
+        }
+
+        return $duplicateValuesInMultipleArrays;
+    }
+
+    private function findMimeAndTypeOverlaps($mimes_array, $type_arrays)
+    {
+        $matches = [];
+        foreach ($mimes_array as $mime) {
+            $type = $this->mimeToType($mime);
+            foreach ($type_arrays as $type_array) {
+                if (in_array($type, $type_array)) {
+                    $matches[$type][] = $mime;
+                    break;
+                }
+            }
+        }
+
+        return $matches;
+    }
+
+    private function mimeToType(string $mimetype)
+    {
+        $manager = \Drupal::service('flat_permissions.permissions_manager');
+
+        $type = explode('/', $mimetype)[0];
+        if (in_array($type, ['audio', 'video', 'image'])) {
+            return $type;
+        } elseif (in_array($mimetype, $manager::WRITTEN_MIMETYPES)) {
+            return 'text';
+        } else {
+            return 'other';
+        }
+    }
+
+
+    /**
+     * Finds values occurring more than once in the given array.
+     *
+     * @param array $array The input array to search for duplicate values.
+     * @return array The array of values that occur more than once.
+     */
+    private function findValuesOccurringMoreThanOnce($array)
+    {
+
+        $valueCounts = array_count_values($array);
+        $multipleValues = array_filter($valueCounts, function ($count) {
+            return $count > 1;
+        });
+        $valuesWithMultipleOccurrences = array_keys($multipleValues);
+
+        return $valuesWithMultipleOccurrences;
+    }
+
+    /**
+     * Checks if any of the checkboxes in the given array have a non-empty value.
+     *
+     * @param array $checkboxes_values An array of checkbox values.
+     * @return bool Returns TRUE if any of the checkboxes have a non-empty value, FALSE otherwise.
+     */
+    private function checkboxesAreChecked(array $checkboxes_values)
+    {
+        foreach ($checkboxes_values as $value) {
+            if (!empty($value)) {
+                return TRUE;
+            }
+        }
+        return FALSE;
+    }
+
+    /**
+     * Helper function that checks if the given object and its nested properties exist.
+     *
+     * @param mixed $object The object to check.
+     * @param string $propertyPath The property path to check, separated by '->'.
+     * @return bool Returns true if the object and all its nested properties exist, false otherwise.
+     */
+    public function objectAndPropertiesExist($object, $propertyPath)
+    {
+        // Check if the initial object itself is null
+        if ($object === null) {
+            return false;
+        }
+
+        // Split the property path into an array of properties
+        $properties = explode('->', $propertyPath);
+
+        foreach ($properties as $property) {
+            // If the object is null or the property does not exist, return false
+            if ($object === null || !is_object($object) || !property_exists($object, $property)) {
+                return false;
+            }
+            // Move to the next nested property
+            $object = $object->$property;
+        }
+
+        return true;
     }
 
     public function storeAccessPolicy($nid, $policy, $class)
