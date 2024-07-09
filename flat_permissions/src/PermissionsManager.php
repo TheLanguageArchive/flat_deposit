@@ -97,9 +97,10 @@ class PermissionsManager
 
         if ($node && $node->hasField($field)) {
             $accessPolicyField = $node->get($field);
-            if ($accessPolicyField->value) {
-                $policy_json = $accessPolicyField->value;
-                return json_decode($policy_json);
+            $accessPolicy = $accessPolicyField->getValue();
+            if ($accessPolicy) {
+                $accessPolicyJson = $accessPolicy[0]['value'];
+                return json_decode($accessPolicyJson);
             }
         }
 
@@ -238,8 +239,9 @@ class PermissionsManager
         if (array_key_exists('files', $fieldset)) {
             $rule['files'] = $fieldset['files'];
         }
-        if (array_key_exists('visible', $fieldset)) {
-            $rule['visible'] = $fieldset['visible'];
+        if (array_key_exists('visibility', $fieldset)) {
+            ddm($fieldset['visibility']);
+            $rule['visibility'] = $fieldset['visibility'];
         }
         return $rule;
     }
@@ -269,7 +271,7 @@ class PermissionsManager
      * @param array[] $arrays The array of arrays to search for duplicate values.
      * @return array The array of duplicate values.
      */
-    private function findDuplicateValuesInMultipleArrays($arrays)
+    public function findDuplicateValuesInMultipleArrays($arrays)
     {
         $valueCounts = [];
         foreach ($arrays as $array) {
@@ -293,7 +295,7 @@ class PermissionsManager
         return $duplicateValuesInMultipleArrays;
     }
 
-    private function findMimeAndTypeOverlaps($mimes_array, $type_arrays)
+    public function findMimeAndTypeOverlaps($mimes_array, $type_arrays)
     {
         $matches = [];
         foreach ($mimes_array as $mime) {
@@ -309,7 +311,7 @@ class PermissionsManager
         return $matches;
     }
 
-    private function mimeToType(string $mimetype)
+    public function mimeToType(string $mimetype)
     {
         $manager = \Drupal::service('flat_permissions.permissions_manager');
 
@@ -330,7 +332,7 @@ class PermissionsManager
      * @param array $array The input array to search for duplicate values.
      * @return array The array of values that occur more than once.
      */
-    private function findValuesOccurringMoreThanOnce($array)
+    public function findValuesOccurringMoreThanOnce($array)
     {
 
         $valueCounts = array_count_values($array);
@@ -348,7 +350,7 @@ class PermissionsManager
      * @param array $checkboxes_values An array of checkbox values.
      * @return bool Returns TRUE if any of the checkboxes have a non-empty value, FALSE otherwise.
      */
-    private function checkboxesAreChecked(array $checkboxes_values)
+    public function checkboxesAreChecked(array $checkboxes_values)
     {
         foreach ($checkboxes_values as $value) {
             if (!empty($value)) {

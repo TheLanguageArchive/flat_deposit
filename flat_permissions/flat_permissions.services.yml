@@ -3,3 +3,11 @@
 services:
   flat_permissions.permissions_manager:
     class: Drupal\flat_permissions\PermissionsManager
+
+  flat_permissions.node_access:
+    class: Drupal\flat_permissions\NodeAccessService
+    arguments: ['@current_user']
+
+  flat_permissions.media_access:
+    class: Drupal\flat_permissions\MediaAccessService
+    arguments: ['@current_user']

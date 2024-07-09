@@ -1,8 +1,19 @@
 <?php
 
 use Drupal\media\MediaInterface;
+use Drupal\node\NodeInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\flat_permissions\NodeAccessService;
+
+function flat_permissions_node_view(array &$build, \Drupal\Core\Entity\EntityInterface $node, $display, $view_mode)
+{
+    if ($node->getType() == 'islandora_object' && $view_mode == 'full') {
+        //ddm('disabling cache');
+        \Drupal::service('page_cache_kill_switch')->trigger();
+        $build['#cache']['max-age'] = 0;
+    }
+}
 
 /**
  * Provides access control for media. Policies are defined on the parent Repository Item, or higher in the collection hierarchy
@@ -165,127 +176,81 @@ function flat_permissions_write_access($nid, AccountInterface $account)
 /**
  * Implements hook_node_access().
  */
-function flat_permissions_node_access(\Drupal\node\NodeInterface $node, $op, \Drupal\Core\Session\AccountInterface $account)
+/* function flat_permissions_node_access(\Drupal\node\NodeInterface $node, $op, \Drupal\Core\Session\AccountInterface $account)
 {
     ddm('node access called');
-    // Check if the operation is 'view'.
-    if ($op == 'view') {
+    ddm('op: ' . $op);
 
-        ddm('op is view');
+    $access = \Drupal\flat_permissions\NodeAccessService::userHasAccess($node, $op);
 
-        $type = $node->getType();
+    ddm('access: ' . $access);
 
-        if ($type == 'islandora_object') {
+    if ($access) {
+        return \Drupal\Core\Access\AccessResult::allowed()->addCacheContexts(['ip', 'user']);
+    }
+    else {
+        return \Drupal\Core\Access\AccessResult::forbidden()->addCacheContexts(['ip', 'user']);
+    }
+} */
 
-            ddm('islandora_object');
-            // If there's any "visible" value in the policy set to true, allow access.
-            // If not, check if the user has any of the allowed roles or users
+function flat_permissions_node_access(NodeInterface $node, $operation, AccountInterface $account)
+{
 
-            $manager = \Drupal::service('flat_permissions.permissions_manager');
+    $node_access_service = \Drupal::service('flat_permissions.node_access');
 
-            $nid = $node->id();
+    $access = $node_access_service->userHasAccess($node, $operation);
 
-            $policy = $manager->fetchAccessPolicy($nid, 'read');
+    return $access ? AccessResult::allowed()->addCacheContexts(['ip', 'user']) : AccessResult::forbidden()->addCacheContexts(['ip', 'user']);
+}
 
-            if ($manager->objectAndPropertiesExist($policy, 'all->visible')) {
-                if ($policy->all->visible == true) {
-                    ddm('policy all visible true');
-                    return \Drupal\Core\Access\AccessResult::allowed();
-                } else {
-                    ddm('policy all visible false');
-                    $all_invisible = true;
-                    if (property_exists($policy->all, "roles")) {
-                        $allowed_roles = $policy->all->roles;
-                        $user_roles = $account->getRoles();
-                        foreach ($user_roles as $user_role) {
-                            if (in_array($user_role, $allowed_roles)) {
-                                return AccessResult::allowed();
-                            }
-                        }
-                    } elseif (property_exists($policy->all, "users")) {
-                        $allowed_users = $policy->all->users;
-                        if (in_array($account->id(), $allowed_users)) {
-                            return AccessResult::allowed();
-                        }
-                    }
-                }
-            }
+/**
+ * Checks the visibility of a policy.
+ *
+ * @param mixed $policy The policy to check.
+ * @return bool Returns 'visible' if the policy has any visibility value set to visible, 'invisible' otherwise.
+ */
+function check_visibility($policy)
+{
 
-            if ($manager->objectAndPropertiesExist($policy, 'types')) {
-                foreach ($policy->types as $type_rule) {
-                    if (property_exists($type_rule, "visible")) {
-                        if ($type_rule->visible == true) {
-                            return \Drupal\Core\Access\AccessResult::allowed();
-                        } else {
-                            $all_invisible = true;
-                        }
-                    } else {
-                        $all_invisible = true;
-                    }
-                }
-                if ($all_invisible) {
-                    foreach ($policy->types as $type_rule) {
-                        if (property_exists($type_rule, "roles")) {
-                            $allowed_roles = $type_rule->roles;
-                            $user_roles = $account->getRoles();
-                            foreach ($user_roles as $user_role) {
-                                if (in_array($user_role, $allowed_roles)) {
-                                    return AccessResult::allowed();
-                                }
-                            }
-                        } elseif (property_exists($type_rule, "users")) {
-                            $allowed_users = $type_rule->users;
-                            if (in_array($account->id(), $allowed_users)) {
-                                return AccessResult::allowed();
-                            }
-                        }
-                    }
-                }
-            }
+    $manager = \Drupal::service('flat_permissions.permissions_manager');
 
-            if ($manager->objectAndPropertiesExist($policy, 'files')) {
-                foreach ($policy->files as $file_rule) {
-                    if (property_exists($file_rule, "visible")) {
-                        if ($file_rule->visible == true) {
-                            return \Drupal\Core\Access\AccessResult::allowed();
-                        } else {
-                            $all_invisible = true;
-                        }
-                    } else {
-                        $all_invisible = true;
-                    }
-                }
-                if ($all_invisible) {
-                    foreach ($policy->files as $file_rule) {
-                        if (property_exists($file_rule, "roles")) {
-                            $allowed_roles = $file_rule->roles;
-                            $user_roles = $account->getRoles();
-                            foreach ($user_roles as $user_role) {
-                                if (in_array($user_role, $allowed_roles)) {
-                                    return AccessResult::allowed();
-                                }
-                            }
-                        } elseif (property_exists($file_rule, "users")) {
-                            $allowed_users = $file_rule->users;
-                            if (in_array($account->id(), $allowed_users)) {
-                                return AccessResult::allowed();
-                            }
-                        }
-                    }
-                }
+    if ($manager->objectAndPropertiesExist($policy, 'all')) {
+        if ($policy->all->visibility == 'visible') {
+            return 'visible';
+        }
+    } elseif ($manager->objectAndPropertiesExist($policy, 'types')) {
+        foreach ($policy->types as $type_rule) {
+            if ($type_rule->visibility  == 'visible') {
+                return 'visible';
             }
         }
-
-        ddm($all_invisible);
-        // If access has not been allowed yet at this stage, we'll deny access if all of the rules are set to invisible
-        if ($all_invisible) {
-            return \Drupal\Core\Access\AccessResult::forbidden();
+    } elseif ($manager->objectAndPropertiesExist($policy, 'files')) {
+        foreach ($policy->files as $file_rule) {
+            if ($file_rule->visibility  == 'visible') {
+                return 'visible';
+            }
         }
     }
 
-    // Default to not allowed for other operations.
-    return \Drupal\Core\Access\AccessResult::neutral();
+    return 'invisible';
 }
+
+function flat_permissions_views_data_alter(array &$data) {
+
+    $data['node_field_data']['flat_node_access_filter'] = [
+      'group' => 'Custom View Filters',
+      'title' => t('FLAT Node Access Filter'),
+      'filter' => [
+        'title' => t('FLAT Node Access Filter'),
+        'help' => t('Filter nodes based on FLAT access policies'),
+        'field' => 'nid',
+        'id' => 'flat_node_access_filter',
+      ],
+    ];
+
+}
+
+
 
 /**
  * Get the view access policy for the given node.

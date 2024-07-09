@@ -122,7 +122,8 @@ class EditPermissionsForm extends FormBase
 
     $form['#tree'] = true;
 
-    // Create an info message for the effective access rules, either inherited from the parents or defined on the current item
+    // Create an info message for the effective access rules, either inherited from the parents or defined on the current item.
+    // In case of inherited rules, we add a link to the parent item on which the rules are defined.
     $info_message =  'The nearest access rules that are defined in the collection hierarchy and that are applicable to this item.';
 
     $suffix = '/permissions';
@@ -242,21 +243,26 @@ class EditPermissionsForm extends FormBase
 
     if (isset($user_input['rules']['all']['all_fieldset']['visibility'])) {
       $default_visibility_value = isset($user_input['rules']['all']['all_fieldset']['visibility']);
-    } elseif ($manager->objectAndPropertiesExist($defaults, 'all')) {
-      $default_visibility_value = property_exists($defaults->all, 'visible') ? isset($defaults->all->visible) : 0;
+    } elseif ($manager->objectAndPropertiesExist($defaults, 'all->visibility')) {
+      ddm($defaults->all->visibility);
+      $default_visibility_value = ($defaults->all->visibility == 'invisible') ? 1 : 0;
     } else {
       $default_visibility_value = 0;
     }
 
+    ddm($default_visibility_value);
+
     $form['rules']['all']['all_fieldset']['visibility'] = [
       '#type' => 'checkbox',
       '#title' => t('Invisible'),
+      '#checked_value' => 'invisible',
+      '#unchecked_value' => 'visible',
       '#states' => [
         'visible' => [
           [':input[name="all_level_1"]' => ['value' => 'none']],
         ],
-        '#default_value' => $default_visibility_value,
       ],
+      '#default_value' => $default_visibility_value,
     ];
 
     $form['rules']['all']['all_fieldset']['hidden-users'] = $this->build_hidden_field('all', 'all', 'users', $manager, $form_state, $defaults);
@@ -667,7 +673,9 @@ class EditPermissionsForm extends FormBase
       $default_visibility_value = isset($user_input['rules']['types']['types_fieldset']['fieldsets'][$i]['visibility']);
     } elseif ($manager->objectAndPropertiesExist($defaults, 'types')) {
       if (array_key_exists(($i), $defaults->types)) {
-        $default_visibility_value = property_exists($defaults->types[$i], 'visible') ? isset($defaults->types[$i]->visible) : 0;
+        if (property_exists($defaults->types[$i], 'visibility')) {
+          $default_visibility_value = ($defaults->types[$i]->visibility == 'invisible') ? 1 : 0;
+        }
       } else {
         $default_visibility_value = 0;
       }
@@ -709,6 +717,8 @@ class EditPermissionsForm extends FormBase
       'visibility' => [
         '#type' => 'checkbox',
         '#title' => t('Invisible'),
+        '#checked_value' => 'invisible',
+        '#unchecked_value' => 'visible',
         '#states' => [
           'visible' => [
             [':input[name="types_level_' . $i . '"]' => ['value' => 'none']],
@@ -787,7 +797,9 @@ class EditPermissionsForm extends FormBase
       $default_visibility_value = isset($user_input['rules']['files']['files_fieldset']['fieldsets'][$i]['visibility']);
     } elseif ($manager->objectAndPropertiesExist($defaults, 'files')) {
       if (array_key_exists(($i), $defaults->files)) {
-        $default_visibility_value = property_exists($defaults->files[$i], 'visible') ? isset($defaults->files[$i]->visible) : 0;
+        if (property_exists($defaults->types[$i], 'visibility')) {
+          $default_visibility_value = ($defaults->types[$i]->visibility == 'invisible') ? 1 : 0;
+        }
       } else {
         $default_visibility_value = 0;
       }
@@ -829,6 +841,8 @@ class EditPermissionsForm extends FormBase
       'visibility' => [
         '#type' => 'checkbox',
         '#title' => t('Invisible'),
+        '#checked_value' => 'invisible',
+        '#unchecked_value' => 'visible',
         '#states' => [
           'visible' => [
             [':input[name="files_level_' . $i . '"]' => ['value' => 'none']],
@@ -1190,8 +1204,8 @@ class EditPermissionsForm extends FormBase
         } else {
           unset($all_rule_output['hidden-users']);
         }
-        $visibility = $rules['all']['all_fieldset']['visibility'] ? FALSE : TRUE;
-        $all_rule_output['visible'] = $visibility;
+        $visibility = $rules['all']['all_fieldset']['visibility'] ? 'invisible' : 'visible';
+        $all_rule_output['visibility'] = $visibility;
         $read_rule = $manager->fieldsetToRule($all_rule_output);
         $read_rule_output['all'] = $read_rule;
       }
@@ -1219,8 +1233,8 @@ class EditPermissionsForm extends FormBase
           } else {
             unset($types_rule_output['hidden-users']);
           }
-          $visibility = $types_rule['visibility'] ? FALSE : TRUE;
-          $types_rule_output['visible'] = $visibility;
+          $visibility = $types_rule['visibility'] ? 'invisible' : 'visible';
+          $types_rule_output['visibility'] = $visibility;
           $read_rule = $manager->fieldsetToRule($types_rule_output);
           $read_rule_output['types'][] = $read_rule;
         }
@@ -1230,8 +1244,8 @@ class EditPermissionsForm extends FormBase
         foreach ($files_rules as $key => $files_rule) {
           $level = $user_input['files_level_' . $key];
           $files_rule_output['level'] = $level;
-          $visibility = $user_input['files_visibility_' . $key] ? FALSE : TRUE;
-          $files_rule_output['visible'] = $visibility;
+          //$visibility = $user_input['files_visibility_' . $key] ? FALSE : TRUE;
+          //$files_rule_output['visible'] = $visibility;
           $files = $files_rule['files'];
           $empty_checkboxes = !$manager->checkboxesAreChecked($files);
           if (!$empty_checkboxes) {
@@ -1245,15 +1259,13 @@ class EditPermissionsForm extends FormBase
           } else {
             unset($files_rule_output['hidden-users']);
           }
-          $visibility = $files_rule['visibility'] ? FALSE : TRUE;
-          $files_rule_output['visible'] = $visibility;
+          $visibility = $files_rule['visibility'] ? 'invisible' : 'visible';
+          $files_rule_output['visibility'] = $visibility;
           $read_rule = $manager->fieldsetToRule($files_rule_output);
           $read_rule_output['files'][] = $read_rule;
         }
       }
     }
-
-    ddm($user_input);
 
     if (!empty($read_rule_output)) {
       $read_output_json = json_encode($read_rule_output);
