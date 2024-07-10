@@ -198,7 +198,7 @@ function flat_permissions_node_access(NodeInterface $node, $operation, AccountIn
 
     $node_access_service = \Drupal::service('flat_permissions.node_access');
 
-    $access = $node_access_service->userHasAccess($node, $operation);
+    $access = $node_access_service->userHasAccess($node, $operation, $account);
 
     return $access ? AccessResult::allowed()->addCacheContexts(['ip', 'user']) : AccessResult::forbidden()->addCacheContexts(['ip', 'user']);
 }
@@ -235,19 +235,34 @@ function check_visibility($policy)
     return 'invisible';
 }
 
-function flat_permissions_views_data_alter(array &$data) {
+/* function flat_permissions_views_data_alter(array &$data)
+{
 
     $data['node_field_data']['flat_node_access_filter'] = [
-      'group' => 'Custom View Filters',
-      'title' => t('FLAT Node Access Filter'),
-      'filter' => [
+        'group' => 'Custom',
         'title' => t('FLAT Node Access Filter'),
         'help' => t('Filter nodes based on FLAT access policies'),
-        'field' => 'nid',
-        'id' => 'flat_node_access_filter',
-      ],
+        'filter' => [
+            //'field' => 'nid',
+            'id' => 'flat_node_access_filter',
+        ],
     ];
+}
+ */
 
+function flat_permissions_views_data_alter(array &$data)
+{
+
+    $data['node_field_data']['custom_node_access_filter'] = [
+        'group' => 'Custom View Filters',
+        'title' => t('FLAT Node Access Filter'),
+        'filter' => [
+            'title' => t('FLAT Node Access Filter'),
+            'help' => t('Filter nodes based on FLAT access policies'),
+            'field' => 'nid',
+            'id' => 'custom_node_access_filter',
+        ],
+    ];
 }
 
 

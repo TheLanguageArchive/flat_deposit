@@ -7,17 +7,14 @@ use Drupal\node\NodeInterface;
 
 class NodeAccessService
 {
-  protected $currentUser;
 
-  public function __construct(AccountProxyInterface $current_user)
+  public function userHasAccess(NodeInterface $node, $op, $current_user)
   {
-    $this->currentUser = $current_user;
-  }
 
-  public function userHasAccess(NodeInterface $node, $op)
-  {
-    // Replace with your custom access logic.
-    // Check if the operation is 'view'.
+    ddm('userHasAccess called');
+
+    ddm('op: ' . $op);
+
     if ($op == 'view' || $op == 'view all revisions') {
 
       //ddm('op is view');
@@ -33,6 +30,12 @@ class NodeAccessService
         $manager = \Drupal::service('flat_permissions.permissions_manager');
 
         $nid = $node->id();
+
+        $userid = $current_user->id();
+
+        ddm('user id: ' . $userid);
+
+        ddm('node id: ' . $nid);
 
         //ddm('node id: ' . $nid);
 
@@ -63,7 +66,7 @@ class NodeAccessService
             if ($manager->objectAndPropertiesExist($policy, 'all')) {
               if (property_exists($policy->all, "roles")) {
                 $allowed_roles = $policy->all->roles;
-                $user_roles = $this->currentUser->getRoles();
+                $user_roles = $current_user->getRoles();
                 foreach ($user_roles as $user_role) {
                   if (in_array($user_role, $allowed_roles)) {
                     //return AccessResult::allowed()->addCacheContexts(['ip', 'user']);
@@ -72,7 +75,7 @@ class NodeAccessService
                 }
               } elseif (property_exists($policy->all, "users")) {
                 $allowed_users = $policy->all->users;
-                if (in_array($this->currentUser->id(), $allowed_users)) {
+                if (in_array($current_user->id(), $allowed_users)) {
                   //return AccessResult::allowed()->addCacheContexts(['ip', 'user']);
                   return TRUE;
                 }
@@ -84,7 +87,7 @@ class NodeAccessService
                     if ($type_rule->roles == 'none') {
                       if (property_exists($type_rule, "users"))
                         $allowed_users = $type_rule->users;
-                      if (in_array($this->currentUser->id(), $allowed_users)) {
+                      if (in_array($current_user->id(), $allowed_users)) {
                         //return AccessResult::allowed()->addCacheContexts(['ip', 'user']);
                         return TRUE;
                       }
@@ -99,7 +102,7 @@ class NodeAccessService
                     if ($file_rule->roles == 'none') {
                       if (property_exists($file_rule, "users"))
                         $allowed_users = $file_rule->users;
-                      if (in_array($this->currentUser->id(), $allowed_users)) {
+                      if (in_array($current_user->id(), $allowed_users)) {
                         //return AccessResult::allowed()->addCacheContexts(['ip', 'user']);
                         return TRUE;
                       }
@@ -111,6 +114,7 @@ class NodeAccessService
           }
 
           //return \Drupal\Core\Access\AccessResult::forbidden()->addCacheContexts(['ip', 'user']);
+          ddm('forbidden');
           return FALSE;
         }
       }
