@@ -8,88 +8,79 @@ use Drupal\node\NodeInterface;
 class NodeAccessService
 {
 
-  public function userHasAccess(NodeInterface $node, $op, $current_user)
+  /**
+   * Determines whether the node can be accessed by the current user, depending on
+   * the "visibility" and the current user's permissions in the policy.
+   *
+   * If any rule has visibility set to 'visible', allow access to the node. Otherwise, the node is invisible
+   * to anyone except users who have explicit permissions in any of the rules.
+   *
+   * @param NodeInterface $node The node to check access for.
+   * @param string $op The operation being performed on the node.
+   * @param AccountProxyInterface $current_user The current user.
+   * @return bool Returns true if the user has access, false otherwise.
+   */
+  public function userHasNodeAccess(NodeInterface $node, $op, $current_user)
   {
 
-    ddm('userHasAccess called');
-
-    ddm('op: ' . $op);
-
     if ($op == 'view' || $op == 'view all revisions') {
-
-      //ddm('op is view');
 
       $type = $node->getType();
 
       if ($type == 'islandora_object') {
 
-        //ddm('islandora_object');
-        // If there's any "visible" value in the policy set to true, allow access.
-        // If not, check if the user has any of the allowed roles or users
-
         $manager = \Drupal::service('flat_permissions.permissions_manager');
 
         $nid = $node->id();
 
-        $userid = $current_user->id();
-
-        ddm('user id: ' . $userid);
-
-        ddm('node id: ' . $nid);
-
-        //ddm('node id: ' . $nid);
+        $username = $current_user->getAccountName();
 
         $policy = $manager->fetchAccessPolicy($nid, 'read');
 
         if (!$policy) {
-          $policy = $manager->fetchEffectiveAccessPolicy($nid, 'read');
+          $effective_policy = $manager->fetchEffectiveAccessPolicy($nid, 'read');
+          if ($effective_policy) {
+            $policy = $effective_policy['policy'];
+          }
         }
 
         if (!$policy) {
-          //return \Drupal\Core\Access\AccessResult::allowed()->addCacheContexts(['ip', 'user']);
           return TRUE;
         } else {
+          // if any rule has visibility set to 'visible', allow access to the node
           $visibility = check_visibility($policy);
 
-
-          //ddm('policy');
-          //ddm($policy);
-
-          //ddm('visibility');
-          //ddm($visibility);
-
           if ($visibility == 'visible') {
-            //return \Drupal\Core\Access\AccessResult::allowed()->addCacheContexts(['ip', 'user']);
             return TRUE;
           } else {
 
+            // all rules have visibility set to 'invisible'.
+            // Check if user has permissions in any of the rules
             if ($manager->objectAndPropertiesExist($policy, 'all')) {
-              if (property_exists($policy->all, "roles")) {
-                $allowed_roles = $policy->all->roles;
-                $user_roles = $current_user->getRoles();
-                foreach ($user_roles as $user_role) {
-                  if (in_array($user_role, $allowed_roles)) {
-                    //return AccessResult::allowed()->addCacheContexts(['ip', 'user']);
-                    return TRUE;
+              if (property_exists($policy->all, "visibility")) {
+                if ($policy->all->visibility == 'invisible') {
+                  if (property_exists($policy->all, "roles")) {
+                    if ($policy->all->roles[0] == 'none') {
+                      if (property_exists($policy->all, "users"))
+                        $allowed_users = $policy->all->users;
+                      if (in_array($username, $allowed_users)) {
+                        return TRUE;
+                      }
+                    }
                   }
-                }
-              } elseif (property_exists($policy->all, "users")) {
-                $allowed_users = $policy->all->users;
-                if (in_array($current_user->id(), $allowed_users)) {
-                  //return AccessResult::allowed()->addCacheContexts(['ip', 'user']);
-                  return TRUE;
                 }
               }
             } elseif ($manager->objectAndPropertiesExist($policy, 'types')) {
               foreach ($policy->types as $type_rule) {
-                if (property_exists($type_rule, "visible")) {
-                  if (property_exists($type_rule, "roles")) {
-                    if ($type_rule->roles == 'none') {
-                      if (property_exists($type_rule, "users"))
-                        $allowed_users = $type_rule->users;
-                      if (in_array($current_user->id(), $allowed_users)) {
-                        //return AccessResult::allowed()->addCacheContexts(['ip', 'user']);
-                        return TRUE;
+                if (property_exists($type_rule, "visibility")) {
+                  if ($type_rule->visibility == 'invisible') {
+                    if (property_exists($type_rule, "roles")) {
+                      if ($type_rule->roles[0] == 'none') {
+                        if (property_exists($type_rule, "users"))
+                          $allowed_users = $type_rule->users;
+                        if (in_array($username, $allowed_users)) {
+                          return TRUE;
+                        }
                       }
                     }
                   }
@@ -97,14 +88,16 @@ class NodeAccessService
               }
             } elseif ($manager->objectAndPropertiesExist($policy, 'files')) {
               foreach ($policy->files as $file_rule) {
-                if (property_exists($file_rule, "visible")) {
-                  if (property_exists($file_rule, "roles")) {
-                    if ($file_rule->roles == 'none') {
-                      if (property_exists($file_rule, "users"))
-                        $allowed_users = $file_rule->users;
-                      if (in_array($current_user->id(), $allowed_users)) {
-                        //return AccessResult::allowed()->addCacheContexts(['ip', 'user']);
-                        return TRUE;
+                if (property_exists($file_rule, "visibility")) {
+                  if ($file_rule->visibility == 'invisible') {
+
+                    if (property_exists($file_rule, "roles")) {
+                      if ($file_rule->roles[0] == 'none') {
+                        if (property_exists($file_rule, "users"))
+                          $allowed_users = $file_rule->users;
+                        if (in_array($username, $allowed_users)) {
+                          return TRUE;
+                        }
                       }
                     }
                   }
@@ -112,9 +105,7 @@ class NodeAccessService
               }
             }
           }
-
-          //return \Drupal\Core\Access\AccessResult::forbidden()->addCacheContexts(['ip', 'user']);
-          ddm('forbidden');
+          // user doesn't have access
           return FALSE;
         }
       }

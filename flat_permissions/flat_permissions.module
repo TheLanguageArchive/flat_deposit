@@ -4,14 +4,29 @@ use Drupal\media\MediaInterface;
 use Drupal\node\NodeInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\views\ViewExecutable;
 use Drupal\flat_permissions\NodeAccessService;
 
+/**
+ * Implements hook_node_view().
+ */
 function flat_permissions_node_view(array &$build, \Drupal\Core\Entity\EntityInterface $node, $display, $view_mode)
 {
+    // disable caching for islandora object view to ensure that access policies are evaluated
     if ($node->getType() == 'islandora_object' && $view_mode == 'full') {
-        //ddm('disabling cache');
         \Drupal::service('page_cache_kill_switch')->trigger();
         $build['#cache']['max-age'] = 0;
+    }
+}
+
+/**
+ * Implements hook_views_pre_render().
+ */
+function flat_permissions_views_pre_render(Drupal\views\ViewExecutable $view)
+{
+    // disable caching for top level collections view to ensure that access policies are evaluated
+    if ($view->id() == 'top_level_collections') {
+        \Drupal::service('page_cache_kill_switch')->trigger();
     }
 }
 
@@ -25,7 +40,6 @@ function flat_permissions_node_view(array &$build, \Drupal\Core\Entity\EntityInt
  */
 function flat_permissions_media_access(MediaInterface $media, $operation, AccountInterface $account)
 {
-
     if ($operation == "view" || $operation == "download") {
 
         $referenced_entities = $media->get('field_media_of')->referencedEntities();
@@ -36,93 +50,95 @@ function flat_permissions_media_access(MediaInterface $media, $operation, Accoun
         }
 
         $parent_nid = $referenced_ids[0]; // There should be only one, we don't support multiple parents
-        // Fetch the access policy of the parent or recursively go up in the hierarchy
+        // Fetch the access policy of the parent
         $manager = \Drupal::service('flat_permissions.permissions_manager');
         $policy = $manager->fetchAccessPolicy($parent_nid, 'read');
+
+        if (!$policy) {
+            // No policy on the direct parent, check further up the hierarchy
+            $effective_policy = $manager->fetchEffectiveAccessPolicy($parent_nid, 'read');
+            if ($effective_policy) {
+                $policy = $effective_policy['policy'];
+            }
+        }
 
         if (!$policy) {
             // If there's no policy in the hierarchy (shouldn't really be the case), deny access
             return AccessResult::forbidden();
         }
 
-        if (property_exists($policy, "read")) {
-
-            // Get the read rules from the policy
-            $read_rules = $policy->read;
-
-            // First, check if there is an "all" rule that applies to all media within the hierarchy
-            if (property_exists($policy, "all")) {
-                $rule = $policy->all;
-                if (property_exists($rule, "roles")) {
-                    $allowed_roles = $rule->roles;
-                    $user_roles = $account->getRoles();
-                    foreach ($user_roles as $user_role) {
-                        if (in_array($user_role, $allowed_roles)) {
-                            return AccessResult::allowed();
-                        }
-                    }
-                }
-                if (property_exists($rule, "users")) {
-                    $allowed_users = $rule->users;
-                    if (in_array($account->id(), $allowed_users)) {
+        // First, check if there is an "all" rule that applies to all media within the hierarchy
+        if (property_exists($policy, "all")) {
+            $rule = $policy->all;
+            if (property_exists($rule, "roles")) {
+                $allowed_roles = $rule->roles;
+                $user_roles = $account->getRoles();
+                foreach ($user_roles as $user_role) {
+                    if (in_array($user_role, $allowed_roles)) {
                         return AccessResult::allowed();
                     }
                 }
             }
+            if (property_exists($rule, "users")) {
+                $allowed_users = $rule->users;
+                if (in_array($account->id(), $allowed_users)) {
+                    return AccessResult::allowed();
+                }
+            }
+        }
 
-            // Second, check if there are "mime" rules that apply to specific mime types
-            if (property_exists($policy, "types")) {
+        // Second, check if there are "mime" rules that apply to specific mime types
+        if (property_exists($policy, "types")) {
 
-                $manager = \Drupal::service('flat_permissions.permissions_manager');
+            $manager = \Drupal::service('flat_permissions.permissions_manager');
 
-                $type_rules = $policy->types;
-                foreach ($type_rules as $type_rule) {
-                    $mimetypes = $type_rule->mimetypes;
-                    $filetypes = $type_rule->filetypes;
-                    $media_mimetype = $media->get('field_mime_type')->value;
-                    $media_filetype = $manager->mimeToType($media_mimetype);
-                    if (in_array($media_mimetype, $mimetypes) || in_array($media_filetype, $filetypes)) {
-                        if (property_exists($type_rule, "roles")) {
-                            $allowed_roles = $type_rule->roles;
-                            $user_roles = $account->getRoles();
-                            foreach ($user_roles as $user_role) {
-                                if (in_array($user_role, $allowed_roles)) {
-                                    return AccessResult::allowed();
-                                }
-                            }
-                        }
-                        if (property_exists($type_rule, "users")) {
-                            $allowed_users = $type_rule->users;
-                            if (in_array($account->id(), $allowed_users)) {
+            $type_rules = $policy->types;
+            foreach ($type_rules as $type_rule) {
+                $mimetypes = $type_rule->mimetypes;
+                $filetypes = $type_rule->filetypes;
+                $media_mimetype = $media->get('field_mime_type')->value;
+                $media_filetype = $manager->mimeToType($media_mimetype);
+                if (in_array($media_mimetype, $mimetypes) || in_array($media_filetype, $filetypes)) {
+                    if (property_exists($type_rule, "roles")) {
+                        $allowed_roles = $type_rule->roles;
+                        $user_roles = $account->getRoles();
+                        foreach ($user_roles as $user_role) {
+                            if (in_array($user_role, $allowed_roles)) {
                                 return AccessResult::allowed();
                             }
                         }
                     }
+                    if (property_exists($type_rule, "users")) {
+                        $allowed_users = $type_rule->users;
+                        if (in_array($account->id(), $allowed_users)) {
+                            return AccessResult::allowed();
+                        }
+                    }
                 }
             }
+        }
 
-            // Finally, check if there are "files" rules that apply to specific media IDs
-            if (property_exists($policy, "files")) {
-                $files_rules = $policy->files;
-                foreach ($files_rules as $file_rule) {
-                    // We've named them "file" rules but actually access to files is managed via the media entities,
-                    // so we work with the media IDs that link the files to the islandora_object nodes they belong to
-                    $media_ids = $file_rule->files;
-                    if (in_array($media->id(), $media_ids)) {
-                        if (property_exists($file_rule, "roles")) {
-                            $allowed_roles = $file_rule->roles;
-                            $user_roles = $account->getRoles();
-                            foreach ($user_roles as $user_role) {
-                                if (in_array($user_role, $allowed_roles)) {
-                                    return AccessResult::allowed();
-                                }
-                            }
-                        }
-                        if (property_exists($file_rule, "users")) {
-                            $allowed_users = $file_rule->users;
-                            if (in_array($account->id(), $allowed_users)) {
+        // Finally, check if there are "files" rules that apply to specific media IDs
+        if (property_exists($policy, "files")) {
+            $files_rules = $policy->files;
+            foreach ($files_rules as $file_rule) {
+                // We've named them "file" rules but actually access to files is managed via the media entities,
+                // so we work with the media IDs that link the files to the islandora_object nodes they belong to
+                $media_ids = $file_rule->files;
+                if (in_array($media->id(), $media_ids)) {
+                    if (property_exists($file_rule, "roles")) {
+                        $allowed_roles = $file_rule->roles;
+                        $user_roles = $account->getRoles();
+                        foreach ($user_roles as $user_role) {
+                            if (in_array($user_role, $allowed_roles)) {
                                 return AccessResult::allowed();
                             }
+                        }
+                    }
+                    if (property_exists($file_rule, "users")) {
+                        $allowed_users = $file_rule->users;
+                        if (in_array($account->id(), $allowed_users)) {
+                            return AccessResult::allowed();
                         }
                     }
                 }
@@ -173,32 +189,11 @@ function flat_permissions_write_access($nid, AccountInterface $account)
     return false;
 }
 
-/**
- * Implements hook_node_access().
- */
-/* function flat_permissions_node_access(\Drupal\node\NodeInterface $node, $op, \Drupal\Core\Session\AccountInterface $account)
-{
-    ddm('node access called');
-    ddm('op: ' . $op);
-
-    $access = \Drupal\flat_permissions\NodeAccessService::userHasAccess($node, $op);
-
-    ddm('access: ' . $access);
-
-    if ($access) {
-        return \Drupal\Core\Access\AccessResult::allowed()->addCacheContexts(['ip', 'user']);
-    }
-    else {
-        return \Drupal\Core\Access\AccessResult::forbidden()->addCacheContexts(['ip', 'user']);
-    }
-} */
-
 function flat_permissions_node_access(NodeInterface $node, $operation, AccountInterface $account)
 {
-
     $node_access_service = \Drupal::service('flat_permissions.node_access');
 
-    $access = $node_access_service->userHasAccess($node, $operation, $account);
+    $access = $node_access_service->userHasNodeAccess($node, $operation, $account);
 
     return $access ? AccessResult::allowed()->addCacheContexts(['ip', 'user']) : AccessResult::forbidden()->addCacheContexts(['ip', 'user']);
 }
@@ -207,7 +202,7 @@ function flat_permissions_node_access(NodeInterface $node, $operation, AccountIn
  * Checks the visibility of a policy.
  *
  * @param mixed $policy The policy to check.
- * @return bool Returns 'visible' if the policy has any visibility value set to visible, 'invisible' otherwise.
+ * @return string Returns 'visible' if the policy has any visibility value set to visible, 'invisible' otherwise.
  */
 function check_visibility($policy)
 {
@@ -235,21 +230,6 @@ function check_visibility($policy)
     return 'invisible';
 }
 
-/* function flat_permissions_views_data_alter(array &$data)
-{
-
-    $data['node_field_data']['flat_node_access_filter'] = [
-        'group' => 'Custom',
-        'title' => t('FLAT Node Access Filter'),
-        'help' => t('Filter nodes based on FLAT access policies'),
-        'filter' => [
-            //'field' => 'nid',
-            'id' => 'flat_node_access_filter',
-        ],
-    ];
-}
- */
-
 function flat_permissions_views_data_alter(array &$data)
 {
 
@@ -264,22 +244,6 @@ function flat_permissions_views_data_alter(array &$data)
         ],
     ];
 }
-
-
-
-/**
- * Get the view access policy for the given node.
- * Normally, Repository Items (Parents of the media objects) are viewable by everyone, but this can be overridden
- * in the policy
- *
- * @param string $nid
- * @return boolean
- */
-/* function flat_permissions_view_access($nid)
-{
-    $manager = \Drupal::service('flat_permissions.permissions_manager');
-    $policy = $manager->fetchAccessPolicy($nid);
-} */
 
 function flat_permissions_theme()
 {

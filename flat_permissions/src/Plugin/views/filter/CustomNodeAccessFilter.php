@@ -2,6 +2,7 @@
 
 namespace Drupal\flat_permissions\Plugin\views\filter;
 
+use Drupal\node\Entity\Node;
 use Drupal\views\Plugin\views\filter\FilterPluginBase;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
@@ -11,9 +12,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Custom filter to restrict access to nodes based on custom logic.
  *
  * @ViewsFilter("custom_node_access_filter")
- * 
+ *
  * @ingroup views_filter_handlers
- * 
+ *
  */
 class CustomNodeAccessFilter extends FilterPluginBase
 {
@@ -24,7 +25,7 @@ class CustomNodeAccessFilter extends FilterPluginBase
   protected $entityManager;
 
   /**
-   * @var \flat_permissions\NodeAccessService
+   * @var \Drupal\flat_permissions\NodeAccessService
    */
   protected $nodeAccessService;
 
@@ -38,23 +39,33 @@ class CustomNodeAccessFilter extends FilterPluginBase
   public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL)
   {
     parent::init($view, $display, $options);
-    $this->definition['title'] = t('FLAT Access Filter');
+    $this->definition['title'] = t('FLAT Node Access Filter');
   }
 
-  private function getFilterId()
+  /**
+   * {@inheritdoc}
+   */
+  public function query()
   {
-    return $this->options['expose']['identifier'];
+    // Add a placeholder condition.
+    $this->query->addWhereExpression(0, "1 = 1");
   }
 
+  /**
+   * Remove nodes that the user isn't allowed to view
+   *
+   * @param array $values
+   *
+   */
   public function postExecute(&$values)
   {
+
     $current_user = \Drupal::currentUser();
-    ddm($current_user);
-    foreach ($values as &$value) {
-      $node = $this->entityManager->getStorage('node')->load($value->_entity_id);
-      if (!$this->nodeAccessService->userHasAccess($node, 'view', $current_user)) {
-        // If the user doesn't have access, remove the value from the result
-        $value->_views_skip_result = TRUE;
+
+    foreach ($values as $index => $row) {
+      $node = Node::load($row->nid);
+      if ($node && !$this->nodeAccessService->userHasNodeAccess($node, 'view', $current_user)) {
+        unset($values[$index]);
       }
     }
   }
