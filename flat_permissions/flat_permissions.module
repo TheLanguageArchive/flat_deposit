@@ -94,8 +94,8 @@ function flat_permissions_media_access(MediaInterface $media, $operation, Accoun
 
             $type_rules = $policy->types;
             foreach ($type_rules as $type_rule) {
-                $mimetypes = $type_rule->mimetypes;
-                $filetypes = $type_rule->filetypes;
+                $mimetypes = property_exists($type_rule, "mimetypes") ? $type_rule->mimetypes : [];
+                $filetypes = property_exists($type_rule, "filetypes") ? $type_rule->filetypes : [];
                 $media_mimetype = $media->get('field_mime_type')->value;
                 $media_filetype = $manager->mimeToType($media_mimetype);
                 if (in_array($media_mimetype, $mimetypes) || in_array($media_filetype, $filetypes)) {
@@ -209,17 +209,17 @@ function check_visibility($policy)
 
     $manager = \Drupal::service('flat_permissions.permissions_manager');
 
-    if ($manager->objectAndPropertiesExist($policy, 'all')) {
+    if ($manager->objectAndPropertiesExist($policy, 'all->visibility')) {
         if ($policy->all->visibility == 'visible') {
             return 'visible';
         }
-    } elseif ($manager->objectAndPropertiesExist($policy, 'types')) {
+    } elseif ($manager->objectAndPropertiesExist($policy, 'types->visibility')) {
         foreach ($policy->types as $type_rule) {
             if ($type_rule->visibility  == 'visible') {
                 return 'visible';
             }
         }
-    } elseif ($manager->objectAndPropertiesExist($policy, 'files')) {
+    } elseif ($manager->objectAndPropertiesExist($policy, 'files->visibility')) {
         foreach ($policy->files as $file_rule) {
             if ($file_rule->visibility  == 'visible') {
                 return 'visible';
