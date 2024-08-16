@@ -259,6 +259,19 @@ class PermissionsManager
         }
     }
 
+    public function rolesToLevel($roles)
+    {
+        if (in_array('anonymous', $roles)) {
+            return $this::LEVELS['anonymous'];
+        } elseif (in_array('authenticated', $roles)) {
+            return $this::LEVELS['authenticated'];
+        } elseif (in_array('academic', $roles)) {
+            return $this::LEVELS['academic'];
+        } elseif (in_array('none', $roles)) {
+            return $this::LEVELS['none'];
+        }
+    }
+
     /**
      * Finds duplicate values in multiple arrays.
      *

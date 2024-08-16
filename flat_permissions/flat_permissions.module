@@ -4,6 +4,7 @@ use Drupal\media\MediaInterface;
 use Drupal\node\NodeInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\media\Entity\Media;
 use Drupal\views\ViewExecutable;
 use Drupal\flat_permissions\NodeAccessService;
 
@@ -248,6 +249,130 @@ function flat_permissions_views_data_alter(array &$data)
         ],
     ];
 }
+
+/**
+ * Implements hook_views_data().
+ */
+function flat_permissions_views_data()
+{
+    $data = [];
+
+    $data['media']['access_level'] = [
+        'title' => t('Access Level'),
+        'help' => t('Displays the access level of the given object.'),
+        'field' => [
+            'id' => 'access_level',
+        ],
+    ];
+
+    return $data;
+}
+
+/**
+ * Get access level to be used as output in Views field.
+ *
+ * @param \Drupal\views\ResultRow $values
+ *   The current row object.
+ *
+ * @return string
+ *   The output to be displayed in the Views field.
+ */
+function get_access_level(Drupal\views\ResultRow $values)
+{
+
+    if (property_exists($values, 'mid')) {
+        $access_level = get_media_access_level($values->mid);
+    } else {
+        $access_level = 'restricted';
+    }
+    return $access_level;
+}
+
+function get_media_access_level($mid)
+{
+
+    $media = Media::load($mid);
+
+    $referenced_entities = $media->get('field_media_of')->referencedEntities();
+    $referenced_ids = [];
+
+    foreach ($referenced_entities as $entity) {
+        $referenced_ids[] = $entity->id();
+    }
+
+    $parent_nid = $referenced_ids[0]; // There should be only one, we don't support multiple parents
+    // Fetch the access policy of the parent
+    $manager = \Drupal::service('flat_permissions.permissions_manager');
+    $policy = $manager->fetchAccessPolicy($parent_nid, 'read');
+
+    if (!$policy) {
+        // No policy on the direct parent, check further up the hierarchy
+        $effective_policy = $manager->fetchEffectiveAccessPolicy($parent_nid, 'read');
+        if ($effective_policy) {
+            $policy = $effective_policy['policy'];
+        }
+    }
+
+    if (!$policy) {
+        // If there's no policy in the hierarchy (shouldn't really be the case), deny access
+        return 'restricted';
+    }
+
+    // First, check if there is an "all" rule that applies to all media within the hierarchy
+    if (property_exists($policy, "all")) {
+        $rule = $policy->all;
+        if (property_exists($rule, "roles")) {
+            $allowed_roles = $rule->roles;
+            return $manager->rolesToLevel($allowed_roles);
+        } else {
+            return 'restricted';
+        }
+    }
+
+    // Second, check if there are "mime" rules that apply to specific mime types
+    if (property_exists($policy, "types")) {
+
+        $manager = \Drupal::service('flat_permissions.permissions_manager');
+
+        $type_rules = $policy->types;
+        foreach ($type_rules as $type_rule) {
+            $mimetypes = property_exists($type_rule, "mimetypes") ? $type_rule->mimetypes : [];
+            $filetypes = property_exists($type_rule, "filetypes") ? $type_rule->filetypes : [];
+            $media_mimetype = $media->get('field_mime_type')->value;
+            $media_filetype = $manager->mimeToType($media_mimetype);
+            if (in_array($media_mimetype, $mimetypes) || in_array($media_filetype, $filetypes)) {
+                if (property_exists($type_rule, "roles")) {
+                    $allowed_roles = $type_rule->roles;
+                    return $manager->rolesToLevel($allowed_roles);
+                } else {
+                    return 'restricted';
+                }
+            }
+        }
+    }
+
+    // Finally, check if there are "files" rules that apply to specific media IDs
+    if (property_exists($policy, "files")) {
+        $files_rules = $policy->files;
+        foreach ($files_rules as $file_rule) {
+            // We've named them "file" rules but actually access to files is managed via the media entities,
+            // so we work with the media IDs that link the files to the islandora_object nodes they belong to
+            $media_ids = $file_rule->files;
+            if (in_array($media->id(), $media_ids)) {
+                if (property_exists($file_rule, "roles")) {
+                    $allowed_roles = $file_rule->roles;
+                    return $manager->rolesToLevel($allowed_roles);
+                } else {
+                    return 'restricted';
+                }
+            }
+        }
+    }
+
+    // If there are no rules that match, access is denied
+    return 'restricted';
+}
+
 
 function flat_permissions_theme()
 {
