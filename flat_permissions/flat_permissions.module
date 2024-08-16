@@ -213,16 +213,20 @@ function check_visibility($policy)
         if ($policy->all->visibility == 'visible') {
             return 'visible';
         }
-    } elseif ($manager->objectAndPropertiesExist($policy, 'types->visibility')) {
+    } elseif ($manager->objectAndPropertiesExist($policy, 'types')) {
         foreach ($policy->types as $type_rule) {
-            if ($type_rule->visibility  == 'visible') {
-                return 'visible';
+            if ($manager->objectAndPropertiesExist($type_rule, 'visibility')) {
+                if ($type_rule->visibility  == 'visible') {
+                    return 'visible';
+                }
             }
         }
-    } elseif ($manager->objectAndPropertiesExist($policy, 'files->visibility')) {
+    } elseif ($manager->objectAndPropertiesExist($policy, 'files')) {
         foreach ($policy->files as $file_rule) {
-            if ($file_rule->visibility  == 'visible') {
-                return 'visible';
+            if ($manager->objectAndPropertiesExist($file_rule, 'visibility')) {
+                if ($file_rule->visibility  == 'visible') {
+                    return 'visible';
+                }
             }
         }
     }
