@@ -31,7 +31,7 @@ class PermissionsManager
     const DEFAULT_GROUPS     = ['administrator'];
 
     /** @var array */
-    const LEVELS      = ['anonymous' => 'Open', 'authenticated' => 'Registered Users', 'academic' => 'Academic Users', 'none' => 'Restricted'];
+    const LEVELS      = ['anonymous' => 'Open', 'authenticated' => 'Registered', 'academic' => 'Academic', 'none' => 'Restricted'];
 
     /** @var array */
     const TYPES     = ['audio' => 'Audio', 'video' => 'Video', 'image' => 'Images', 'text'  => 'Written/Annotations', 'other' => 'Other'];

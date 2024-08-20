@@ -7,6 +7,8 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\media\Entity\Media;
 use Drupal\views\ViewExecutable;
 use Drupal\flat_permissions\NodeAccessService;
+use Drupal\search_api_solr\Plugin\search_api\backend\SearchApiSolrBackend;
+use Drupal\search_api\IndexInterface;
 
 /**
  * Implements hook_node_view().
@@ -315,7 +317,7 @@ function get_media_access_level($mid)
 
     if (!$policy) {
         // If there's no policy in the hierarchy (shouldn't really be the case), deny access
-        return 'restricted';
+        return 'Restricted';
     }
 
     // First, check if there is an "all" rule that applies to all media within the hierarchy
@@ -325,7 +327,7 @@ function get_media_access_level($mid)
             $allowed_roles = $rule->roles;
             return $manager->rolesToLevel($allowed_roles);
         } else {
-            return 'restricted';
+            return 'Restricted';
         }
     }
 
@@ -345,7 +347,7 @@ function get_media_access_level($mid)
                     $allowed_roles = $type_rule->roles;
                     return $manager->rolesToLevel($allowed_roles);
                 } else {
-                    return 'restricted';
+                    return 'Restricted';
                 }
             }
         }
@@ -363,16 +365,15 @@ function get_media_access_level($mid)
                     $allowed_roles = $file_rule->roles;
                     return $manager->rolesToLevel($allowed_roles);
                 } else {
-                    return 'restricted';
+                    return 'Restricted';
                 }
             }
         }
     }
 
     // If there are no rules that match, access is denied
-    return 'restricted';
+    return 'Restricted';
 }
-
 
 function flat_permissions_theme()
 {
