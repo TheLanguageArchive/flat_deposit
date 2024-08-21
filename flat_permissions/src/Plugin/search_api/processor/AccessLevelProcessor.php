@@ -40,7 +40,6 @@ class AccessLevelProcessor extends ProcessorPluginBase
   public function alterIndexedItems(array &$items)
   {
 
-    ddm('alterIndexedItems');
     foreach ($items as $item) {
       $field = $item->getField('field_read_access_policy');
       if ($field) {
@@ -53,8 +52,8 @@ class AccessLevelProcessor extends ProcessorPluginBase
   }
 
   /**
-   * Process the Read Access Policy field before it is indexed. The field needs to be configured 
-   * in the search api coniguration as a "Fulltext Tokens" field.
+   * Process the Read Access Policy field before it is indexed. The field needs to be a multi-value field 
+   * and needs to be configured in the search API as a string field.
    *
    * @param \Drupal\search_api\Item\FieldInterface $field
    *   The field to process.
@@ -64,19 +63,16 @@ class AccessLevelProcessor extends ProcessorPluginBase
 
     foreach ($field->getValues() as &$value) {
 
-      if (is_object($value)) {
+      if (is_string($value)) {
 
-        $modified_value = $this->get_access_levels($value);
+        $levels = $this->get_access_levels($value);
 
-        $value->setTokens($modified_value);
+        $field->setValues([]);
 
-        $modified_values[] = $value;
-      } else {
-
-        $modified_values[] = $value;
+        foreach ($levels as $level) {
+          $field->addValue($level);
+        }
       }
-
-      $field->setValues($modified_values);
     }
   }
 
@@ -130,11 +126,6 @@ class AccessLevelProcessor extends ProcessorPluginBase
 
     $levels = array_unique($levels);
 
-    foreach ($levels as $level) {
-      // Create a new TextToken object for each level.
-      $level_tokens[] = new TextToken($level, 1);
-    }
-
-    return $level_tokens;
+    return $levels;
   }
 }
