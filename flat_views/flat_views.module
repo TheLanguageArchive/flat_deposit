@@ -1,5 +1,7 @@
 <?php
+
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 
 /**
  * @file
@@ -37,34 +39,36 @@ function flat_views_menu()
     return $items;
 }
 
-function flat_views_notifications_delete_all($form, FormStateInterface $form_state, $user){
+function flat_views_notifications_delete_all($form, FormStateInterface $form_state, $user)
+{
 
     $a = 2;
     return  confirm_form(
         array(),
         t('Are you sure you want to delete all reports?'),
-        'dashboard/'. $user->getAccountName() .'notifications',
+        'dashboard/' . $user->getAccountName() . 'notifications',
         t('This action cannot be undone.'),
         t('Delete'),
         t('Cancel')
     );
-
 }
 
-function flat_views_notifications_delete_all_submit($user){
+function flat_views_notifications_delete_all_submit($user)
+{
 
     \Drupal::messenger()->addMessage('Done');
 }
 
-function flat_views_views_api() {
+function flat_views_views_api()
+{
 
-  $views_registration = array (
-    'api' => '3.0',
-    'path' => drupal_get_path('module', 'flat_views') . '/views',
-  );
+    $views_registration = array(
+        'api' => '3.0',
+        'path' => drupal_get_path('module', 'flat_views') . '/views',
+    );
 
 
-  return $views_registration;
+    return $views_registration;
 }
 
 
@@ -95,28 +99,25 @@ function flat_views_block_info()
 function flat_views_block_view($delta = '')
 {
 
-    switch ($delta){
+    switch ($delta) {
         case 'reports_actions':
 
-        if (Drupal::currentUser()->hasPermission('use deposit module')) {
+            if (Drupal::currentUser()->hasPermission('use deposit module')) {
 
-            module_load_include('inc','flat_views','includes/flat_reports.actions_form');
+                module_load_include('inc', 'flat_views', 'includes/flat_reports.actions_form');
 
-            $form = drupal_get_form('flat_reports_action_form');
-            $rendered_form = drupal_render($form);
+                $form = drupal_get_form('flat_reports_action_form');
+                $rendered_form = drupal_render($form);
 
-            $block = array(
-                'subject' => '',
-                'content' => $rendered_form,
-            );
-            break;
-
-        }
-
+                $block = array(
+                    'subject' => '',
+                    'content' => $rendered_form,
+                );
+                break;
+            }
     }
 
     return $block;
-
 }
 
 
@@ -130,10 +131,10 @@ function flat_views_block_view($delta = '')
 function flat_views_block_info_alter(&$blocks, $theme, $code_blocks)
 {
 
-    foreach ($blocks['views'] as &$view_block){
+    foreach ($blocks['views'] as &$view_block) {
 
         $block_description = $view_block['info'];
-        switch ($block_description){
+        switch ($block_description) {
             case "Flat user notifications":
                 $view_block['region'] = 'content';
                 $view_block['visibility'] = BLOCK_VISIBILITY_LISTED;
@@ -155,11 +156,60 @@ function flat_views_block_info_alter(&$blocks, $theme, $code_blocks)
                 $view_block['status'] = TRUE;
                 break;
         }
-
-        }
+    }
 
     #var_dump($blocks['views']);
 }
 
+/**
+ * Implements hook_preprocess_HOOK() for block templates.
+ */
+function flat_views_preprocess_facet_block(&$variables)
+{
+    if ($variables['plugin_id'] == 'facet_block:read_access_policy_facets') {
+        if (isset($variables['elements']['content'][0]['#items'])) {
+            foreach ($variables['elements']['content'][0]['#items'] as &$facet_item) {
 
+                ddm($facet_item);
 
+                $query = $facet_item['#url']->getOption('query');
+
+                // Create a new URL object pointing to the search results page.
+                $new_url = Url::fromRoute('view.solr_search_content.page_1', [], ['query' => $query]);
+
+                // Replace the original URL with the new one.
+                $facet_item['#url'] = $new_url;
+
+                ddm($facet_item);
+            }
+        }
+    }
+}
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+function flat_views_page_attachments(array &$page)
+{
+    // Get the current route name.
+    $route_name = \Drupal::routeMatch()->getRouteName();
+
+    // Log the route name to the Drupal log (dblog).
+    \Drupal::logger('flat_views')->notice('Current route: ' . $route_name);
+
+    // Optionally, display a message on the page (for debugging purposes).
+    // \Drupal::messenger()->addMessage('Current route: ' . $route_name);
+}
+
+function flat_views_preprocess_facet(array &$variables)
+{
+    foreach ($variables['items'] as &$facet_item) {
+        // Get the current query parameters to retain the facet selection.
+        $query = $facet_item['#url']->getOption('query');
+
+        // Create a new URL object pointing to the search results page.
+        $new_url = Url::fromRoute('view.solr_search_content.page_1', [], ['query' => $query]);
+
+        // Replace the original URL with the new one.
+        $facet_item['#url'] = $new_url;
+    }
+}
