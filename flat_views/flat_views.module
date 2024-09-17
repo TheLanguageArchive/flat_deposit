@@ -1,7 +1,13 @@
 <?php
 
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\facets\Entity\Facet;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\search_api\Query\QueryInterface;
+use Drupal\views\ViewExecutable;
+
+
 
 /**
  * @file
@@ -161,9 +167,7 @@ function flat_views_block_info_alter(&$blocks, $theme, $code_blocks)
     #var_dump($blocks['views']);
 }
 
-/**
- * Implements hook_preprocess_HOOK() for block templates.
- */
+/*
 function flat_views_preprocess_facet_block(&$variables)
 {
     if ($variables['plugin_id'] == 'facet_block:read_access_policy_facets') {
@@ -185,8 +189,6 @@ function flat_views_preprocess_facet_block(&$variables)
         }
     }
 }
-
-use Drupal\Core\Routing\RouteMatchInterface;
 
 function flat_views_page_attachments(array &$page)
 {
@@ -211,5 +213,40 @@ function flat_views_preprocess_facet(array &$variables)
 
         // Replace the original URL with the new one.
         $facet_item['#url'] = $new_url;
+    }
+}
+*/
+
+function flat_views_views_post_execute(ViewExecutable $view)
+{
+    // Check the view ID and display ID to target the correct view.
+    if ($view->id() == 'facet_sum' && $view->current_display == 'block_1') {
+        // Loop through the view results.
+        foreach ($view->result as &$row) {
+            if (isset($row->_entity) && $row->_entity->hasField('field_file_size') && !$row->_entity->get('field_file_size')->isEmpty()) {
+                $row->_entity->field_file_size->value = (int) $row->_entity->field_custom_text->value * 2;
+            }
+        }
+    }
+}
+
+function flat_views_preprocess_facets_item_list(&$variables)
+{
+    $custom_view_path = '/search';
+
+    $node = \Drupal::routeMatch()->getParameter('node');
+    if ($node instanceof \Drupal\node\NodeInterface) {
+        $nid = $node->id();
+    }
+
+    // Hide registration link for the authenticated user.
+    $items = &$variables['items'];
+    foreach ($items as $key => &$item) {
+
+        $options = $item['value']['#url']->getOptions();
+        $item['value']['#url'] = Url::fromUri('internal:' . $custom_view_path, $options);
+        if ($nid) {
+            $item['value']['#url']->mergeOptions(['query' => ['f' => ['descendant_of:' . $nid]]]);
+        }
     }
 }
