@@ -230,7 +230,44 @@ function flat_views_views_post_execute(ViewExecutable $view)
     }
 }
 
-function flat_views_preprocess_facets_item_list(&$variables)
+/**
+ * Implements hook_block_view_alter().
+ */
+function flat_views_block_view_alter(array &$build, \Drupal\Core\Block\BlockPluginInterface $block) {
+    // Check if the block is the facets block by its machine name.
+    dpm($block->getDerivativeId());
+    if ($block->getDerivativeId() === 'read_access_policy_search') {
+      // Get the current route match service.
+      $route_match = \Drupal::routeMatch();
+      $node = $route_match->getParameter('node');
+
+      // Check if we are on the search results page.
+      $current_path = \Drupal::service('path.current')->getPath();
+
+      // Adjust the path for your search results page.
+      // Assuming the search results page path is '/search'.
+      if ($current_path == '/search') {
+        // Allow the facets block to display on the search results page.
+        return;
+      }
+
+      // Check if we are on a node page and if it's of the desired content type.
+      if ($node instanceof \Drupal\node\NodeInterface) {
+        $content_type = $node->bundle();
+
+        // Show the block only on nodes of a specific content type (e.g., 'article').
+        if ($content_type === 'islandora_object') {
+          return; // Keep the block if the content type is 'article'.
+        }
+      }
+
+      // If not the search page or the specific content type, remove the block.
+      unset($build);
+    }
+  }
+
+
+/* function flat_views_preprocess_facets_item_list(&$variables)
 {
     $custom_view_path = '/search';
 
@@ -249,4 +286,4 @@ function flat_views_preprocess_facets_item_list(&$variables)
             $item['value']['#url']->mergeOptions(['query' => ['f' => ['descendant_of:' . $nid]]]);
         }
     }
-}
+} */
