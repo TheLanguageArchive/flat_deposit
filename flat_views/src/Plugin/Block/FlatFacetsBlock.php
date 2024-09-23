@@ -6,6 +6,7 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\facets\FacetInterface;
 
 /**
  * Provides a 'FlatFacetsBlock' block.
@@ -15,7 +16,8 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
  *   admin_label = @Translation("FLAT Facets Block"),
  * )
  */
-class FlatFacetsBlock extends BlockBase implements ContainerFactoryPluginInterface {
+class FlatFacetsBlock extends BlockBase implements ContainerFactoryPluginInterface
+{
 
   /**
    * The route match service.
@@ -36,7 +38,8 @@ class FlatFacetsBlock extends BlockBase implements ContainerFactoryPluginInterfa
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The route match service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RouteMatchInterface $route_match) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, RouteMatchInterface $route_match)
+  {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->routeMatch = $route_match;
   }
@@ -44,7 +47,8 @@ class FlatFacetsBlock extends BlockBase implements ContainerFactoryPluginInterfa
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition)
+  {
     return new static(
       $configuration,
       $plugin_id,
@@ -56,44 +60,82 @@ class FlatFacetsBlock extends BlockBase implements ContainerFactoryPluginInterfa
   /**
    * {@inheritdoc}
    */
-  public function build() {
-    $build = [];
+  public function build()
+  {
 
-    // Get the node from the current route.
-    $node = $this->routeMatch->getParameter('node');
+    dpm('build called');
+
+    $build = [];
 
     // Get the current path.
     $current_path = \Drupal::service('path.current')->getPath();
 
-    // Check if the current page is the search results page or a node of the desired content type.
-    if ($current_path === '/search' || ($node instanceof \Drupal\node\NodeInterface && $node->bundle() === 'islandora_object')) {
-      // Load and render multiple facet blocks programmatically.
-      $block_manager = \Drupal::service('plugin.manager.block');
+    // Load the facet entity by its machine name.
+    $facet_storage = \Drupal::entityTypeManager()->getStorage('facets_facet');
 
-      // List of facet block IDs to render. Replace these with your actual facet block IDs.
-      $facet_block_ids = [
-        'facet_block:read_access_policy_search',
-      ];
+    // List of facet machine names.
+    $facet_machine_names = ['read_access_policy_search'];
 
-    // Loop through the facet block IDs and add their rendered output to the build array.
-    foreach ($facet_block_ids as $facet_block_id) {
-        $plugin_block = $block_manager->createInstance($facet_block_id);
+    foreach ($facet_machine_names as $facet_name) {
+      // Load the facet entity.
+      $facet = $facet_storage->load($facet_name);
 
-        // Check if we are on a non-search page and force the facet source context if necessary.
-        if ($current_path !== '/search') {
-          // Simulate a search context for non-search pages.
-          // The actual implementation depends on the facet source (like Solr or Views) and may require additional parameters.
-          $facet_source = \Drupal::service('facets.manager')->getFacetSource('search_api:views_page__solr_search_content');
+      //dpm($facet);
 
-          // Attach the source to the plugin.
-          $plugin_block->setContextValue('facet_source', $facet_source);
+      if ($facet instanceof FacetInterface) {
+        // Get the facet source.
+        $facet_source = $facet->getFacetSource();
+
+        //dpm($facet_source);
+
+        // Ensure facet source context is available.
+        if ($facet_source && ($current_path === '/search' || $this->isNodeOfType('islandora_object'))) {
+          // Render the facet block.
+          $facet_block_id = 'facets_block:' . $facet_name;
+          $block_manager = \Drupal::service('plugin.manager.block');
+          //dpm($block_manager);
+
+          $block_definitions = \Drupal::service('plugin.manager.block')->getDefinitions();
+          // Loop through block definitions and log only facet-related ones.
+          foreach ($block_definitions as $block_id => $definition) {
+            if (strpos($block_id, 'facets_block:') !== FALSE) {
+              \Drupal::logger('flat_views')->debug('Facet Block ID: @id', ['@id' => $block_id]);
+            }
+          }
+          // Ensure that the block exists and can be instantiated.
+          if ($block_manager->hasDefinition($facet_block_id)) {
+            dpm("has defnition");
+            $plugin_block = $block_manager->createInstance($facet_block_id);
+            $block_content = $plugin_block->build();
+
+            // Add the block content to the build array.
+            $build[] = $block_content;
+          } else {
+            // Log an error if the block definition is not found.
+            \Drupal::logger('flat_views')->error('The facet block "@id" was not found.', ['@id' => $facet_block_id]);
+          }
+        } else {
+          // Log an error if the facet was not loaded correctly.
+          \Drupal::logger('flat_views')->error('Facet with machine name "@name" was not found.', ['@name' => 'read_access_policy_search']);
         }
-
-        $block_content = $plugin_block->build();
-        $build[] = $block_content;
       }
-
-      return $build;
     }
+
+    return $build;
+  }
+
+  /**
+   * Helper function to check if the current route is a node of a specific content type.
+   *
+   * @param string $content_type
+   *   The content type machine name.
+   *
+   * @return bool
+   *   TRUE if the current page is a node of the given content type.
+   */
+  protected function isNodeOfType($content_type)
+  {
+    $node = $this->routeMatch->getParameter('node');
+    return $node instanceof \Drupal\node\NodeInterface && $node->bundle() === $content_type;
   }
 }

@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\views\ViewExecutable;
+use Drupal\facets\FacetSource\FacetSourcePluginInterface;
 
 
 
@@ -230,41 +231,6 @@ function flat_views_views_post_execute(ViewExecutable $view)
     }
 }
 
-/**
- * Implements hook_block_view_alter().
- */
-function flat_views_block_view_alter(array &$build, \Drupal\Core\Block\BlockPluginInterface $block) {
-    // Check if the block is the facets block by its machine name.
-    dpm($block->getDerivativeId());
-    if ($block->getDerivativeId() === 'read_access_policy_search') {
-      // Get the current route match service.
-      $route_match = \Drupal::routeMatch();
-      $node = $route_match->getParameter('node');
-
-      // Check if we are on the search results page.
-      $current_path = \Drupal::service('path.current')->getPath();
-
-      // Adjust the path for your search results page.
-      // Assuming the search results page path is '/search'.
-      if ($current_path == '/search') {
-        // Allow the facets block to display on the search results page.
-        return;
-      }
-
-      // Check if we are on a node page and if it's of the desired content type.
-      if ($node instanceof \Drupal\node\NodeInterface) {
-        $content_type = $node->bundle();
-
-        // Show the block only on nodes of a specific content type (e.g., 'article').
-        if ($content_type === 'islandora_object') {
-          return; // Keep the block if the content type is 'article'.
-        }
-      }
-
-      // If not the search page or the specific content type, remove the block.
-      unset($build);
-    }
-  }
 
 
 /* function flat_views_preprocess_facets_item_list(&$variables)
@@ -287,3 +253,25 @@ function flat_views_block_view_alter(array &$build, \Drupal\Core\Block\BlockPlug
         }
     }
 } */
+
+
+/**
+ * Implements hook_preprocess_HOOK() for page templates.
+ */
+/* function flat_views_preprocess_page(&$variables)
+{
+    // Get the current route name.
+    $route_name = \Drupal::routeMatch()->getRouteName();
+
+    // Check if the current page is not the search results page.
+    if ($route_name !== 'search_results') {
+        // Load the facet source and attach it to this page.
+        $facet_source = \Drupal::service('plugin.manager.facets.facet_source')->getDefinition('search_api:views_page__solr_search_content__page_1');
+        if ($facet_source instanceof FacetSourcePluginInterface) {
+            dpm("facet source found");
+            // Render facets on this non-search page.
+            $variables['facets'] = $facet_source->render();
+        }
+    }
+}
+ */
