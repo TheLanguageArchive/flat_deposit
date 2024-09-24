@@ -218,7 +218,7 @@ function flat_views_preprocess_facet(array &$variables)
 }
 */
 
-function flat_views_views_post_execute(ViewExecutable $view)
+/* function flat_views_views_post_execute(ViewExecutable $view)
 {
     // Check the view ID and display ID to target the correct view.
     if ($view->id() == 'facet_sum' && $view->current_display == 'block_1') {
@@ -229,7 +229,7 @@ function flat_views_views_post_execute(ViewExecutable $view)
             }
         }
     }
-}
+} */
 
 
 
