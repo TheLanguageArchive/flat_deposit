@@ -74,7 +74,7 @@ class FlatFacetsBlock extends BlockBase implements ContainerFactoryPluginInterfa
     $facet_storage = \Drupal::entityTypeManager()->getStorage('facets_facet');
 
     // List of facet machine names.
-    $facet_machine_names = ['read_access_policy_search'];
+    $facet_machine_names = ['descendant_of'];
 
     foreach ($facet_machine_names as $facet_name) {
       // Load the facet entity.
@@ -91,11 +91,13 @@ class FlatFacetsBlock extends BlockBase implements ContainerFactoryPluginInterfa
         // Ensure facet source context is available.
         if ($facet_source && ($current_path === '/search' || $this->isNodeOfType('islandora_object'))) {
           // Render the facet block.
-          $facet_block_id = 'facets_block:' . $facet_name;
+          $facet_block_id = 'facet_block:' . $facet_name;
           $block_manager = \Drupal::service('plugin.manager.block');
           //dpm($block_manager);
 
           $block_definitions = \Drupal::service('plugin.manager.block')->getDefinitions();
+
+          //dpm($block_definitions);
           // Loop through block definitions and log only facet-related ones.
           foreach ($block_definitions as $block_id => $definition) {
             if (strpos($block_id, 'facets_block:') !== FALSE) {
