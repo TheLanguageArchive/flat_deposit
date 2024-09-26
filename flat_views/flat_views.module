@@ -7,8 +7,11 @@ use Drupal\Core\Url;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\views\ViewExecutable;
 use Drupal\facets\FacetSource\FacetSourcePluginInterface;
-
-
+use Drupal\search_api\Entity\Index;
+use Drupal\facets\FacetManager\DefaultFacetManager;
+use Drupal\facets\FacetInterface;
+use Drupal\facets\FacetSource\FacetSourcePluginManager;
+use Drupal\node\NodeInterface;
 
 /**
  * @file
@@ -276,20 +279,17 @@ function flat_views_preprocess_facet(array &$variables)
 }
  */
 
- use Drupal\search_api\Entity\Index;
-use Drupal\facets\FacetInterface;
-
 /**
  * Implements hook_block_view_alter().
  */
 function flat_views_block_view_alter(array &$build, \Drupal\Core\Block\BlockPluginInterface $block) {
 
-    dpm("block view alter base id");
-    dpm($block->getBaseId());
+    //dpm("block view alter base id");
+    //dpm($block->getBaseId());
     //dpm("block view alter plugin id");
     //dpm($block->getPluginId());
-    dpm("block view alter configuration id");
-    dpm($block->getConfiguration());
+    //dpm("block view alter configuration id");
+    //dpm($block->getConfiguration());
   // Check if it's the desired facet block.
   if ($block->getBaseId() === 'flat_facets_block') {
 
@@ -302,3 +302,156 @@ function flat_views_block_view_alter(array &$build, \Drupal\Core\Block\BlockPlug
     }
   }
 }
+
+
+
+/**
+ * Programmatically trigger a facet query and add a filter for descendent_of.
+ *
+ * @param \Drupal\node\NodeInterface $node
+ *   The node entity to use in the facet query.
+ */
+function trigger_facet_query_programmatically(NodeInterface $node) {
+
+  // Get the facet source ID for the facet tied to your Search API index or view.
+  $facet_source_id = 'search_api:views_page__solr_search_content__page_1'; // Replace with your actual facet source ID.
+
+  // Load the Facet Source plugin manager.
+  /** @var \Drupal\facets\FacetSource\FacetSourcePluginManager $facet_source_manager */
+  $facet_source_manager = \Drupal::service('plugin.manager.facets.facet_source');
+
+  // Load the facet source plugin.
+  $facet_source = $facet_source_manager->createInstance($facet_source_id);
+
+
+  if ($facet_source) {
+    // Get the facets tied to this facet source.
+    $facet_manager = \Drupal::service('facets.manager');
+    $facets = $facet_manager->getFacetsByFacetSourceId($facet_source_id);
+
+    // Loop through facets and find the one matching 'descendent_of'.
+    foreach ($facets as $facet) {
+
+    //dpm($facet);
+      /** @var \Drupal\facets\FacetInterface $facet */
+
+      // We are specifically targeting the facet called 'descendent_of_search'.
+      if ($facet->id() === 'descendant_of_search') {
+
+        // Set the current node's ID as the active item for the 'descendent_of_search' facet.
+        $facet->setActiveItem($node->id());
+      }
+    }
+  } else {
+    \Drupal::logger('flat_views')->error('Facet source not found for source ID: @facet_source_id', ['@facet_source_id' => $facet_source_id]);
+  }
+}
+
+
+/**
+ * Implements hook_node_view().
+ */
+function flat_views_node_view(array &$build, \Drupal\node\NodeInterface $node, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display, $view_mode) {
+    // Check if the node is of the islandora_object content type
+    if ($node->bundle() == 'islandora_object') {
+      // Call the function to trigger the facet query programmatically.
+      trigger_facet_query_programmatically($node);
+    }
+  }
+
+  /**
+ * Implements hook_plugin_type_info().
+ */
+function flat_views_plugin_type_info() {
+    $info['search_query_processor']['custom_facets_query_processor'] = [
+      'class' => 'Drupal\custom_facets\Plugin\Search\CustomFacetsQueryProcessor',
+      'label' => t('Custom Facets Query Processor'),
+      'description' => t('Handles custom facet queries with include/exclude functionality.'),
+    ];
+    return $info;
+  }
+
+/**
+ * Custom submit handler to process facet values.
+ */
+function flat_views_facet_submit($form, FormStateInterface $form_state) {
+    // Capture the selected facets.
+    $facet_values = [];
+    foreach ($form['facets'] as $facet_name => $facet) {
+        foreach ($facet['#options'] as $value => $option) {
+            $facet_values[$facet_name][$value] = [
+                'include' => !empty($option['include']),
+                'exclude' => !empty($option['exclude']),
+            ];
+        }
+    }
+
+    // Save or pass these values to your custom query processor.
+    // This would typically involve setting them in the state or a session.
+    \Drupal::service('session')->set('custom_facets_values', $facet_values);
+}
+
+/**
+ * Implements hook_preprocess_views_view().
+ */
+function flat_views_preprocess_views_view(&$variables) {
+    dpm($variables['view']->id());
+    // Check if it's the view and display you want to alter.
+    if ($variables['view']->id() == 'your_view_machine_name' && $variables['view']->current_display == 'your_block_display_id') {
+      // Alter the facets here.
+      // Inspect the $variables array using Devel or print it out to find the correct structure.
+
+      $facets = &$variables['rows']; // The exact structure may vary based on your setup.
+
+      foreach ($facets as &$facet) {
+        // Add your plus/minus signs or any other alterations.
+        $facet['sign'] = '<span class="facet-sign">+</span>'; // Adjust logic for inclusive/exclusive search.
+      }
+    }
+  }
+
+
+/**
+ * Implements hook_preprocess_HOOK() for block templates.
+ */
+function flat_views_preprocess_block(&$variables) {
+    dpm($variables['elements']['#id']);
+    if ($variables['elements']['#id'] == 'tla_bootstrap_sass_flatfacetsblock') { // Replace with your block's machine name.
+        // Alter the output of the facets.
+        // You can inspect the block content using `dpm()` (if Devel is installed) to see the structure.
+        $facets = &$variables['content']['#items'];
+
+        // Example of adding plus/minus logic.
+        foreach ($facets as &$facet) {
+          // You can modify the $facet array to add your + / - buttons.
+          // Example:
+          $facet['sign'] = '<span class="facet-sign">+</span>'; // Modify to add actual logic for plus/minus.
+        }
+      }
+    // Add custom library for JS and CSS.
+    $variables['#attached']['library'][] = 'flat_views/flat_views';
+}
+
+/**
+ * Implements hook_library_info_build().
+ */
+function flat_views_library_info_build() {
+    $libraries['flat_views'] = [
+        'version' => '1.0',
+        'css' => [
+            'theme' => [
+                'css/custom_facets.css' => [],
+            ],
+        ],
+        'js' => [
+            'js/custom_facets.js' => [],
+        ],
+    ];
+    return $libraries;
+}
+
+
+
+
+
+

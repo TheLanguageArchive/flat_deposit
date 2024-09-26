@@ -63,8 +63,6 @@ class FlatFacetsBlock extends BlockBase implements ContainerFactoryPluginInterfa
   public function build()
   {
 
-    dpm('build called');
-
     $build = [];
 
     // Get the current path.
@@ -74,51 +72,34 @@ class FlatFacetsBlock extends BlockBase implements ContainerFactoryPluginInterfa
     $facet_storage = \Drupal::entityTypeManager()->getStorage('facets_facet');
 
     // List of facet machine names.
-    $facet_machine_names = ['descendant_of'];
+    $facet_machine_names = ['descendant_of_search', 'read_access_policy_search', 'language'];
 
     foreach ($facet_machine_names as $facet_name) {
       // Load the facet entity.
       $facet = $facet_storage->load($facet_name);
 
-      //dpm($facet);
-
       if ($facet instanceof FacetInterface) {
         // Get the facet source.
         $facet_source = $facet->getFacetSource();
-
-        //dpm($facet_source);
 
         // Ensure facet source context is available.
         if ($facet_source && ($current_path === '/search' || $this->isNodeOfType('islandora_object'))) {
           // Render the facet block.
           $facet_block_id = 'facet_block:' . $facet_name;
           $block_manager = \Drupal::service('plugin.manager.block');
-          //dpm($block_manager);
 
-          $block_definitions = \Drupal::service('plugin.manager.block')->getDefinitions();
-
-          //dpm($block_definitions);
-          // Loop through block definitions and log only facet-related ones.
-          foreach ($block_definitions as $block_id => $definition) {
-            if (strpos($block_id, 'facets_block:') !== FALSE) {
-              \Drupal::logger('flat_views')->debug('Facet Block ID: @id', ['@id' => $block_id]);
-            }
-          }
           // Ensure that the block exists and can be instantiated.
           if ($block_manager->hasDefinition($facet_block_id)) {
-            dpm("has defnition");
+
             $plugin_block = $block_manager->createInstance($facet_block_id);
             $block_content = $plugin_block->build();
 
             // Add the block content to the build array.
             $build[] = $block_content;
           } else {
-            // Log an error if the block definition is not found.
-            \Drupal::logger('flat_views')->error('The facet block "@id" was not found.', ['@id' => $facet_block_id]);
+            // Log a warning if the block definition is not found.
+            \Drupal::logger('flat_views')->warning('The facet block "@id" was not found.', ['@id' => $facet_block_id]);
           }
-        } else {
-          // Log an error if the facet was not loaded correctly.
-          \Drupal::logger('flat_views')->error('Facet with machine name "@name" was not found.', ['@name' => 'read_access_policy_search']);
         }
       }
     }
