@@ -298,7 +298,7 @@ function flat_views_library_info_build() {
  * @param array $variables
  *   The variables that are passed to the template.
  */
-function flat_views_preprocess_facets_item_list(&$variables)
+/* function flat_views_preprocess_facets_item_list(&$variables)
 {
     $nid = NULL;
 
@@ -324,7 +324,112 @@ function flat_views_preprocess_facets_item_list(&$variables)
     //dpm($item);
 
     $variables['#attached']['library'][] = 'flat_views/flat_views';
-}
+} */
+
+/**
+ * Implements hook_preprocess_facets_item_list().
+ */
+function flat_views_preprocess_facets_item_list(&$variables) {
+
+    dpm($variables['facet']->getFacetSourceId());
+    // Check if this is the facet you want to modify.
+    if ($variables['facet']->id() == 'read_access_policy_search') {
+
+        $nid = NULL;
+
+    $custom_view_path = '/search';
+
+    $node = \Drupal::routeMatch()->getParameter('node');
+    if ($node instanceof \Drupal\node\NodeInterface) {
+        $nid = $node->id();
+    }
+
+      // Define facet machine names for inclusive and exclusive facets.
+      $inclusive_facet_name = 'read_access_policy_search';
+      $exclusive_facet_name = 'read_access_policy_search_exclusive';
+
+      // Initialize arrays to hold facet items from inclusive and exclusive facets.
+      $inclusive_items = [];
+      $exclusive_items = [];
+
+      // Check for the inclusive facet.
+      if ($variables['facet']->id() === $inclusive_facet_name) {
+        $inclusive_items = $variables['items'];
+      }
+
+      // Check for the exclusive facet.
+      if ($variables['facet']->id() === $exclusive_facet_name) {
+        $exclusive_items = $variables['items'];
+      }
+
+      // Combine the inclusive and exclusive facet results.
+      $combined_results = [];
+
+      // Process inclusive facet items.
+      foreach ($inclusive_items as $item) {
+        $display_value = $item['#markup']; // Assuming 'label' or 'markup' holds the display value.
+        $combined_results[$display_value]['inclusive'] = [
+          'label' => $display_value,
+          'inclusive_url' => $item['#url']->toString(),
+        ];
+      }
+
+      // Process exclusive facet items.
+      foreach ($exclusive_items as $item) {
+        $display_value = $item['#markup'];
+        $combined_results[$display_value]['exclusive'] = [
+          'label' => $display_value,
+          'exclusive_url' => $item['#url']->toString(),
+        ];
+      }
+
+      // Prepare the final list of items for rendering.
+      $variables['items'] = [];
+      foreach ($combined_results as $value => $types) {
+        $inclusive_url = isset($types['inclusive']['inclusive_url']) ? $types['inclusive']['inclusive_url'] : '#';
+        $exclusive_url = isset($types['exclusive']['exclusive_url']) ? $types['exclusive']['exclusive_url'] : '#';
+
+        // Append both "+" and "-" links for each value.
+        $variables['items'][] = [
+          '#markup' => $value,
+          '#inclusive_url' => $inclusive_url,
+          '#exclusive_url' => $exclusive_url,
+        ];
+      }
+    }
+  }
+
+/**
+ * Loads the facet items for a given facet machine name.
+ */
+function flat_views_load_facet_items($facet_machine_name) {
+    // Load the facet configuration entity.
+    $facet = \Drupal::entityTypeManager()->getStorage('facets_facet')->load($facet_machine_name);
+    if (!$facet) {
+      return [];
+    }
+
+    // Get the facet source plugin.
+    $facet_source_plugin = $facet->getFacetSource()->getPlugin();
+
+    // Rebuild the query and process the facet results.
+    $query = $facet_source_plugin->getQuery();
+    $query->execute();
+
+    // Process the facet results through the processor.
+    \Drupal::service('facets.manager')->build($facet);
+
+    // Collect the items from the processed facet results.
+    $facet_items = [];
+    foreach ($facet->getProcessedResults() as $result) {
+      $facet_items[] = [
+        '#markup' => $result->getDisplayValue(),
+        '#url' => $result->getUrl(),
+      ];
+    }
+
+    return $facet_items;
+  }
 
 /**
  * Implements hook_theme_registry_alter().
@@ -344,6 +449,63 @@ function flat_views_theme_registry_alter(&$theme_registry) {
 
   }
 }
+
+/**
+ * Implements hook_preprocess_block().
+ */
+function flat_views_preprocess_block(&$variables) {
+    if ($variables['configuration']['provider'] == 'facets') {
+        // Check if this is the specific facet block you're targeting.
+  //if ($variables['base_plugin_id'] === 'views_block') { // && $variables['elements']['#facet']->getName() == 'read_access_policy_search') {
+
+    //dpm('hook block preprocess');
+
+    // Load the two facets (inclusive and exclusive) by machine name.
+    $inclusive_facet = Facet::load('read_access_policy_search'); // Replace 'facet_inclusive' with your actual facet machine name.
+    $exclusive_facet = Facet::load('read_access_policy_search_exclusive'); // Replace 'facet_exclusive' with your actual facet machine name.
+
+/*     // Get the results for both facets.
+    $inclusive_results = $inclusive_facet->getResults();
+    $exclusive_results = $exclusive_facet->getResults();
+
+    // Combine the facets by display value.
+    $combined_results = [];
+
+    foreach ($inclusive_results as $result) {
+      $display_value = $result->getDisplayValue();
+      $combined_results[$display_value]['inclusive'] = [
+        'label' => $display_value . ' +',
+        'url' => $result->getUrl()->toString(),
+      ];
+    }
+
+    foreach ($exclusive_results as $result) {
+      $display_value = $result->getDisplayValue();
+      $combined_results[$display_value]['exclusive'] = [
+        'label' => $display_value . ' -',
+        'url' => $result->getUrl()->toString(),
+      ];
+    }
+
+    // Prepare the final results array for rendering.
+    $final_results = [];
+    foreach ($combined_results as $value => $types) {
+      $inclusive_url = isset($types['inclusive']) ? $types['inclusive']['url'] : '#';
+      $exclusive_url = isset($types['exclusive']) ? $types['exclusive']['url'] : '#';
+
+      $final_results[] = [
+        'label' => $value,
+        'inclusive_url' => $inclusive_url,
+        'exclusive_url' => $exclusive_url,
+      ];
+    }
+
+    // Pass the combined results to the template.
+    $variables['content']['#items'] = $final_results */
+  }
+}
+
+
 
 
 
