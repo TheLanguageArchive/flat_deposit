@@ -1,4 +1,8 @@
 .facet-sign {
-    font-weight: bold;
+    float: right;
     margin-left: 5px;
+}
+
+li.breadcrumb-exclude a {
+    text-decoration: line-through;
 }

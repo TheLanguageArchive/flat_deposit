@@ -1,0 +1,6 @@
+services:
+  flat_views.breadcrumb_builder:
+    class: Drupal\flat_views\Breadcrumb\CustomBreadcrumbBuilder
+    arguments: ['@current_route_match', '@entity_type.manager', '@path.current']
+    tags:
+      - { name: breadcrumb_builder, priority: 100 }
