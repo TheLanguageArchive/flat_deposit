@@ -87,7 +87,7 @@ class CustomBreadcrumbBuilder implements BreadcrumbBuilderInterface
         $breadcrumb->addCacheTags(['node_list']);
 
         // Start with the Home link.
-        $breadcrumb->addLink(\Drupal\Core\Link::createFromRoute(t('Hello'), '<front>'));
+        $breadcrumb->addLink(\Drupal\Core\Link::createFromRoute(t('Home'), '<front>'));
 
         /** @var \Drupal\facets\FacetSource\FacetSourcePluginManager $facet_source_manager */
         $facet_source_manager = \Drupal::service('plugin.manager.facets.facet_source');
@@ -149,18 +149,25 @@ class CustomBreadcrumbBuilder implements BreadcrumbBuilderInterface
                 $url_processor = $url_processor_manager->createInstance($facet_source->getUrlProcessorName(), ['facet' => $facet]);
                 $facet_manager->build($facet);
 
-                $result = $facet->getResults()[0];
+                //dpm($facet->getResults());
 
-                $cloned_result = clone $result;
+                $results = $facet->getResults();
 
-                if (in_array($cloned_result->getRawValue(), $cloned_result->getFacet()->getActiveItems())) {
-                    $cloned_result->setActiveState(TRUE);
+                foreach ($results as $result) {
+
+                    $cloned_result = clone $result;
+
+                    if (in_array($cloned_result->getRawValue(), $cloned_result->getFacet()->getActiveItems())) {
+                        $cloned_result->setActiveState(TRUE);
+                        $active_results[$facet->id()][] = $cloned_result;
+
+                        $active_facets[$facet->id()] = $facet;
+                    }
                 }
-                $active_results[$facet->id()][] = $cloned_result;
-
-                $active_facets[$facet->id()] = $facet;
             }
         }
+
+        //dpm($active_results);
 
         /** @var \Drupal\facets\Result\ResultInterface[] $facet_results */
         foreach ($active_results as $facet_id => $facet_results) {
@@ -168,32 +175,38 @@ class CustomBreadcrumbBuilder implements BreadcrumbBuilderInterface
             $facet_crumb_items = [];
 
             foreach ($facet_results as $res) {
+                //dpm($res->getRawValue());
                 $facet_used_result[$facet_id][] = $res->getRawValue();
-                $facet_crumb_items[] = implode(', ', $res->getFacet()->getActiveItems());
+                $facet_crumb_items = $res->getFacet()->getActiveItems();
             }
 
             sort($facet_crumb_items);
 
-            $facet_url = $facets_url_generator->getUrl($facet_used_result, FALSE);
+            foreach ($facet_crumb_items as $facet_crumb_item) {
 
-            $options = $facet_url->getOptions();
+                $facet_used_result[$facet_id] = [$facet_crumb_item];
 
-            if (str_contains($facet_id, '_include')) {
-                $options['attributes']['class'][] = 'breadcrumb-include';
-            } elseif (str_contains($facet_id, '_exclude')) {
-                $options['attributes']['class'][] = 'breadcrumb-exclude';
+                $facet_url = $facets_url_generator->getUrl($facet_used_result, FALSE);
+
+                $options = $facet_url->getOptions();
+
+                if (str_contains($facet_id, '_include')) {
+                    $options['attributes']['class'][] = 'breadcrumb-include';
+                } elseif (str_contains($facet_id, '_exclude')) {
+                    $options['attributes']['class'][] = 'breadcrumb-exclude';
+                }
+
+                $facet_url->setOptions($options);
+
+                if (!empty($facet_source->getBreadcrumbSettings()['before'])) {
+                    $crumb_text = $active_facets[$facet_id]->label() . ': ' . $facet_crumb_item;
+                } else {
+                    $crumb_text = $facet_crumb_item;
+                };
+                $link = Link::fromTextAndUrl($crumb_text, $facet_url);
+
+                $breadcrumb->addLink($link);
             }
-
-            $facet_url->setOptions($options);
-
-            if (!empty($facet_source->getBreadcrumbSettings()['before'])) {
-                $crumb_text = $active_facets[$facet_id]->label() . ': ' . implode(', ', $facet_crumb_items);
-            } else {
-                $crumb_text = implode(', ', $facet_crumb_items);
-            };
-            $link = Link::fromTextAndUrl($crumb_text, $facet_url);
-
-            $breadcrumb->addLink($link);
         }
 
         return $breadcrumb;
