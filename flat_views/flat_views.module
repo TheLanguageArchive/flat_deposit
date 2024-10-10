@@ -184,7 +184,7 @@ function flat_views_block_info_alter(&$blocks, $theme, $code_blocks)
  * @param \Drupal\node\NodeInterface $node
  *   The node entity to use in the facet query.
  */
-function trigger_facet_query_programmatically(NodeInterface $node)
+function trigger_facet_query(NodeInterface $node)
 {
 
   // Get the facet source ID for the facet tied to your Search API index or view.
@@ -206,7 +206,7 @@ function trigger_facet_query_programmatically(NodeInterface $node)
     // Loop through facets and find the one matching 'descendent_of_search'.
     foreach ($facets as $facet) {
 
-      if ($facet->id() === 'descendant_of_search') {
+      if ($facet->id() === 'descendant_of') {
 
         // Set the current node's ID as the active item
         $facet->setActiveItem($node->id());
@@ -237,7 +237,7 @@ function flat_views_node_view(array &$build, \Drupal\node\NodeInterface $node, \
   // Check if the node is of the islandora_object content type
   if ($node->bundle() == 'islandora_object') {
     // Call the function to trigger the facet query programmatically.
-    trigger_facet_query_programmatically($node);
+    trigger_facet_query($node);
   }
 }
 
@@ -287,6 +287,14 @@ function flat_views_library_info_build()
 function flat_views_preprocess_facets_item_list(&$variables)
 {
 
+  $node = \Drupal::routeMatch()->getParameter('node');
+  if ($node instanceof \Drupal\node\NodeInterface) {
+      $nid = $node->id();
+  }
+  else {
+      $nid = NULL;
+  }
+
   $facet_id = $variables['facet']->id();
 
   if (str_contains($facet_id, 'include')) {
@@ -328,6 +336,10 @@ function flat_views_preprocess_facets_item_list(&$variables)
           // current include value
 
           $include_url = $item['value']['#url'];
+
+          if ($nid) {
+            $include_url->mergeOptions(['query' => ['f' => ['descendant_of:' . $nid]]]);
+          }
 
           $exclude_url = clone $include_url;
 
