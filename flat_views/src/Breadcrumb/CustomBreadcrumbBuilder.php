@@ -155,7 +155,6 @@ class CustomBreadcrumbBuilder implements BreadcrumbBuilderInterface
                     if (str_contains($facet_id, '_exclude')) {
 
                         $active_results[$facet_id][] = $cloned_result;
-
                     }
                 }
             }
@@ -175,8 +174,7 @@ class CustomBreadcrumbBuilder implements BreadcrumbBuilderInterface
 
                         $facet_used_result[$facet_id][] = $active_item;
                     }
-                }
-                else {
+                } else {
                     $facet_used_result[$facet_id][] = $res->getRawValue();
                 }
                 $all_facet_crumb_items[$facet_id] = $res->getFacet()->getActiveItems();
@@ -187,9 +185,15 @@ class CustomBreadcrumbBuilder implements BreadcrumbBuilderInterface
 
             foreach ($facet_crumb_items as $facet_crumb_item) {
 
-                $facet_used_result[$facet_id] = [$facet_crumb_item];
+                // URL for the breadcrumb option to remove the facet value (superscript "x" link in the template)
+                $facet_remove_url = $facets_url_generator->getUrl($facet_used_result, FALSE);
 
-                $facet_url = $facets_url_generator->getUrl($facet_used_result, FALSE);
+                // URL for the breadcrumb option to select only his particular value for the facet
+                $facet_used_result_copy = $facet_used_result;
+
+                $facet_used_result_copy[$facet_id] = [$facet_crumb_item];
+
+                $facet_url = $facets_url_generator->getUrl($facet_used_result_copy, FALSE);
 
                 $options = $facet_url->getOptions();
 
@@ -199,7 +203,23 @@ class CustomBreadcrumbBuilder implements BreadcrumbBuilderInterface
                     $options['attributes']['class'][] = 'breadcrumb-exclude';
                 }
 
+                // remove the current value for the remove URL query, leaving all other values
+                $facet_remove_options = $facet_remove_url->getOptions();
+
+                foreach ($facet_remove_options['query']['f'] as $key => $facet_value) {
+
+                    if ($facet_value  == $facet_id . ":" . $facet_crumb_item) {
+                        unset($facet_remove_options['query']['f'][$key]);
+                    }
+                }
+
+                $facet_remove_url->setOptions($facet_remove_options);
+
+                // add the remove URL to an attribute such that we can use it in the template
+                $options['attributes']['remove'] = $facet_remove_url->toString();
+
                 $facet_url->setOptions($options);
+
                 if ($facet_id == 'descendant_of') {
                     $nid = $facet_crumb_item;
                     $node = Node::load($nid);
@@ -207,6 +227,7 @@ class CustomBreadcrumbBuilder implements BreadcrumbBuilderInterface
                 } else {
                     $crumb_text = $facet_crumb_item;
                 }
+
                 $link = Link::fromTextAndUrl($crumb_text, $facet_url);
 
                 $breadcrumb->addLink($link);

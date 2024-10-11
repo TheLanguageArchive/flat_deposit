@@ -242,19 +242,6 @@ function flat_views_node_view(array &$build, \Drupal\node\NodeInterface $node, \
 }
 
 /**
- * Implements hook_plugin_type_info().
- */
-function flat_views_plugin_type_info()
-{
-  $info['search_query_processor']['custom_facets_query_processor'] = [
-    'class' => 'Drupal\custom_facets\Plugin\Search\CustomFacetsQueryProcessor',
-    'label' => t('Custom Facets Query Processor'),
-    'description' => t('Handles custom facet queries with include/exclude functionality.'),
-  ];
-  return $info;
-}
-
-/**
  * Implements hook_library_info_build().
  */
 function flat_views_library_info_build()
@@ -289,10 +276,9 @@ function flat_views_preprocess_facets_item_list(&$variables)
 
   $node = \Drupal::routeMatch()->getParameter('node');
   if ($node instanceof \Drupal\node\NodeInterface) {
-      $nid = $node->id();
-  }
-  else {
-      $nid = NULL;
+    $nid = $node->id();
+  } else {
+    $nid = NULL;
   }
 
   $facet_id = $variables['facet']->id();
@@ -429,7 +415,8 @@ function flat_views_theme_registry_alter(&$theme_registry)
   }
 }
  */
-function flat_deposit_preprocess_breadcrumb(&$variables) {
+function flat_deposit_preprocess_breadcrumb(&$variables)
+{
   $variables['breadcrumb'] = [];
   /** @var \Drupal\Core\Link $link */
   foreach ($variables['links'] as $key => $link) {
@@ -438,7 +425,10 @@ function flat_deposit_preprocess_breadcrumb(&$variables) {
     if (isset($options['attributes']['class'])) {
       $class = implode(' ', $options['attributes']['class']);
     }
-    $variables['breadcrumb'][$key] = ['text' => $link->getText(), 'url' => $link->getUrl()->toString(), 'class' => $class];
+    $remove = NULL;
+    if (isset($options['attributes']['remove'])) {
+      $remove = $options['attributes']['remove'];
+    }
+    $variables['breadcrumb'][$key] = ['text' => $link->getText(), 'url' => $link->getUrl()->toString(), 'class' => $class, 'remove' => $remove];
   }
 }
-

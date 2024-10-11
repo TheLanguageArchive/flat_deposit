@@ -15,6 +15,9 @@
       {% if item.url %}
         <li class="breadcrumb-item {{ item.class }}">
           <a href="{{ item.url }}">{{ item.text }}</a>
+          {% if item.remove %}
+          <sup><a href="{{ item.remove }}" class="remove">x</a></sup>
+          {% endif %}
         </li>
       {% else %}
         <li class="breadcrumb-item active {{ item.class }}">
