@@ -7,10 +7,8 @@ use Drupal\Core\Breadcrumb\BreadcrumbBuilderInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Path\CurrentPathStack;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\Core\Link;
 use Drupal\facets\FacetInterface;
-use Drupal\facets\Entity\Facet;
 use Drupal\node\Entity\Node;
 
 
@@ -192,6 +190,13 @@ class CustomBreadcrumbBuilder implements BreadcrumbBuilderInterface
                 $facet_used_result_copy = $facet_used_result;
 
                 $facet_used_result_copy[$facet_id] = [$facet_crumb_item];
+
+                // remove the options for the opposite facet (include or exclude)
+                if (str_contains($facet_id, '_include')) {
+                    unset($facet_used_result_copy[str_replace('_include', '_exclude', (string)$facet_id)]);
+                } elseif (str_contains($facet_id, '_exclude')) {
+                    unset($facet_used_result_copy[str_replace('_exclude', '_include', (string)$facet_id)]);
+                }
 
                 $facet_url = $facets_url_generator->getUrl($facet_used_result_copy, FALSE);
 
