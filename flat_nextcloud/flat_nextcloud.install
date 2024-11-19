@@ -7,7 +7,7 @@ use Drupal\flat_workspaces\FieldStorageDefinition;
  */
 function flat_nextcloud_install()
 {
-    $formDisplayStorage = \Drupal::entityTypeManager()->getStorage('entity_form_display');
+/*     $formDisplayStorage = \Drupal::entityTypeManager()->getStorage('entity_form_display');
 
     $flatBundleDisplay = $formDisplayStorage->load('node.flat_bundle.default');
     $flatBundleDisplay->setComponent('flat_nc_path', ['type' => 'text_textfield'])->save();
@@ -25,7 +25,7 @@ function flat_nextcloud_install()
             'settings' => ['display_label' => TRUE],
         ]);
 
-    $userFormDisplay->save();
+    $userFormDisplay->save(); */
 }
 
 /**
