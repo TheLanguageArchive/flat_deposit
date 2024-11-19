@@ -9,7 +9,7 @@ use Drupal\flat_workspaces\FieldStorageDefinition;
 function flat_workspaces_install()
 {
   /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $form_display */
-  $form_display = \Drupal::entityTypeManager()
+  /*   $form_display = \Drupal::entityTypeManager()
     ->getStorage('entity_form_display')
     ->load('node.flat_bundle.default');
 
@@ -17,7 +17,7 @@ function flat_workspaces_install()
     'type' => 'text_textfield',
   ]);
 
-  $form_display->save();
+  $form_display->save(); */
 }
 
 
