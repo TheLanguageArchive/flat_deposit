@@ -5,28 +5,7 @@ use Drupal\flat_workspaces\FieldStorageDefinition;
 /**
  * Implements hook_install
  */
-function flat_nextcloud_install()
-{
-/*     $formDisplayStorage = \Drupal::entityTypeManager()->getStorage('entity_form_display');
-
-    $flatBundleDisplay = $formDisplayStorage->load('node.flat_bundle.default');
-    $flatBundleDisplay->setComponent('flat_nc_path', ['type' => 'text_textfield'])->save();
-
-    $userFormDisplay = $formDisplayStorage->load('user.user.default');
-    $userFormDisplay
-        ->setComponent('nextcloud_integration', [
-            'type' => 'boolean_checkbox',
-            'weight' => 4,
-            'settings' => ['display_label' => TRUE],
-        ])
-        ->setComponent('nextcloud_uid', [
-            'type' => 'string_textfield',
-            'weight' => 4,
-            'settings' => ['display_label' => TRUE],
-        ]);
-
-    $userFormDisplay->save(); */
-}
+function flat_nextcloud_install() {}
 
 /**
  * Implements hook_uninstall
@@ -34,22 +13,4 @@ function flat_nextcloud_install()
  * Removes all nextcloud variables and deleted user entity fields
  *
  */
-function flat_nextcloud_uninstall()
-{
-    //variable_del('flat_nextcloud');
-    /*
-//field_attach_delete_bundle('user', 'user');
-
-// Remove flat_source field option to select a Nextcloud directory in Bundle form
-$field = field_info_field('flat_source');
-
-$values = &$field['settings']['allowed_values'];
-
-if (isset($values['cloud'])) {
-
-unset($values['cloud']);
-field_update_field($field);
-
-}
- */
-}
+function flat_nextcloud_uninstall() {}
