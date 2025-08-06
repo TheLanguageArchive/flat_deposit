@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Reference;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -10,6 +12,9 @@ use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\system\Entity\Menu;
 use Drupal\file\Entity\File;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\media\Entity\MediaType;
+use Drupal\flat_deposit\Plugin\Validation\Constraint\CustomFileExtensionConstraint;
 
 /**
  * Implements hook_theme().
@@ -1749,4 +1754,52 @@ function flat_deposit_preprocess_fieldset(&$variables)
 {
     $element = $variables['element'];
     $variables['actions'] = $element['#actions'] ?? FALSE;
+
 }
+
+
+/**
+ * Implements hook_entity_presave().
+ */
+function flat_deposit_entity_presave($entity) {
+  if (
+    $entity->getEntityTypeId() === 'file' &&
+    $entity->isNew()
+  ) {
+    $route = \Drupal::routeMatch()->getRouteName();
+
+    if (str_starts_with($route, 'jsonapi.')) {
+      $request = \Drupal::requestStack()->getCurrentRequest();
+      $raw_content = $request->getContent();
+      $data = json_decode($raw_content, TRUE);
+
+      \Drupal::logger('flat_deposit')->debug('setting file entity status to TRUE');
+
+      $entity->set('status', TRUE);
+
+      \Drupal::logger('flat_deposit')->debug('Raw JSON: @json', ['@json' => $raw_content]);
+
+      if (!empty($data['data']['attributes']['filemime'])) {
+        $provided_mime = $data['data']['attributes']['filemime'];
+
+        \Drupal::logger('flat_deposit')->notice('Overriding detected filemime with: @mime', ['@mime' => $provided_mime]);
+
+        // Forcefully override.
+        $entity->set('filemime', $provided_mime);
+      }
+      else {
+        \Drupal::logger('flat_deposit')->warning('No filemime attribute found in JSON:API upload.');
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_validation_constraint_alter().
+ */
+function flat_deposit_validation_constraint_alter(array &$definitions) {
+  if (isset($definitions['FileExtension'])) {
+    $definitions['FileExtension']['class'] = \Drupal\flat_deposit\Plugin\Validation\Constraint\FileExtensionConstraint::class;
+  }
+}
+

@@ -3,7 +3,8 @@ description: Provides an interface for depositing archive materials
 package: FLAT
 type: module
 core_version_requirement: ^10
-# dependencies:
+dependencies:
+    - drupal:file
 #   - drupal:imce
 #   - drupal:views
 #   - drupal:feeds
