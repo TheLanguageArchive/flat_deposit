@@ -1,7 +1,7 @@
 {
     "name": "thelanguagearchive/flat_deposit",
     "description": "Drupal deposit module for next generation Islandora/Fedora-based repository",
-    "type": "drupal-module",
+    "type": "drupal-custom-module",
     "license": "GPL-3.0",
     "minimum-stability": "dev",
     "require": {
