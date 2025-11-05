@@ -1,7 +1,7 @@
 <?php
 
 //include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/IngestService/SIP.php';
-module_load_include('php', 'flat_deposit', 'Helpers/IngestService/SIP');
+\Drupal::moduleHandler()->loadInclude('flat_deposit', 'php', 'Helpers/IngestService/SIP');
 
 class Bundle extends SIP
 {
@@ -126,7 +126,7 @@ class Bundle extends SIP
             return TRUE;
         }
 
-        module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'inc/class.FlatBundle');
 
         $move = \FlatBundle::moveBundleData($this->node, 'data', 'freeze');
 
@@ -216,7 +216,7 @@ class Bundle extends SIP
 
         $this->logging('Starting addResourcesToCmdi');
 
-        module_load_include('inc', 'flat_deposit', '/Helpers/CMDI/class.CmdiHandler');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', '/Helpers/CMDI/class.CmdiHandler');
 
         $file_name = $this->cmdiTarget;
 
@@ -373,7 +373,7 @@ class Bundle extends SIP
         $this->logging('Starting customRollback');
 
         // bundles need to unfreeze (if frozen) during rollback
-        module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'inc/class.FlatBundle');
 
         $move = \FlatBundle::moveBundleData($this->node, 'data', 'unfreeze');
         $move = \FlatBundle::moveBundleData($this->node, 'metadata', 'unfreeze');

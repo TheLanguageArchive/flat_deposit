@@ -2,8 +2,8 @@
 
 use \Drupal\Core\File\StreamWrapperManager;
 
-module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/Template2FormParser');
-module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/Form2CmdiParser');
+\Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/Template2FormParser');
+\Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/Form2CmdiParser');
 
 class RecursiveDotFilterIterator extends RecursiveFilterIterator
 {

@@ -61,10 +61,10 @@ class NextcloudStreamWrapper extends LocalStream
         $path = $this
           ->getDirectoryPath() . $this
           ->getTarget($uri);
-      
+
         $realpath = realpath($path);
         if (!$realpath) {
-      
+
           // This file does not yet exist.
           $realpath = realpath(dirname($path)) . '/' . \Drupal::service('file_system')
             ->basename($path);

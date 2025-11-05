@@ -19,7 +19,7 @@ function flat_fedora_collections_form($form, &$form_state)
     $connection = islandora_get_tuque_connection();
     $ri = $connection->repository->ri;
 
-    module_load_include('php', 'flat_deposit','/inc/fedora_queries');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'php', '/inc/fedora_queries');
     $query = query_owned_collections($user_name);
     $sparql_query_results = $ri->sparqlQuery($query);
 
@@ -112,7 +112,7 @@ function flat_fedora_collections_form_submit($form, &$form_state){
         $user = \Drupal::currentUser();
         $uid = $user->uid;
 
-        module_load_include('inc', 'flat_deposit','/inc/flat_collection.add_collection');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', '/inc/flat_collection.add_collection');
         create_collection_node($data['label'], $uid, $data['pid']);
 
 

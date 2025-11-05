@@ -4,9 +4,9 @@ spl_autoload_register('autoload_formleaf');
 function autoload_formleaf()
 {
 
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormComposite');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormComponent');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormField');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormComposite');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormComponent');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormField');
 
 }
 

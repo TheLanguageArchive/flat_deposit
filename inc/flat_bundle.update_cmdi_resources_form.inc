@@ -36,7 +36,7 @@ function flat_bundle_update_cmdi_resources_form($form, &$form_state)
     );
 
 
-    module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
 
 
     if(!file_exists(\Drupal::service("file_system")->realpath($fName))){
@@ -160,7 +160,7 @@ function flat_bundle_delete_cmdi_resource_submit($form, &$form_state){
 
     $resourceIDs = $node->flat_deleted_resources->value ? explode(',', $node->flat_deleted_resources->value) : [];
 
-    module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
 
     $cmd = $form_state['values']['data']['cmdi'];
     foreach (array_slice($form_state['values']['table_container'], 0, -1) as $row){

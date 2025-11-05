@@ -43,7 +43,7 @@ class BundleEditCmdiForm extends FormBase
 
     if (!empty($node)) {
 
-      module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+      \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
 
       // exit form generation if no parent collection has been selected
       if ($form_state->get([
@@ -189,7 +189,7 @@ class BundleEditCmdiForm extends FormBase
       $form_state->set(['selected'], '');
     }
 
-    module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'inc/class.FlatTuque');
     // Form Validation setup
     $owner = $form_state->getValue(['owner']);
     $namespace = $form_state->getValue(['namespace']);
@@ -280,8 +280,8 @@ class BundleEditCmdiForm extends FormBase
         //*******************//
         // Generate Cmdi file//
         //*******************//
-        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
-        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiValueExtractor');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiPreset/class.CmdiValueExtractor');
 
         $templateName = $form_state->get(['selected']);
         $owner = $form_state->getValue(['owner']);
@@ -307,8 +307,8 @@ class BundleEditCmdiForm extends FormBase
         break;
 
       case 'Import':
-        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
-        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
 
         $file = file_save_upload('cmdi_file', array(
           // Validate file extensions

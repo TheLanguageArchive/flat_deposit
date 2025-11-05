@@ -45,7 +45,7 @@ class CollectionController extends ControllerBase
 
         } */
 
-        module_load_include('inc', 'node', 'node.pages');
+        \Drupal::moduleHandler()->loadInclude('node', 'inc', 'node.pages');
 
         /*         $node_type = 'flat_collection';
         $node = \Drupal::entityTypeManager()

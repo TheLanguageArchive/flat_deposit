@@ -1,7 +1,7 @@
 <?php
 
 //include_once drupal_get_path('module', 'flat_deposit') . '/Helpers/IngestService/SIP.php';
-module_load_include('php', 'flat_deposit', 'Helpers/IngestService/SIP');
+\Drupal::moduleHandler()->loadInclude('flat_deposit', 'php', 'Helpers/IngestService/SIP');
 
 /**
  * Collection is responsible to ingest new/updated MPI_collections and updated MPI_BUndles into the fedora commons repository.

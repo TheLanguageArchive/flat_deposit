@@ -64,7 +64,7 @@ class CollectionAddCurrentCollectionForm extends FormBase {
     $obj = $form_state->getValue(['data', 'fedoraObject']);
     $fid = $obj->id;
 
-    module_load_include('inc', 'flat_deposit', 'inc/class.FlatCollection');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'inc/class.FlatCollection');
     $collection_nodes = FlatCollection::getUserCollectionNodes($user->id(), $fid);
     if (!empty($collection_nodes)) {
       $form_state->setErrorByName('submit', 'Current collection is already active');
@@ -98,7 +98,7 @@ class CollectionAddCurrentCollectionForm extends FormBase {
     $fid = $obj->id;
 
 
-    module_load_include('inc', 'flat_deposit', 'inc/flat_collection.add_collection');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'inc/flat_collection.add_collection');
     create_collection_node($label, $uid, $fid);
 
     \Drupal::messenger()->addMessage('Collection has been added to your active collections');

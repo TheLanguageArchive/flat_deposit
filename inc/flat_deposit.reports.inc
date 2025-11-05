@@ -50,7 +50,7 @@ function flat_deposit_ui_list_uploads(){
         '#theme' => 'item_list',
     );
 
-    return render($content);
+    return \Drupal::service('renderer')->render($content);
 
 }
 

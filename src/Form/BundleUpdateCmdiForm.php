@@ -37,7 +37,7 @@ class BundleUpdateCmdiForm extends FormBase
 
     ctools_add_js('ajax-responder');
 
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
     $ds = islandora_datastream_load("CMD", $fedora_object->id);
     $inheritedData = CmdiHandler::simplexml_load_cmdi_string($ds->content);
     if ($inheritedData) {
@@ -114,7 +114,7 @@ class BundleUpdateCmdiForm extends FormBase
     //********************************************************************
     // Generate profile specific form render array and attach to container
     //********************************************************************
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
 
     // load preset if selected
     \CmdiPresetManager::load($form_state);

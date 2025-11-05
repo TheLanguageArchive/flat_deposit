@@ -222,7 +222,7 @@ function flat_nextcloud_admin_form_submit ($form, &$form_state)
 
     switch ($button) {
         case 'Save': {
-            module_load_include('inc', 'flat_nextcloud', 'inc/config');
+            \Drupal::moduleHandler()->loadInclude('flat_nextcloud', 'inc', 'inc/config');
 
             flat_nextcloud_set_nextcloud($form_state['values']['nextcloud']);
 
@@ -233,7 +233,7 @@ function flat_nextcloud_admin_form_submit ($form, &$form_state)
 
         case 'Reset to defaults': {
 
-            module_load_include('inc', 'flat_nextcloud', 'inc/config');
+            \Drupal::moduleHandler()->loadInclude('flat_nextcloud', 'inc', 'inc/config');
 
             flat_nextcloud_set_nextcloud();
 

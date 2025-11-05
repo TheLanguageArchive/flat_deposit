@@ -1,8 +1,8 @@
 <?php
-module_load_include('php','flat_deposit','Helpers/IngestService/IngestFactory');
-module_load_include('php','flat_deposit','Helpers/IngestService/SIP');
-module_load_include('php','flat_deposit','Helpers/IngestService/Collection');
-module_load_include('php','flat_deposit','Helpers/IngestService/Bundle');
+\Drupal::moduleHandler()->loadInclude('flat_deposit', 'php', 'Helpers/IngestService/IngestFactory');
+\Drupal::moduleHandler()->loadInclude('flat_deposit', 'php', 'Helpers/IngestService/SIP');
+\Drupal::moduleHandler()->loadInclude('flat_deposit', 'php', 'Helpers/IngestService/Collection');
+\Drupal::moduleHandler()->loadInclude('flat_deposit', 'php', 'Helpers/IngestService/Bundle');
 
 
 

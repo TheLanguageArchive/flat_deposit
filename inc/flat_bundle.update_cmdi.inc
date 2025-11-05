@@ -13,7 +13,7 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object)
 
     ctools_add_js('ajax-responder');
 
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
     $ds = islandora_datastream_load("CMD", $fedora_object->id);
     $inheritedData = CmdiHandler::simplexml_load_cmdi_string($ds->content);
     if ($inheritedData) {
@@ -88,7 +88,7 @@ function flat_bundle_update_cmdi_form($form, &$form_state, $fedora_object)
     //********************************************************************
     // Generate profile specific form render array and attach to container
     //********************************************************************
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
 
     // load template if selected
     CmdiTemplateManager::load($form_state);
@@ -143,8 +143,8 @@ function flat_bundle_update_form_final_validate($form, &$form_state)
     $file = file_save_upload('cmdi', array(
         'file_validate_extensions' => array('cmd cmdi xml')));
 
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
-    module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'inc/class.FlatTuque');
     $owner = $form_state['values']['owner'];
     $profile = $form_state['values']['select_profile_name'];
     $export_dir = 'metadata://' . str_replace('@', '_at_', $owner) . "/.collection/";
@@ -252,8 +252,8 @@ function flat_bundle_update_form_final_validate($form, &$form_state)
         //*******************//
         // Generate Cmdi file //
         //*******************//
-        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
-        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
 
         $templateName = $form_state['values']['select_profile_name'];
         $form_data = CmdiValueExtractor::extract($form_state);
@@ -308,7 +308,7 @@ function flat_bundle_update_form_final_validate($form, &$form_state)
 
     $test = FALSE;
 
-    module_load_include('php', 'flat_deposit', 'Helpers/IngestService/IngestClient');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'php', 'Helpers/IngestService/IngestClient');
 
     try {
         $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fidParent, $test, $namespace);
@@ -368,7 +368,7 @@ function flat_bundle_update_cmdi_form_submit($form, &$form_state)
 
 function flat_bundle_update_form_ajax_handler(&$form, &$form_state)
 {
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
     CmdiValueSyncer::sync($form, $form_state);
 
     return $form;

@@ -52,7 +52,7 @@ $collection_fid = $collection_node->flat_fid->value;
 
 
 // instantiate client
-module_load_include('php','flat_deposit','Helpers/IngestService/IngestClient');
+\Drupal::moduleHandler()->loadInclude('flat_deposit', 'php', 'Helpers/IngestService/IngestClient');
 
 try {
     $ingest_client = new \IngestClient($sipType, $sipOwnerName, $recordCmdi, $collection_fid, $test);

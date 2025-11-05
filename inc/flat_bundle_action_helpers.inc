@@ -153,7 +153,7 @@ function bundle_deleted_files($nid)
 function bundle_max_files_exceeded($nid)
 {
 
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
 
     $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
 
@@ -362,7 +362,7 @@ function bundle_has_subfolders($nid)
  */
 function has_flat_uri($nid)
 {
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
 
     $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
 
@@ -402,7 +402,7 @@ function has_flat_uri($nid)
 function bundle_files_mismatch($nid)
 {
 
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
 
     $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
 
@@ -636,7 +636,7 @@ function move_node_data($nid)
 
     $error = [];
 
-    module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'inc/class.FlatBundle');
     $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
     // @FIXME entity_metadata_wrapper fix for drupal 9
     // $wrapper = entity_metadata_wrapper('node', $node);

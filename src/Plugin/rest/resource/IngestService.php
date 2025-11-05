@@ -90,7 +90,7 @@ class IngestService extends ResourceBase
         $collection_fid = "lat:12345";
 
         // instantiate client
-        module_load_include('php', 'flat_deposit', 'Helpers/IngestService/IngestClient');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'php', 'Helpers/IngestService/IngestClient');
 
         try {
             $ingest_client = new \IngestClient($sipType, $sipOwnerName, $cmdi_url, $collection_fid, $test);

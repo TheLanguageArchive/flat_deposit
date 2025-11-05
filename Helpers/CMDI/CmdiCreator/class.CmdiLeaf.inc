@@ -5,9 +5,9 @@ spl_autoload_register('autoload_cmdileaf');
 function autoload_cmdileaf()
 {
 
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiComposite');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiComponent');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiCreator/class.CmdiComposite');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiCreator/class.CmdiComponent');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
 
 }
 

@@ -2,7 +2,7 @@ name: FLAT Deposit
 description: Provides an interface for depositing archive materials
 package: FLAT
 type: module
-core_version_requirement: ^10
+core_version_requirement: ^10 || ^11
 dependencies:
     - drupal:file
 #   - drupal:imce

@@ -3,22 +3,22 @@ spl_autoload_register('autoload_formbuilder');
 
 function autoload_formbuilder()
 {
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormComponent');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormComposite');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormLeaf');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormField');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiModalBuilder');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetActionsBuilder');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetBuilder');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetRebuilder');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetSaveLoaded');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetLoader');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetSaver');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetDb');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetData');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetManager');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiValueExtractor');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiPreset/class.CmdiValueSyncer');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormComponent');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormComposite');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormLeaf');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormField');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiPreset/class.CmdiModalBuilder');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetActionsBuilder');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetBuilder');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetRebuilder');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetSaveLoaded');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetLoader');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetSaver');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetDb');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetData');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiPreset/class.CmdiPresetManager');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiPreset/class.CmdiValueExtractor');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiPreset/class.CmdiValueSyncer');
 }
 
 use Drupal\Core\Form\FormStateInterface;

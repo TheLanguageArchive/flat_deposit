@@ -81,7 +81,7 @@ function flat_workspaces_admin_form($form, &$form_state)
 function flat_workspace_admin_form_save_submit ($form, &$form_state)
 {
 
-    module_load_include('inc', 'flat_workspaces', 'inc/config');
+    \Drupal::moduleHandler()->loadInclude('flat_workspaces', 'inc', 'inc/config');
 
     flat_workspaces_set_variables($form_state['values']['workspace_settings']);
 

@@ -42,7 +42,7 @@ class BundleController extends ControllerBase
 
         } */
 
-        module_load_include('inc', 'node', 'node.pages');
+        \Drupal::moduleHandler()->loadInclude('node', 'inc', 'node.pages');
 
         $node_type = 'flat_bundle';
         $node = \Drupal::entityTypeManager()
@@ -60,7 +60,7 @@ class BundleController extends ControllerBase
 
     public function enterMetadata()
     {
-        module_load_include('inc', 'node', 'node.pages');
+        \Drupal::moduleHandler()->loadInclude('node', 'inc', 'node.pages');
 
         $form = \Drupal::formBuilder()->getForm('Drupal\flat_deposit\Form\BundleEnterCmdiForm');
 
@@ -69,7 +69,7 @@ class BundleController extends ControllerBase
 
     public function editMetadata()
     {
-        module_load_include('inc', 'node', 'node.pages');
+        \Drupal::moduleHandler()->loadInclude('node', 'inc', 'node.pages');
 
         $form = \Drupal::formBuilder()->getForm('Drupal\flat_deposit\Form\BundleEditCmdiForm');
 

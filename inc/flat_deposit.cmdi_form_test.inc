@@ -170,7 +170,7 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     $owner = $form_state['values']['owner'];
 
     // get new simplexml object
-    module_load_include('inc','flat_deposit','Helpers/CMDI/CmdiCreator/class.CmdiCreator');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
     $creator = new CmdiCreator();
     try{
 
@@ -208,28 +208,21 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     }
 
     //validate existence output dir
-<<<<<<< HEAD
     $node = menu_get_object();
     $wrapper = entity_metadata_wrapper('node', $node);
 
     $title = $node->title;
     $collection = $wrapper->flat_parent_title->value();
-=======
     $node = \Drupal::routeMatch()->getParameter();
     // $wrapper = entity_metadata_wrapper('node', $node);
 
     $title = $node->title;
     $collection = $node->flat_parent_title->value;
->>>>>>> c1c57f0 ([feature/d9])
 
 
     $export_dir = 'metadata://' . '/' . $owner . "/$collection/$title";
     if (!file_exists($export_dir)) {
-<<<<<<< HEAD
-        drupal_mkdir($export_dir, NULL, TRUE);
-=======
         \Drupal::service("file_system")->mkdir($export_dir, NULL, TRUE);
->>>>>>> c1c57f0 ([feature/d9])
     }
 
     if (!file_exists($export_dir)) {
@@ -250,7 +243,7 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
 
     // Get cmdi
     $import =  FALSE;
-    module_load_include('inc','flat_deposit','Helpers/CMDI/class.CmdiHandler');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
     $msg = get_cmdi($form_state['values'], $recordCmdi, $import);
 
 
@@ -299,11 +292,7 @@ function flat_deposit_cmdi_form_submit($form, &$form_state){
         \Drupal::messenger()->addMessage(t('Metadata for bundle %title has been saved', array('%title' => $node->title)));
     */
 
-<<<<<<< HEAD
     \Drupal::messenger()->addMessage(t('Metadata for bundle has been saved'));
-=======
-    \Drupal::messenger()->addMessage(t('Metadata for bundle has been saved'));
->>>>>>> c1c57f0 ([feature/d9])
 
 
 }

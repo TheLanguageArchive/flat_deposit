@@ -4,9 +4,9 @@ spl_autoload_register('autoload_cmdicreator');
 
 function autoload_cmdicreator()
 {
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiComponent');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiComposite');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiLeaf');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiCreator/class.CmdiComponent');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiCreator/class.CmdiComposite');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiCreator/class.CmdiLeaf');
 }
 
 class CmdiCreatorException extends Exception
@@ -229,7 +229,7 @@ class CmdiCreator
     private function getTree($form_data, $owner)
     {
 
-        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
 
         $clarinId = $form_data['data']['clarinProfileId'];
 

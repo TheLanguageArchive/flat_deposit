@@ -19,7 +19,7 @@ function flat_deposit_bundle_edit_cmdi_form($form, &$form_state)
 
     ctools_add_js('ajax-responder');
 
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
 
     // exit form generation if no parent collection has been selected
     if (isset($form_state['parent_nid'])) {
@@ -86,7 +86,7 @@ function flat_deposit_bundle_edit_cmdi_form($form, &$form_state)
     //********************************************************************
     // Generate profile specific form render array and attach to container
     //********************************************************************
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
 
     // load template if selected
     CmdiTemplateManager::load($form_state);
@@ -103,7 +103,7 @@ function flat_deposit_bundle_edit_cmdi_form($form, &$form_state)
 
     if (array_key_exists($profile, $availableFormTemplates)) {
         // Load form builder app
-        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
         $formBuilder = new FormBuilder($form_state['build_info']['args'][0]);
 
         // count button presses per field
@@ -136,7 +136,7 @@ function flat_deposit_bundle_edit_cmdi_form($form, &$form_state)
 
 function flat_bundle_edit_cmdi_form_ajax_handler(&$form, &$form_state)
 {
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
     CmdiValueSyncer::sync($form, $form_state);
 
     return $form;
@@ -185,7 +185,7 @@ function flat_deposit_bundle_edit_cmdi_form_final_validate($form, &$form_state)
     //*******************//
     // Title Validations //
     //*******************//
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
     $templateName = $form_state['values']['select_profile_name'];
 
     $title = $form_state['values']['template_container']['elements']['title_field'][0];
@@ -195,7 +195,7 @@ function flat_deposit_bundle_edit_cmdi_form_final_validate($form, &$form_state)
         return $form;
     }
 
-    module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'inc/class.FlatTuque');
     $parent_node = \Drupal::entityTypeManager()->getStorage('node')->load($parent_nid);
     // @FIXME entity_metadata_wrapper fix for drupal 9
     // $parent_wrapper = entity_metadata_wrapper('node', $parent_node);
@@ -217,8 +217,8 @@ function flat_deposit_bundle_edit_cmdi_form_final_validate($form, &$form_state)
     //*******************//
     // Generate Cmdi file//
     //*******************//
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
 
     $owner = $form_state['values']['owner'];
     $form_data = CmdiValueExtractor::extract($form_state);
@@ -249,7 +249,7 @@ function flat_deposit_bundle_edit_cmdi_form_final_validate($form, &$form_state)
     //***********************//
     // Validate cmdi profile //
     //***********************//
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
     $cmdi = CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($cmdiFile));
     try {
         $cmdi->canBeValidated();

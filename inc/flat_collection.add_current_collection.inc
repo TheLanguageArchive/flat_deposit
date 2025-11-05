@@ -51,7 +51,7 @@ function flat_collection_add_current_collection_form_validate($form, &$form_stat
     $obj = $form_state['values']['data']['fedoraObject'];
     $fid = $obj->id;
 
-    module_load_include('inc', 'flat_deposit', 'inc/class.FlatCollection');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'inc/class.FlatCollection');
     $collection_nodes = FlatCollection::getUserCollectionNodes($user->uid, $fid);
     if (!empty($collection_nodes)){
         $form_state->setErrorByName('submit','Current collection is already active');
@@ -90,7 +90,7 @@ function flat_collection_add_current_collection_form_submit($form, &$form_state)
     $fid = $obj->id;
 
 
-    module_load_include('inc','flat_deposit', 'inc/flat_collection.add_collection');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'inc/flat_collection.add_collection');
     create_collection_node($label, $uid, $fid);
 
     \Drupal::messenger()->addMessage('Collection has been added to your active collections');

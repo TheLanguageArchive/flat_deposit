@@ -2,7 +2,7 @@ name: FLAT Nextcloud
 description: Provides access to Nextcloud directories for including files to be deposited
 package: FLAT
 type: module
-core_version_requirement: ^10
+core_version_requirement: ^10 || ^11
 dependencies:
   - flat_deposit
 update_module_enable:

@@ -28,7 +28,7 @@ class FlatTuque
         $fObj = islandora_object_load($pid);
         if ($fObj) {
             $values = [];
-            module_load_include('php', 'flat_deposit', '/inc/fedora_queries');
+            \Drupal::moduleHandler()->loadInclude('flat_deposit', 'php', '/inc/fedora_queries');
 
             $query = query_existing_labels_in_collection($pid);
 

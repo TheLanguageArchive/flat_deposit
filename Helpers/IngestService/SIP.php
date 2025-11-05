@@ -173,7 +173,7 @@ abstract class SIP
         $parentFid = $this->parentFid;
         $file_name = $this->cmdiTarget;
 
-        module_load_include('inc', 'flat_deposit', '/Helpers/CMDI/class.CmdiHandler');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', '/Helpers/CMDI/class.CmdiHandler');
 
         $fileSystem = \Drupal::service("file_system");
         $cmdi = \CmdiHandler::simplexml_load_cmdi_file($fileSystem->realpath($file_name));
@@ -273,7 +273,7 @@ abstract class SIP
 
         $sipId = $this->sipId;
 
-        module_load_include('php', 'flat_deposit', '/Helpers/IngestService/Sword');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'php', '/Helpers/IngestService/Sword');
 
         $sword = new \Sword();
         $upload = $sword->postSip($path, $zipName, $sipId);
@@ -294,7 +294,7 @@ abstract class SIP
 
         $sipId = $this->sipId;
 
-        module_load_include('php', 'flat_deposit', '/Helpers/IngestService/Sword');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'php', '/Helpers/IngestService/Sword');
 
         $sword = new \Sword();
         $check = $sword->swordRejected($sipId);
@@ -318,7 +318,7 @@ abstract class SIP
 
         $parentFid = $this->parentFid ? $this->parentFid : NULL;
 
-        module_load_include('php', 'flat_deposit', '/Helpers/IngestService/Doorkeeper');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'php', '/Helpers/IngestService/Doorkeeper');
         $dk = new \Doorkeeper();
         $dk->triggerServlet($this->sipId, $query, $namespace, $parentFid);
         $fid = $dk->checkStatus($this->sipId, 1800);
@@ -368,7 +368,7 @@ abstract class SIP
     {
         // remove directory with SIP data
         $sip_dir = $this->frozenSipDir;
-        module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'inc/class.FlatBundle');
 
         if (file_exists($sip_dir)) {
 
@@ -392,7 +392,7 @@ abstract class SIP
         // config/install/flat_deposit.settings.yml and config/schema/flat_deposit.schema.yml.
         $basePath = \Drupal::config('flat_deposit.settings')->get('flat_deposit_ingest_service')['bag_dir'];
         $bagDir = $basePath . $this->sipId;
-        module_load_include('inc', 'flat_deposit', 'inc/class.FlatBundle');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'inc/class.FlatBundle');
         \FlatBundle::recursiveRmDir($bagDir);
         \Drupal::service("file_system")->rmdir($bagDir);
     }

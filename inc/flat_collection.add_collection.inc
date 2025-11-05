@@ -25,7 +25,7 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject)
     }
 
     // get all available form template files
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
     $available_profiles = FormBuilder::getAvailableTemplates('flat_collection');
 
     // Add option to import a external file
@@ -203,7 +203,7 @@ function flat_collection_add_form($form, &$form_state, $fedoraObject)
         // Load inherited cmdi metadata from node
         $cmdiDs = islandora_datastream_load('CMD', $fedoraObject);
         if ($cmdiDs) {
-            module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+            \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
             $inheritedData = simplexml_load_string($cmdiDs->content, 'CmdiHandler');
         }
 
@@ -242,7 +242,7 @@ function flat_deposit_form_flat_collection_add_form_alter(&$form, \Drupal\Core\F
 
 function flat_collection_add_form_final_validate($form, &$form_state) {
 
-    module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'inc/class.FlatTuque');
     // Form Validation setup
     $owner = $form_state['values']['owner'];
     $namespace = $form_state['values']['namespace'];
@@ -330,8 +330,8 @@ $allowed_collection_profiles = \Drupal::config('flat_deposit.settings')->get('fl
             //*******************//
             // Generate Cmdi file//
             //*******************//
-            module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
-            module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
+            \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
+            \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
 
             $templateName = $form_state['selected'];
             $owner = $form_state['values']['owner'];
@@ -357,8 +357,8 @@ $allowed_collection_profiles = \Drupal::config('flat_deposit.settings')->get('fl
             break;
 
         case 'Import':
-            module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
-            module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
+            \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
+            \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
 
             $file = file_save_upload('cmdi_file', array(
                 // Validate file extensions
@@ -455,7 +455,7 @@ $allowed_collection_profiles = \Drupal::config('flat_deposit.settings')->get('fl
     $fid = $form_state['values']['data']['fid'];
     $test = FALSE;
 
-    module_load_include('php', 'flat_deposit', 'Helpers/IngestService/IngestClient');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'php', 'Helpers/IngestService/IngestClient');
     try {
         $ingest_client = new IngestClient($sipType, $owner, $cmdiFile, $fid, $test, $namespace);
     } catch (IngestServiceException $exception) {
@@ -530,7 +530,7 @@ function create_collection_node($label, $uid, $fid)
 
 function flat_collection_add_form_ajax_handler(&$form, &$form_state)
 {
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
     CmdiValueSyncer::sync($form, $form_state);
 
     return $form;

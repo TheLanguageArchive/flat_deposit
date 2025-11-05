@@ -109,7 +109,7 @@ class FlatBundle
             return;
         }
 
-        module_load_include('inc', 'flat_deposit', '/inc/class.FlatUtils');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', '/inc/class.FlatUtils');
         $values = \FlatUtils::getChildrenTitles($parent_fid);
 
         if (in_array(strtoupper($title), array_unique(array_map('strtoupper', $values)))) {

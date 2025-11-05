@@ -36,7 +36,7 @@ function flat_deposit_cmdi_form($form, &$form_state)
 
 
     // get all available template xml
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
     $available_profiles = FormBuilder::getAvailableTemplates('flat_bundle');
 
     // $available_profiles ['Import'] = 'I want to upload a CMDI metadata file';
@@ -202,7 +202,7 @@ function flat_deposit_cmdi_form($form, &$form_state)
     CmdiTemplateManager::save($form_state);
 
     if (isset($form_state['selected']) AND !empty($form_state['selected'])) {
-        module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+        \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
         $check = FormBuilder::checkTemplateItems($form_state['selected']);
         if ($check !== TRUE) {
             \Drupal::messenger()->addWarning($check);
@@ -264,7 +264,7 @@ function flat_deposit_cmdi_form($form, &$form_state)
 
 function flat_deposit_cmdi_form_ajax_handler(&$form, &$form_state) {
 
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueSyncer');
     CmdiValueSyncer::sync($form, $form_state);
 
     return $form;
@@ -370,7 +370,7 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     //*******************//
     // Title Validations //
     //*******************//
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/FormBuilder/class.FormBuilder');
     $templateName = $form_state['selected'];
 
     $title = $form_state['values']['template_container']['elements']['title_field'][0];
@@ -380,7 +380,7 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
         return $form;
     }
 
-    module_load_include('inc', 'flat_deposit', 'inc/class.FlatTuque');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'inc/class.FlatTuque');
     $parent_node = \Drupal::entityTypeManager()->getStorage('node')->load($parent_nid);
     // @FIXME entity_metadata_wrapper fix for drupal 9
     // $parent_wrapper = entity_metadata_wrapper('node', $parent_node);
@@ -402,8 +402,8 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     //*******************//
     // Generate Cmdi file//
     //*******************//
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiCreator/class.CmdiCreator');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/CmdiTemplate/class.CmdiValueExtractor');
 
     $owner = $form_state['values']['owner'];
     $form_data = CmdiValueExtractor::extract($form_state);
@@ -435,7 +435,7 @@ function flat_deposit_cmdi_form_final_validate($form, &$form_state)
     //***********************//
     // Validate cmdi profile //
     //***********************//
-    module_load_include('inc', 'flat_deposit', 'Helpers/CMDI/class.CmdiHandler');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'Helpers/CMDI/class.CmdiHandler');
     $cmdi = CmdiHandler::simplexml_load_cmdi_file(\Drupal::service("file_system")->realpath($cmdiFile));
     try {
         $cmdi->canBeValidated();
@@ -468,7 +468,7 @@ function flat_deposit_cmdi_form_submit($form, &$form_state)
     $new_file = file_save((object)array(
         'filename' => 'record.cmdi',
         'uri' => $form_state['values']['cmdiFile'],
-        'status' => FILE_STATUS_PERMANENT,
+        'status' => \Drupal\file\FileInterface::STATUS_PERMANENT,
         'filemime' => file_get_mimetype($form_state['values']['cmdiFile']),
         'display' => '1',
         'description' =>'',

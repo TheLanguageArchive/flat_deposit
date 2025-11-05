@@ -2,7 +2,7 @@
 
 use Drupal\Core\Form\FormStateInterface;
 
-module_load_include('inc', 'node', 'node.pages');
+\Drupal::moduleHandler()->loadInclude('node', 'inc', 'node.pages');
 /**
  * Created by PhpStorm.
  * User: danrhe
@@ -240,7 +240,7 @@ class Workspaces
     {
         if (is_dir($directory)) {
 
-            module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
+            \Drupal::moduleHandler()->loadInclude('flat_workspaces', 'inc', 'inc/class.AclHandler');
             $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
             if (empty($acl->getInfo())) {
                 return false;
@@ -260,7 +260,7 @@ class Workspaces
     {
         if (is_dir($directory)) {
 
-            module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
+            \Drupal::moduleHandler()->loadInclude('flat_workspaces', 'inc', 'inc/class.AclHandler');
             $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
 
             if (empty($acl->getInfo())) {
@@ -279,7 +279,7 @@ class Workspaces
     {
         if (is_dir($directory)) {
 
-            module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
+            \Drupal::moduleHandler()->loadInclude('flat_workspaces', 'inc', 'inc/class.AclHandler');
             $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
 
             if (empty($acl->getInfo())) {
@@ -300,7 +300,7 @@ class Workspaces
     {
         if (is_dir($directory)) {
 
-            module_load_include('inc', 'flat_workspaces', 'inc/class.AclHandler');
+            \Drupal::moduleHandler()->loadInclude('flat_workspaces', 'inc', 'inc/class.AclHandler');
             $acl = new \AclHandler(\Drupal::service('file_system')->realpath($directory));
 
             if (empty($acl->getInfo())) {

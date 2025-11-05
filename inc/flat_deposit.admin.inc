@@ -498,7 +498,7 @@ function flat_deposit_admin_form_save_validate($form, &$form_state)
 
 function flat_deposit_admin_form_save_submit($form, &$form_state)
 {
-    module_load_include('inc', 'flat_deposit', 'inc/config');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'inc/config');
 
     flat_deposit_set_general($form_state['values']['general']);
     flat_deposit_set_cmdi_profiles($form_state['values']['cmdi_profiles']);
@@ -515,7 +515,7 @@ function flat_deposit_admin_form_save_submit($form, &$form_state)
 
 function flat_deposit_admin_form_reset_submit($form, &$form_state)
 {
-    module_load_include('inc', 'flat_deposit', 'inc/config');
+    \Drupal::moduleHandler()->loadInclude('flat_deposit', 'inc', 'inc/config');
 
     flat_deposit_set_general();
     flat_deposit_set_cmdi_profiles();
@@ -655,7 +655,7 @@ function flat_deposit_admin_form_import_validate($form, &$form_state)
 
 function flat_deposit_admin_form_import_submit($form, &$form_state)
 {
-    $flat_deposit_config = \Drupal::configFactory()->getEditable('flat_deposit.settings')
+    $flat_deposit_config = \Drupal::configFactory()->getEditable('flat_deposit.settings');
     $flat_deposit_config->set('flat_deposit_general', $form_state['values']['imported_values']['general']);
     $flat_deposit_config->set('flat_deposit_cmdi_profiles', $form_state['values']['imported_values']['cmdi_profiles']);
     $flat_deposit_config->set('flat_deposit_fits', $form_state['values']['imported_values']['fits']);
